@@ -294,13 +294,13 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
 
   if (!plan) {
     return (
-      <div className="max-w-5xl mx-auto w-full pt-8 space-y-8">
-        <div className="relative overflow-hidden bg-[linear-gradient(135deg,rgba(25,194,179,0.18),rgba(242,178,79,0.16),rgba(239,106,135,0.14))] border border-white/10 rounded-[2.8rem] p-10 md:p-12 shadow-2xl">
+      <div className="max-w-5xl mx-auto w-full pt-4 sm:pt-8 space-y-6 sm:space-y-8">
+        <div className="relative overflow-hidden bg-[linear-gradient(135deg,rgba(25,194,179,0.18),rgba(242,178,79,0.16),rgba(239,106,135,0.14))] border border-white/10 rounded-[2rem] sm:rounded-[2.8rem] p-6 sm:p-10 md:p-12 shadow-2xl">
           <div className="absolute inset-y-0 right-0 w-1/2 opacity-30 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.35),transparent_55%)]" />
           <div className="relative space-y-5 max-w-3xl">
             <p className="text-[11px] font-black uppercase tracking-[0.35em] text-teal-300">7-Day Implementation Sprint</p>
-            <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter leading-none">Values-to-Action Plan</h2>
-            <p className="text-slate-200/90 text-lg font-light leading-relaxed max-w-2xl">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tighter leading-none">Values-to-Action Plan</h2>
+            <p className="text-slate-200/90 text-base sm:text-lg font-light leading-relaxed max-w-2xl">
               Convert your synthesis into a one-week behavior loop. Generate a practical plan, check in in under a minute, and finish with a sharable weekly summary.
             </p>
             <div className="flex flex-wrap gap-3 text-[11px] uppercase tracking-[0.2em]">
@@ -312,7 +312,7 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-[1.35fr_0.65fr] gap-8">
-          <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-10 shadow-2xl space-y-8">
+          <div className="bg-[#162940]/70 border border-white/10 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 shadow-2xl space-y-6 sm:space-y-8">
             <div>
               <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-400 mb-4">Step 1: Select 2-3 focus values</p>
               <p className="text-sm text-slate-300 mb-5 max-w-2xl">
@@ -337,7 +337,7 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
               <p className="text-slate-400 text-xs mt-4">Keep at least 2 values selected to build a meaningful weekly loop.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
                 <p className="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-black">Input data</p>
                 <p className="text-3xl font-black text-white mt-2">{entries.length}</p>
@@ -365,7 +365,7 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
             </button>
           </div>
 
-          <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6">
+          <div className="bg-[#162940]/70 border border-white/10 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-2xl space-y-6">
             <div>
               <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-400 mb-3">Readiness checks</p>
               <div className="space-y-3 text-sm text-slate-300">
@@ -399,11 +399,11 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
   }
 
   return (
-    <div className="max-w-5xl mx-auto w-full pt-8 space-y-8">
-      <div className="bg-[linear-gradient(135deg,rgba(25,194,179,0.14),rgba(18,37,58,0.78),rgba(242,178,79,0.12))] border border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
+    <div className="max-w-5xl mx-auto w-full pt-4 sm:pt-8 space-y-6 sm:space-y-8">
+      <div className="bg-[linear-gradient(135deg,rgba(25,194,179,0.14),rgba(18,37,58,0.78),rgba(242,178,79,0.12))] border border-white/10 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
-            <h2 className="text-4xl font-black text-white tracking-tight">7-Day Action Plan</h2>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">7-Day Action Plan</h2>
             <p className="text-slate-300/80 text-sm mt-2">Cycle {plan.id} • {new Date(plan.createdAt).toLocaleDateString()}</p>
             <div className="flex flex-wrap gap-2 mt-4">
               {plan.selectedValues.map((value) => (
@@ -414,18 +414,18 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 min-w-[280px]">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 min-w-0 w-full sm:w-auto sm:min-w-[280px]">
             <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
               <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black">Complete</p>
-              <p className="text-2xl text-white font-black mt-1">{completionRate}%</p>
+              <p className="text-lg sm:text-2xl text-white font-black mt-1">{completionRate}%</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
               <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black">Streak</p>
-              <p className="text-2xl text-white font-black mt-1">{activeStreak}</p>
+              <p className="text-lg sm:text-2xl text-white font-black mt-1">{activeStreak}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
               <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black">Next</p>
-              <p className="text-2xl text-white font-black mt-1">{nextUncheckedDay || 7}</p>
+              <p className="text-lg sm:text-2xl text-white font-black mt-1">{nextUncheckedDay || 7}</p>
             </div>
           </div>
         </div>
@@ -444,8 +444,8 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
 
       {activePlanDay && (
         <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_0.7fr] gap-8">
-          <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6">
-            <div className="flex flex-wrap gap-3">
+          <div className="bg-[#162940]/70 border border-white/10 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
               {plan.days.map((day) => {
                 const selected = activeDay === day.day;
                 const status = day.checkIn?.status;
@@ -453,7 +453,7 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
                   <button
                     key={day.day}
                     onClick={() => setActiveDay(day.day)}
-                    className={`px-4 py-3 rounded-xl border text-left min-w-[110px] transition-all ${selected ? 'bg-teal-500/20 border-teal-400/60 shadow-lg shadow-teal-950/20' : 'bg-white/5 border-white/10 hover:border-teal-500/40'}`}
+                    className={`px-4 py-3 rounded-xl border text-left min-w-0 sm:min-w-[110px] transition-all ${selected ? 'bg-teal-500/20 border-teal-400/60 shadow-lg shadow-teal-950/20' : 'bg-white/5 border-white/10 hover:border-teal-500/40'}`}
                   >
                     <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-300">Day {day.day}</p>
                     <p className="text-xs mt-1 text-white truncate">{status ? statusLabels[status] : 'Pending'}</p>
@@ -462,24 +462,24 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
               })}
             </div>
 
-            <div className="rounded-[2rem] border border-teal-500/20 bg-[linear-gradient(135deg,rgba(25,194,179,0.16),rgba(6,14,24,0.25))] p-6">
+            <div className="rounded-[1.5rem] sm:rounded-[2rem] border border-teal-500/20 bg-[linear-gradient(135deg,rgba(25,194,179,0.16),rgba(6,14,24,0.25))] p-5 sm:p-6">
               <div className="flex items-center gap-3 text-teal-300">
                 <Flame className="w-5 h-5" />
                 <p className="text-[11px] uppercase tracking-[0.25em] font-black">Today&apos;s focus</p>
               </div>
-              <p className="text-white text-2xl font-black mt-4">{activePlanDay.theme}</p>
+              <p className="text-white text-xl sm:text-2xl font-black mt-4">{activePlanDay.theme}</p>
               <p className="text-sm text-slate-300 mt-3 max-w-2xl">
                 Keep today narrow. Finish the smallest meaningful action first, then use the check-in to capture what actually happened.
               </p>
             </div>
 
-            <div className="bg-black/20 border border-white/10 rounded-2xl p-6">
+            <div className="bg-black/20 border border-white/10 rounded-2xl p-5 sm:p-6">
               <p className="text-xs text-teal-400 uppercase tracking-[0.2em] font-black mb-2">Day {activePlanDay.day} actions</p>
               <ul className="mt-4 space-y-3">
                 {activePlanDay.actions.map((action) => (
                   <li key={action.id} className="p-4 rounded-xl border border-white/10 bg-white/5">
                     <div className="flex items-center justify-between gap-4">
-                      <p className="text-white font-medium">{action.title}</p>
+                      <p className="text-white font-medium text-sm sm:text-base">{action.title}</p>
                       <span className="text-[10px] uppercase tracking-[0.2em] text-amber-400 font-black flex items-center gap-1">
                         <Clock3 className="w-3.5 h-3.5" />
                         {action.durationMinutes}m
@@ -497,15 +497,15 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
             </div>
           </div>
 
-          <div className="space-y-8">
-            <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-6 shadow-2xl space-y-4">
+          <div className="space-y-6 sm:space-y-8">
+            <div className="bg-[#162940]/70 border border-white/10 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 shadow-2xl space-y-4">
               <p className="text-xs text-teal-400 uppercase tracking-[0.2em] font-black">Daily Check-in</p>
-              <div className="flex flex-wrap gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {(['done', 'partial', 'skipped'] as CheckInStatus[]).map((status) => (
                   <button
                     key={status}
                     onClick={() => setStatusSelection(status)}
-                    className={`px-4 py-2 rounded-full border text-xs font-black uppercase tracking-[0.15em] transition-all ${statusSelection === status ? statusAccent[status] : 'bg-white/5 border-white/10 text-slate-300'}`}
+                    className={`px-4 py-3 rounded-2xl sm:rounded-full border text-xs font-black uppercase tracking-[0.15em] transition-all ${statusSelection === status ? statusAccent[status] : 'bg-white/5 border-white/10 text-slate-300'}`}
                   >
                     {statusLabels[status]}
                   </button>
@@ -538,10 +538,10 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
 
               {error && <p className="text-rose-400 text-xs">{error}</p>}
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={handleSaveCheckIn}
-                  className="px-5 py-3 rounded-xl bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2"
+                  className="px-5 py-3 rounded-xl bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   Save Check-in
@@ -549,7 +549,7 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
                 <button
                   onClick={handleReplanRemaining}
                   disabled={isReplanning}
-                  className="px-5 py-3 rounded-xl border border-white/10 bg-white/5 text-slate-200 text-xs font-black uppercase tracking-[0.2em] disabled:opacity-30 flex items-center gap-2"
+                  className="px-5 py-3 rounded-xl border border-white/10 bg-white/5 text-slate-200 text-xs font-black uppercase tracking-[0.2em] disabled:opacity-30 flex items-center justify-center gap-2"
                 >
                   {isReplanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
                   Replan Remaining Days
@@ -557,7 +557,7 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
               </div>
             </div>
 
-            <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-6 shadow-2xl space-y-5">
+            <div className="bg-[#162940]/70 border border-white/10 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 shadow-2xl space-y-5">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <h3 className="text-2xl font-black text-white tracking-tight">Weekly Reflection</h3>
                 {plan.status !== 'completed' && (

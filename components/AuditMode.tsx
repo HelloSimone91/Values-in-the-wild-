@@ -170,8 +170,8 @@ const AuditMode: React.FC<AuditModeProps> = ({ onSaveValue, entries }) => {
     return (
       <div className="max-w-5xl mx-auto space-y-10">
         <div className="text-center space-y-3">
-          <h2 className="text-5xl font-black text-white tracking-tighter">Discovery Areas</h2>
-          <p className="text-slate-300/80 text-xl font-light">Select a focus to begin extracting lived values from your reality.</p>
+          <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tighter">Discovery Areas</h2>
+          <p className="text-slate-300/80 text-lg sm:text-xl font-light">Select a focus to begin extracting lived values from your reality.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {Object.values(Pillar).map((p) => {
@@ -182,7 +182,7 @@ const AuditMode: React.FC<AuditModeProps> = ({ onSaveValue, entries }) => {
               <button
                 key={p}
                 onClick={() => startPillar(p)}
-                className={`group p-10 bg-[#162940]/60 backdrop-blur-sm rounded-[2.5rem] border ${complete ? 'border-teal-500/50' : 'border-white/5'} hover:border-teal-500/40 hover:bg-[#162940]/80 transition-all duration-500 text-left flex flex-col h-full shadow-2xl relative overflow-hidden`}
+                className={`group p-6 sm:p-10 bg-[#162940]/60 backdrop-blur-sm rounded-[2rem] sm:rounded-[2.5rem] border ${complete ? 'border-teal-500/50' : 'border-white/5'} hover:border-teal-500/40 hover:bg-[#162940]/80 transition-all duration-500 text-left flex flex-col h-full shadow-2xl relative overflow-hidden`}
               >
                 {complete && (
                    <div className="absolute top-0 right-0 p-4 opacity-20">
@@ -195,7 +195,7 @@ const AuditMode: React.FC<AuditModeProps> = ({ onSaveValue, entries }) => {
                   </div>
                   <ArrowRight className="w-6 h-6 text-slate-600 group-hover:text-amber-500 transition-all group-hover:translate-x-2" />
                 </div>
-                <h3 className="text-2xl font-black text-white mb-3 group-hover:text-teal-400 transition-colors tracking-tight">{p}</h3>
+                <h3 className="text-xl sm:text-2xl font-black text-white mb-3 group-hover:text-teal-400 transition-colors tracking-tight">{p}</h3>
                 <p className="text-[15px] text-slate-300 leading-relaxed font-light mb-6">{PILLAR_DESCRIPTIONS[p]}</p>
                 <div className="mt-auto flex items-center gap-2">
                    <div className="h-1 flex-1 bg-white/5 rounded-full overflow-hidden">
@@ -212,28 +212,28 @@ const AuditMode: React.FC<AuditModeProps> = ({ onSaveValue, entries }) => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-280px)] max-w-4xl mx-auto w-full bg-[#162940]/80 backdrop-blur-xl rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl">
+    <div className="flex flex-col h-[calc(100vh-240px)] sm:h-[calc(100vh-280px)] max-w-4xl mx-auto w-full bg-[#162940]/80 backdrop-blur-xl rounded-[2rem] sm:rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl">
       {/* Session Header */}
-      <div className="bg-white/5 px-10 py-6 flex justify-between items-center border-b border-white/10">
-        <div className="flex items-center gap-4">
+      <div className="bg-white/5 px-5 sm:px-10 py-4 sm:py-6 flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-white/10">
+        <div className="flex items-center gap-4 min-w-0">
           <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></div>
-          <span className="text-xs font-black text-white uppercase tracking-[0.2em]">Live Session: {activePillar}</span>
+          <span className="text-xs font-black text-white uppercase tracking-[0.2em] truncate">Live Session: {activePillar}</span>
         </div>
         <button 
           onClick={() => setActivePillar(null)}
-          className="text-[10px] font-black text-rose-400 hover:text-rose-300 transition-colors uppercase tracking-[0.3em] px-5 py-2.5 rounded-full bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10"
+          className="text-[10px] font-black text-rose-400 hover:text-rose-300 transition-colors uppercase tracking-[0.3em] px-5 py-2.5 rounded-full bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 self-start sm:self-auto"
         >
           End Session
         </button>
       </div>
 
       {/* Chat Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-10 space-y-10 scroll-smooth">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 sm:p-10 space-y-6 sm:space-y-10 scroll-smooth">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-500`}>
             <div className={`max-w-[85%] ${msg.type === 'resonance-menu' ? 'w-full' : ''}`}>
               {msg.type === 'text' && (
-                <div className={`px-8 py-6 rounded-[2rem] text-[16px] leading-relaxed shadow-lg ${
+                <div className={`px-5 sm:px-8 py-4 sm:py-6 rounded-[1.5rem] sm:rounded-[2rem] text-[15px] sm:text-[16px] leading-relaxed shadow-lg ${
                   msg.role === 'user' 
                     ? 'bg-[#0d9488] text-white rounded-tr-none font-semibold border-b-2 border-teal-700/50' 
                     : 'bg-white/5 border border-white/10 text-slate-100 rounded-tl-none font-light'
@@ -269,21 +269,21 @@ const AuditMode: React.FC<AuditModeProps> = ({ onSaveValue, entries }) => {
       </div>
 
       {/* Input Area */}
-      <div className="p-10 pt-4 bg-gradient-to-t from-black/20 to-transparent">
-        <div className="flex gap-4 bg-white/5 p-3 rounded-[2.5rem] border border-white/10 focus-within:border-teal-500/50 focus-within:bg-white/10 transition-all shadow-inner">
+      <div className="p-5 sm:p-10 pt-4 bg-gradient-to-t from-black/20 to-transparent">
+        <div className="flex gap-3 sm:gap-4 bg-white/5 p-2 sm:p-3 rounded-[2rem] sm:rounded-[2.5rem] border border-white/10 focus-within:border-teal-500/50 focus-within:bg-white/10 transition-all shadow-inner">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Describe an action or observation..."
-            className="flex-1 bg-transparent border-none px-6 py-4 text-slate-100 placeholder:text-slate-500 focus:outline-none font-medium"
+            className="flex-1 bg-transparent border-none px-4 sm:px-6 py-3 sm:py-4 text-slate-100 placeholder:text-slate-500 focus:outline-none font-medium text-sm sm:text-base min-w-0"
             disabled={isLoading}
           />
           <button
             onClick={handleSend}
             disabled={isLoading || !input.trim()}
-            className="p-5 bg-[#0d9488] text-white rounded-full hover:bg-[#0f766e] disabled:bg-slate-700 disabled:text-slate-500 transition-all shadow-xl hover:scale-105"
+            className="p-4 sm:p-5 bg-[#0d9488] text-white rounded-full hover:bg-[#0f766e] disabled:bg-slate-700 disabled:text-slate-500 transition-all shadow-xl hover:scale-105 shrink-0"
           >
             <Send className="w-6 h-6" />
           </button>

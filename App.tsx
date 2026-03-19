@@ -67,14 +67,14 @@ const App: React.FC = () => {
   const NavButton = ({ targetMode, icon: Icon, label }: { targetMode: Mode; icon: any; label: string }) => (
     <button
       onClick={() => setMode(targetMode)}
-      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 relative group ${
+      className={`flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 rounded-xl transition-all duration-300 relative group min-h-[44px] ${
         mode === targetMode
           ? 'text-teal-400 font-semibold bg-white/10'
           : 'text-slate-300/70 hover:text-white hover:bg-white/5'
       }`}
     >
       <Icon className={`w-5 h-5 transition-transform duration-300 ${mode === targetMode ? 'scale-110 text-teal-400' : 'group-hover:scale-105'}`} />
-      <span className="hidden sm:inline text-sm font-medium">{label}</span>
+      <span className="text-[11px] sm:text-sm font-medium">{label}</span>
       {mode === targetMode && (
         <span className="absolute bottom-0 left-2 right-2 h-1 bg-amber-500 rounded-full" />
       )}
@@ -85,20 +85,20 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#1f3653] flex flex-col font-sans text-slate-100 selection:bg-teal-500/30">
       {/* Top Navigation */}
       <header className="bg-[#162940]/90 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3 py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:h-20 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-3">
             <div className="bg-[#0d9488] p-2.5 rounded-xl shadow-lg shadow-teal-900/40">
               <Layers className="w-6 h-6 text-white" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-2xl font-black text-white tracking-tight leading-none">
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none">
                 EMBODIED<span className="text-teal-400 font-light tracking-widest ml-1">ALIGN</span>
               </h1>
               <span className="text-[10px] text-teal-400/80 font-bold uppercase tracking-[0.3em] mt-1">Values Intelligence</span>
             </div>
           </div>
           
-          <nav className="flex items-center gap-2">
+          <nav className="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch gap-2 w-full lg:w-auto">
             <NavButton targetMode={Mode.AUDIT} icon={Compass} label="The Audit" />
             <NavButton targetMode={Mode.WILD} icon={Zap} label="Observation Log" />
             <NavButton targetMode={Mode.SYNTHESIS} icon={Sparkles} label="Synthesis" />
@@ -108,8 +108,8 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 w-full max-w-6xl mx-auto p-6 md:p-10">
-        <div className="mb-10 flex items-center justify-between">
+      <main className="flex-1 w-full max-w-6xl mx-auto p-4 sm:p-6 md:p-10">
+        <div className="mb-8 sm:mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3 text-[11px] text-teal-100 font-bold uppercase tracking-widest bg-teal-500/20 px-4 py-2 rounded-full border border-teal-500/20">
             <CheckCircle2 className="w-4 h-4 text-teal-400" />
             <span>Active Exploration</span>
