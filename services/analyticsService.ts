@@ -10,7 +10,8 @@ interface AnalyticsEvent {
 
 const STORAGE_KEY = 'embodied_analytics_events';
 const MAX_EVENTS = 200;
-const API_BASE = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
+const configuredBase = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
+const API_BASE = configuredBase || (import.meta.env.DEV ? 'http://localhost:8787' : '');
 
 const readEvents = (): AnalyticsEvent[] => {
   try {

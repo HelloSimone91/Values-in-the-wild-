@@ -15,9 +15,9 @@ View your app in AI Studio: https://ai.studio/apps/drive/12w64UVoGcSPzuL74_3PqOZ
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. Copy `.env.example` to `.env.local` and set `GEMINI_API_KEY`
+3. Run frontend + API together:
+   `npm run dev:full`
 
 ## Values-to-Action Plan (v1)
 
@@ -29,15 +29,28 @@ The app now includes an `Action Plan` mode with:
 
 ## Backend Persistence (cross-device ready)
 
-Set `VITE_BACKEND_URL` to enable server persistence:
+Set `VITE_BACKEND_URL` to enable server persistence. In local development, the frontend defaults to `http://localhost:8787` automatically.
 
 ```bash
 VITE_BACKEND_URL=https://your-api.example.com
 ```
 
-Expected endpoints:
+Included backend endpoints:
 - `GET /api/v1/users/:userId/action-plan`
 - `PUT /api/v1/users/:userId/action-plan`
-- `POST /api/v1/events` (optional analytics sink)
+- `POST /api/v1/events`
+- `GET /api/v1/health`
 
-If no backend URL is set, the app falls back to local storage.
+### Backend Commands
+
+- Run only API server: `npm run dev:api`
+- Run only frontend: `npm run dev`
+- Run both: `npm run dev:full`
+
+### Backend Storage
+
+The backend stores data in `backend/data/store.json`:
+- `plans` keyed by `userId`
+- `events` for analytics
+
+If backend is unavailable, the app still falls back to local storage.

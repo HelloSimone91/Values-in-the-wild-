@@ -2,7 +2,8 @@ import { ActionPlanCycle } from '../types';
 
 const USER_ID_KEY = 'embodied_user_id';
 const PLAN_KEY = 'embodied_action_plan';
-const API_BASE = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
+const configuredBase = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
+const API_BASE = configuredBase || (import.meta.env.DEV ? 'http://localhost:8787' : '');
 
 export const getOrCreateUserId = (): string => {
   const existing = localStorage.getItem(USER_ID_KEY);

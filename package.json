@@ -5,20 +5,26 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "node backend/index.mjs",
+    "dev:full": "concurrently -k \"npm run dev:api\" \"npm run dev\"",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start:api": "node backend/index.mjs"
   },
   "dependencies": {
-    "react-markdown": "^10.1.0",
     "@google/genai": "^1.31.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "lucide-react": "^0.556.0",
     "react": "^19.2.1",
-    "recharts": "^3.5.1",
-    "react-dom": "^19.2.1"
+    "react-dom": "^19.2.1",
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.5.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.2.1",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
