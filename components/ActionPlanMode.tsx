@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ActionPlanCycle, CheckInStatus, DayCheckIn, ValueEntry } from '../types';
 import { deriveTopValues, generateActionPlan } from '../services/actionPlanService';
 import { trackEvent } from '../services/analyticsService';
-import { CalendarDays, FileDown, Loader2, RotateCcw, Target } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Clock3, FileDown, Flame, Loader2, RotateCcw, Target } from 'lucide-react';
 
 interface ActionPlanModeProps {
   entries: ValueEntry[];
@@ -21,6 +21,12 @@ const statusLabels: Record<CheckInStatus, string> = {
   skipped: 'Skipped',
 };
 
+const statusAccent: Record<CheckInStatus, string> = {
+  done: 'text-teal-300 border-teal-500/50 bg-teal-500/10',
+  partial: 'text-amber-300 border-amber-500/50 bg-amber-500/10',
+  skipped: 'text-rose-300 border-rose-500/40 bg-rose-500/10',
+};
+
 const dayFromTimestamp = (createdAt: number): number => {
   const msPerDay = 24 * 60 * 60 * 1000;
   const elapsed = Math.floor((Date.now() - createdAt) / msPerDay) + 1;
@@ -36,12 +42,10 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isReplanning, setIsReplanning] = useState(false);
   const [activeDay, setActiveDay] = useState(1);
-
   const [statusSelection, setStatusSelection] = useState<CheckInStatus>('done');
   const [skipReason, setSkipReason] = useState('');
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
-
   const [showExportModal, setShowExportModal] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
 
@@ -84,6 +88,11 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
   const partialDays = plan?.days.filter((day) => day.checkIn?.status === 'partial').length || 0;
   const skippedDays = plan?.days.filter((day) => day.checkIn?.status === 'skipped').length || 0;
   const completionRate = plan ? Math.round((checkedInDays / plan.days.length) * 100) : 0;
+  const activeStreak = plan?.days.reduce((streak, day) => {
+    if (day.checkIn?.status === 'done') return streak + 1;
+    return streak;
+  }, 0) || 0;
+  const nextUncheckedDay = plan?.days.find((day) => !day.checkIn)?.day;
 
   const toggleValue = (value: string) => {
     setSelectedValues((prev) => {
@@ -165,6 +174,8 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
 
     await onPlanChange(updatedPlan);
     setError(null);
+    setNote('');
+    setSkipReason('');
 
     trackEvent('checkin_submitted', {
       cycle_id: plan.id,
@@ -179,6 +190,12 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
         completion_rate: 100,
         user_segment: 'individual_self_coaching',
       });
+      return;
+    }
+
+    const followingUncheckedDay = updatedDays.find((day) => !day.checkIn)?.day;
+    if (followingUncheckedDay) {
+      setActiveDay(followingUncheckedDay);
     }
   };
 
@@ -277,50 +294,105 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
 
   if (!plan) {
     return (
-      <div className="max-w-4xl mx-auto w-full pt-8 space-y-8">
-        <div className="text-center space-y-3">
-          <h2 className="text-5xl font-black text-white tracking-tighter">Values-to-Action Plan</h2>
-          <p className="text-slate-300/80 text-lg font-light max-w-2xl mx-auto">
-            Convert your synthesis into a focused 7-day behavior loop with quick daily check-ins.
-          </p>
+      <div className="max-w-5xl mx-auto w-full pt-8 space-y-8">
+        <div className="relative overflow-hidden bg-[linear-gradient(135deg,rgba(25,194,179,0.18),rgba(242,178,79,0.16),rgba(239,106,135,0.14))] border border-white/10 rounded-[2.8rem] p-10 md:p-12 shadow-2xl">
+          <div className="absolute inset-y-0 right-0 w-1/2 opacity-30 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.35),transparent_55%)]" />
+          <div className="relative space-y-5 max-w-3xl">
+            <p className="text-[11px] font-black uppercase tracking-[0.35em] text-teal-300">7-Day Implementation Sprint</p>
+            <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter leading-none">Values-to-Action Plan</h2>
+            <p className="text-slate-200/90 text-lg font-light leading-relaxed max-w-2xl">
+              Convert your synthesis into a one-week behavior loop. Generate a practical plan, check in in under a minute, and finish with a sharable weekly summary.
+            </p>
+            <div className="flex flex-wrap gap-3 text-[11px] uppercase tracking-[0.2em]">
+              <span className="px-4 py-2 rounded-full border border-white/10 bg-black/20 text-slate-200">1-2 actions per day</span>
+              <span className="px-4 py-2 rounded-full border border-white/10 bg-black/20 text-slate-200">Cross-device persistence</span>
+              <span className="px-4 py-2 rounded-full border border-white/10 bg-black/20 text-slate-200">Coach-shareable recap</span>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-10 shadow-2xl space-y-8">
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-400 mb-4">Step 1: Select 2-3 focus values</p>
-            <div className="flex flex-wrap gap-3">
-              {recommendedValues.length > 0 ? recommendedValues.map((value) => {
-                const active = selectedValues.includes(value);
-                return (
-                  <button
-                    key={value}
-                    onClick={() => toggleValue(value)}
-                    className={`px-5 py-2.5 rounded-full border text-xs font-black uppercase tracking-[0.2em] transition-all ${active ? 'bg-teal-500/20 border-teal-400/60 text-teal-300' : 'bg-white/5 border-white/10 text-slate-300 hover:border-teal-500/40'}`}
-                  >
-                    {value}
-                  </button>
-                );
-              }) : (
-                <p className="text-slate-400 text-sm">Log more observations to generate recommended values.</p>
-              )}
+        <div className="grid grid-cols-1 xl:grid-cols-[1.35fr_0.65fr] gap-8">
+          <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-10 shadow-2xl space-y-8">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-400 mb-4">Step 1: Select 2-3 focus values</p>
+              <p className="text-sm text-slate-300 mb-5 max-w-2xl">
+                Start with the values you are already living most consistently. These become the anchors for the next seven days.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {recommendedValues.length > 0 ? recommendedValues.map((value) => {
+                  const active = selectedValues.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => toggleValue(value)}
+                      className={`px-5 py-2.5 rounded-full border text-xs font-black uppercase tracking-[0.2em] transition-all ${active ? 'bg-teal-500/20 border-teal-400/60 text-teal-300 shadow-lg shadow-teal-950/20' : 'bg-white/5 border-white/10 text-slate-300 hover:border-teal-500/40'}`}
+                    >
+                      {value}
+                    </button>
+                  );
+                }) : (
+                  <p className="text-slate-400 text-sm">Log more observations to generate recommended values.</p>
+                )}
+              </div>
+              <p className="text-slate-400 text-xs mt-4">Keep at least 2 values selected to build a meaningful weekly loop.</p>
             </div>
-            <p className="text-slate-400 text-xs mt-4">Keep at least 2 values selected to build a meaningful weekly loop.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-black">Input data</p>
+                <p className="text-3xl font-black text-white mt-2">{entries.length}</p>
+                <p className="text-xs text-slate-400 mt-2">Behavior observations available for plan generation.</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-black">Pillar spread</p>
+                <p className="text-3xl font-black text-white mt-2">{distinctPillars}</p>
+                <p className="text-xs text-slate-400 mt-2">Distinct areas represented in your recent evidence.</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-black">Weekly shape</p>
+                <p className="text-3xl font-black text-white mt-2">7</p>
+                <p className="text-xs text-slate-400 mt-2">Days of focused action with quick daily reflection.</p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleGeneratePlan}
+              disabled={!canGenerate || selectedValues.length < 2 || isGenerating}
+              className="w-full md:w-auto px-8 py-4 bg-[#0d9488] rounded-2xl text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-[#0f766e] disabled:opacity-30 transition-all flex items-center gap-3"
+            >
+              {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Target className="w-5 h-5" />}
+              Generate 7-Day Plan
+            </button>
           </div>
 
-          <div className="bg-black/20 border border-white/10 rounded-2xl p-6 text-sm text-slate-300 space-y-2">
-            <p>Readiness checks:</p>
-            <p>Entries: <span className={entries.length >= MIN_ENTRIES ? 'text-teal-300' : 'text-amber-400'}>{entries.length}/{MIN_ENTRIES}</span></p>
-            <p>Distinct pillars: <span className={distinctPillars >= MIN_PILLARS ? 'text-teal-300' : 'text-amber-400'}>{distinctPillars}/{MIN_PILLARS}</span></p>
-          </div>
+          <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-400 mb-3">Readiness checks</p>
+              <div className="space-y-3 text-sm text-slate-300">
+                <div className="flex items-center justify-between rounded-xl bg-black/20 px-4 py-3 border border-white/10">
+                  <span>Entries</span>
+                  <span className={entries.length >= MIN_ENTRIES ? 'text-teal-300' : 'text-amber-400'}>{entries.length}/{MIN_ENTRIES}</span>
+                </div>
+                <div className="flex items-center justify-between rounded-xl bg-black/20 px-4 py-3 border border-white/10">
+                  <span>Distinct pillars</span>
+                  <span className={distinctPillars >= MIN_PILLARS ? 'text-teal-300' : 'text-amber-400'}>{distinctPillars}/{MIN_PILLARS}</span>
+                </div>
+                <div className="flex items-center justify-between rounded-xl bg-black/20 px-4 py-3 border border-white/10">
+                  <span>Selected values</span>
+                  <span className={selectedValues.length >= 2 ? 'text-teal-300' : 'text-amber-400'}>{selectedValues.length}/3</span>
+                </div>
+              </div>
+            </div>
 
-          <button
-            onClick={handleGeneratePlan}
-            disabled={!canGenerate || selectedValues.length < 2 || isGenerating}
-            className="w-full md:w-auto px-8 py-4 bg-[#0d9488] rounded-2xl text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-[#0f766e] disabled:opacity-30 transition-all flex items-center gap-3"
-          >
-            {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Target className="w-5 h-5" />}
-            Generate 7-Day Plan
-          </button>
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5">
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-300">What v1 gives you</p>
+              <ul className="mt-3 space-y-3 text-sm text-slate-200">
+                <li>Concrete actions tied to values you already embody.</li>
+                <li>One-tap check-ins designed for sub-60-second completion.</li>
+                <li>A weekly summary you can keep private or export for a coach.</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -328,7 +400,7 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
 
   return (
     <div className="max-w-5xl mx-auto w-full pt-8 space-y-8">
-      <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
+      <div className="bg-[linear-gradient(135deg,rgba(25,194,179,0.14),rgba(18,37,58,0.78),rgba(242,178,79,0.12))] border border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
             <h2 className="text-4xl font-black text-white tracking-tight">7-Day Action Plan</h2>
@@ -342,63 +414,98 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
             </div>
           </div>
 
-          <div className="min-w-[220px]">
-            <div className="flex justify-between text-xs text-slate-300 mb-2">
-              <span>Completion</span>
-              <span>{completionRate}%</span>
+          <div className="grid grid-cols-3 gap-3 min-w-[280px]">
+            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black">Complete</p>
+              <p className="text-2xl text-white font-black mt-1">{completionRate}%</p>
             </div>
-            <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-              <div className="h-full bg-teal-500" style={{ width: `${completionRate}%` }} />
+            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black">Streak</p>
+              <p className="text-2xl text-white font-black mt-1">{activeStreak}</p>
             </div>
-            <p className="text-[11px] text-slate-400 mt-2">{checkedInDays}/7 check-ins completed</p>
+            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black">Next</p>
+              <p className="text-2xl text-white font-black mt-1">{nextUncheckedDay || 7}</p>
+            </div>
           </div>
+        </div>
+
+        <div className="mt-6">
+          <div className="flex justify-between text-xs text-slate-300 mb-2">
+            <span>Weekly completion arc</span>
+            <span>{checkedInDays}/7 check-ins completed</span>
+          </div>
+          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+            <div className="h-full bg-teal-500" style={{ width: `${completionRate}%` }} />
+          </div>
+          <p className="text-[11px] text-slate-400 mt-2">Cross-device persistence is active when the backend is running.</p>
         </div>
       </div>
 
-      <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6">
-        <div className="flex flex-wrap gap-3">
-          {plan.days.map((day) => {
-            const selected = activeDay === day.day;
-            const status = day.checkIn?.status;
-            return (
-              <button
-                key={day.day}
-                onClick={() => setActiveDay(day.day)}
-                className={`px-4 py-3 rounded-xl border text-left min-w-[110px] transition-all ${selected ? 'bg-teal-500/20 border-teal-400/60' : 'bg-white/5 border-white/10 hover:border-teal-500/40'}`}
-              >
-                <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-300">Day {day.day}</p>
-                <p className="text-xs mt-1 text-white truncate">{status ? statusLabels[status] : 'Pending'}</p>
-              </button>
-            );
-          })}
-        </div>
+      {activePlanDay && (
+        <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_0.7fr] gap-8">
+          <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6">
+            <div className="flex flex-wrap gap-3">
+              {plan.days.map((day) => {
+                const selected = activeDay === day.day;
+                const status = day.checkIn?.status;
+                return (
+                  <button
+                    key={day.day}
+                    onClick={() => setActiveDay(day.day)}
+                    className={`px-4 py-3 rounded-xl border text-left min-w-[110px] transition-all ${selected ? 'bg-teal-500/20 border-teal-400/60 shadow-lg shadow-teal-950/20' : 'bg-white/5 border-white/10 hover:border-teal-500/40'}`}
+                  >
+                    <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-300">Day {day.day}</p>
+                    <p className="text-xs mt-1 text-white truncate">{status ? statusLabels[status] : 'Pending'}</p>
+                  </button>
+                );
+              })}
+            </div>
 
-        {activePlanDay && (
-          <div className="space-y-6">
+            <div className="rounded-[2rem] border border-teal-500/20 bg-[linear-gradient(135deg,rgba(25,194,179,0.16),rgba(6,14,24,0.25))] p-6">
+              <div className="flex items-center gap-3 text-teal-300">
+                <Flame className="w-5 h-5" />
+                <p className="text-[11px] uppercase tracking-[0.25em] font-black">Today&apos;s focus</p>
+              </div>
+              <p className="text-white text-2xl font-black mt-4">{activePlanDay.theme}</p>
+              <p className="text-sm text-slate-300 mt-3 max-w-2xl">
+                Keep today narrow. Finish the smallest meaningful action first, then use the check-in to capture what actually happened.
+              </p>
+            </div>
+
             <div className="bg-black/20 border border-white/10 rounded-2xl p-6">
-              <p className="text-xs text-teal-400 uppercase tracking-[0.2em] font-black mb-2">Day {activePlanDay.day} theme</p>
-              <p className="text-white font-semibold">{activePlanDay.theme}</p>
+              <p className="text-xs text-teal-400 uppercase tracking-[0.2em] font-black mb-2">Day {activePlanDay.day} actions</p>
               <ul className="mt-4 space-y-3">
                 {activePlanDay.actions.map((action) => (
                   <li key={action.id} className="p-4 rounded-xl border border-white/10 bg-white/5">
                     <div className="flex items-center justify-between gap-4">
                       <p className="text-white font-medium">{action.title}</p>
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-amber-400 font-black">{action.durationMinutes}m</span>
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-amber-400 font-black flex items-center gap-1">
+                        <Clock3 className="w-3.5 h-3.5" />
+                        {action.durationMinutes}m
+                      </span>
                     </div>
-                    <p className="text-xs text-slate-300 mt-2">Value: {action.valueTag} • {action.rationale}</p>
+                    <div className="flex flex-wrap items-center gap-3 mt-3">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] uppercase tracking-[0.18em] border border-teal-500/20 bg-teal-500/10 text-teal-300 font-black">
+                        {action.valueTag}
+                      </span>
+                      <p className="text-xs text-slate-300">{action.rationale}</p>
+                    </div>
                   </li>
                 ))}
               </ul>
             </div>
+          </div>
 
-            <div className="bg-black/20 border border-white/10 rounded-2xl p-6 space-y-4">
+          <div className="space-y-8">
+            <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-6 shadow-2xl space-y-4">
               <p className="text-xs text-teal-400 uppercase tracking-[0.2em] font-black">Daily Check-in</p>
               <div className="flex flex-wrap gap-3">
                 {(['done', 'partial', 'skipped'] as CheckInStatus[]).map((status) => (
                   <button
                     key={status}
                     onClick={() => setStatusSelection(status)}
-                    className={`px-4 py-2 rounded-full border text-xs font-black uppercase tracking-[0.15em] transition-all ${statusSelection === status ? 'bg-teal-500/20 border-teal-400/60 text-teal-300' : 'bg-white/5 border-white/10 text-slate-300'}`}
+                    className={`px-4 py-2 rounded-full border text-xs font-black uppercase tracking-[0.15em] transition-all ${statusSelection === status ? statusAccent[status] : 'bg-white/5 border-white/10 text-slate-300'}`}
                   >
                     {statusLabels[status]}
                   </button>
@@ -425,7 +532,7 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
               <textarea
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
-                placeholder="Optional reflection note (required only when skipped without reason chip)."
+                placeholder="Optional reflection note. Capture the blocker, surprise, or win."
                 className="w-full h-24 p-4 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-teal-500/50"
               />
 
@@ -434,8 +541,9 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={handleSaveCheckIn}
-                  className="px-5 py-3 rounded-xl bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-black uppercase tracking-[0.2em]"
+                  className="px-5 py-3 rounded-xl bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2"
                 >
+                  <CheckCircle2 className="w-4 h-4" />
                   Save Check-in
                 </button>
                 <button
@@ -448,54 +556,65 @@ const ActionPlanMode: React.FC<ActionPlanModeProps> = ({ entries, plan, userId, 
                 </button>
               </div>
             </div>
-          </div>
-        )}
-      </div>
 
-      <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h3 className="text-2xl font-black text-white tracking-tight">Weekly Reflection</h3>
-          {plan.status !== 'completed' && (
-            <button
-              onClick={handleCompleteCycle}
-              className="px-5 py-3 rounded-xl border border-teal-500/40 bg-teal-500/10 text-teal-200 text-xs font-black uppercase tracking-[0.2em]"
-            >
-              Mark Cycle Complete
-            </button>
-          )}
-        </div>
+            <div className="bg-[#162940]/70 border border-white/10 rounded-[2.5rem] p-6 shadow-2xl space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <h3 className="text-2xl font-black text-white tracking-tight">Weekly Reflection</h3>
+                {plan.status !== 'completed' && (
+                  <button
+                    onClick={handleCompleteCycle}
+                    className="px-5 py-3 rounded-xl border border-teal-500/40 bg-teal-500/10 text-teal-200 text-xs font-black uppercase tracking-[0.2em]"
+                  >
+                    Mark Cycle Complete
+                  </button>
+                )}
+              </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div className="p-4 rounded-xl border border-white/10 bg-white/5">
-            <p className="text-slate-400 text-xs uppercase tracking-[0.2em]">Done</p>
-            <p className="text-white text-xl font-black mt-1">{doneDays}</p>
-          </div>
-          <div className="p-4 rounded-xl border border-white/10 bg-white/5">
-            <p className="text-slate-400 text-xs uppercase tracking-[0.2em]">Partial</p>
-            <p className="text-white text-xl font-black mt-1">{partialDays}</p>
-          </div>
-          <div className="p-4 rounded-xl border border-white/10 bg-white/5">
-            <p className="text-slate-400 text-xs uppercase tracking-[0.2em]">Skipped</p>
-            <p className="text-white text-xl font-black mt-1">{skippedDays}</p>
-          </div>
-        </div>
+              <div className="grid grid-cols-1 gap-4 text-sm">
+                <div className="p-4 rounded-xl border border-white/10 bg-white/5">
+                  <p className="text-slate-400 text-xs uppercase tracking-[0.2em]">Done</p>
+                  <p className="text-white text-xl font-black mt-1">{doneDays}</p>
+                </div>
+                <div className="p-4 rounded-xl border border-white/10 bg-white/5">
+                  <p className="text-slate-400 text-xs uppercase tracking-[0.2em]">Partial</p>
+                  <p className="text-white text-xl font-black mt-1">{partialDays}</p>
+                </div>
+                <div className="p-4 rounded-xl border border-white/10 bg-white/5">
+                  <p className="text-slate-400 text-xs uppercase tracking-[0.2em]">Skipped</p>
+                  <p className="text-white text-xl font-black mt-1">{skippedDays}</p>
+                </div>
+              </div>
 
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => setShowExportModal(true)}
-            className="px-5 py-3 rounded-xl border border-white/10 bg-white/5 text-slate-200 text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2"
-          >
-            <FileDown className="w-4 h-4" />
-            Export Weekly Summary
-          </button>
-          <button
-            onClick={() => onPlanChange(null)}
-            className="px-5 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-200 text-xs font-black uppercase tracking-[0.2em]"
-          >
-            Start New Cycle
-          </button>
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-slate-200">
+                <p className="text-[10px] uppercase tracking-[0.25em] font-black text-amber-300 mb-2">Interpretation</p>
+                <p>
+                  {doneDays >= 5
+                    ? 'The pattern is holding. Your values are turning into repeated behavior.'
+                    : partialDays + skippedDays > doneDays
+                      ? 'Friction is visible. Use replan to reduce ambition, not commitment.'
+                      : 'Momentum is forming. Keep the actions small enough to repeat tomorrow.'}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => setShowExportModal(true)}
+                  className="px-5 py-3 rounded-xl border border-white/10 bg-white/5 text-slate-200 text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2"
+                >
+                  <FileDown className="w-4 h-4" />
+                  Export Weekly Summary
+                </button>
+                <button
+                  onClick={() => onPlanChange(null)}
+                  className="px-5 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-200 text-xs font-black uppercase tracking-[0.2em]"
+                >
+                  Start New Cycle
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {showExportModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">

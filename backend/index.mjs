@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import { promises as fs } from 'fs';
+import fsSync from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -8,6 +9,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.join(__dirname, 'data');
 const STORE_FILE = path.join(DATA_DIR, 'store.json');
+const DIST_DIR = path.join(__dirname, '..', 'dist');
+const DIST_INDEX = path.join(DIST_DIR, 'index.html');
 
 const PORT = Number(process.env.PORT || 8787);
 const MAX_EVENTS = Number(process.env.MAX_EVENTS || 5000);
@@ -128,6 +131,15 @@ app.post('/api/v1/events', async (req, res) => {
 app.get('/api/v1/events', (_req, res) => {
   res.json({ count: store.events.length, events: store.events.slice(-100) });
 });
+
+if (fsSync.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+
+  // In production, serve the built SPA from the same service.
+  app.get(/^(?!\/api).*/, (_req, res) => {
+    res.sendFile(DIST_INDEX);
+  });
+}
 
 app.use((err, _req, res, _next) => {
   console.error(err);

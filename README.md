@@ -54,3 +54,24 @@ The backend stores data in `backend/data/store.json`:
 - `events` for analytics
 
 If backend is unavailable, the app still falls back to local storage.
+
+## Deployment
+
+The repo now supports a single-service deployment where the Node backend serves both the API and the built Vite frontend.
+
+### Render
+
+- `render.yaml` is included for a one-click Render web service setup
+- build command: `npm install && npm run build`
+- start command: `npm run start`
+
+### Docker
+
+Build and run locally:
+
+```bash
+docker build -t values-in-the-wild .
+docker run -p 8787:8787 --env-file .env.local values-in-the-wild
+```
+
+The app will be available at `http://localhost:8787`.

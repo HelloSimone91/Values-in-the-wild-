@@ -9,6 +9,7 @@
     "dev:full": "concurrently -k \"npm run dev:api\" \"npm run dev\"",
     "build": "vite build",
     "preview": "vite preview",
+    "start": "node backend/index.mjs",
     "start:api": "node backend/index.mjs"
   },
   "dependencies": {
