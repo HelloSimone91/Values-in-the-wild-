@@ -1,14 +1,71 @@
-import React from 'react';
-import { ArrowUpRight, Brain, CalendarDays, Flame, Sparkles } from 'lucide-react';
-import { recentReflections, trendBars } from '../stitchData';
+import React, { useMemo } from 'react';
+import { ArrowRight, Brain, CalendarDays, Flame, Sparkles } from 'lucide-react';
+import {
+  buildTrendBars,
+  calculateStreak,
+  formatReflectionDate,
+  ReflectionEntry,
+  ValueDefinition,
+  valueEmoji,
+} from '../stitchData';
 
-const HistoryView: React.FC = () => {
+interface HistoryViewProps {
+  reflections: ReflectionEntry[];
+  values: ValueDefinition[];
+  onSelectValue: (name: string) => void;
+  onOpenPractice: () => void;
+}
+
+const HistoryView: React.FC<HistoryViewProps> = ({ reflections, values, onSelectValue, onOpenPractice }) => {
+  const streak = useMemo(() => calculateStreak(reflections), [reflections]);
+  const trendBars = useMemo(() => buildTrendBars(reflections), [reflections]);
+  const weeklyCount = useMemo(() => trendBars.reduce((sum, day) => sum + day.count, 0), [trendBars]);
+  const practicedMap = useMemo(() => {
+    return reflections.reduce<Record<string, number>>((acc, entry) => {
+      acc[entry.value] = (acc[entry.value] || 0) + 1;
+      return acc;
+    }, {});
+  }, [reflections]);
+
+  const topValue = useMemo(() => {
+    const [name] = Object.entries(practicedMap).sort((a, b) => b[1] - a[1])[0] || [];
+    return values.find((value) => value.name === name) || null;
+  }, [practicedMap, values]);
+
+  const maxTrend = Math.max(...trendBars.map((day) => day.count), 1);
+
+  if (!reflections.length) {
+    return (
+      <section className="rounded-[2.6rem] bg-[#f9f2ed] p-8 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
+        <div className="max-w-2xl space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">
+            <Sparkles className="h-3.5 w-3.5" />
+            No reflections yet
+          </div>
+          <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e] sm:text-5xl">
+            History starts after the first real entry.
+          </h1>
+          <p className="text-base leading-7 text-[#6f6258] sm:text-lg">
+            Open Practice, pick a value, and save one grounded reflection. This screen will turn that data into streaks, trends, and signal.
+          </p>
+          <button
+            onClick={onOpenPractice}
+            className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-6 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
+          >
+            Open practice
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <div className="space-y-12">
       <header className="space-y-4">
-        <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e] sm:text-5xl">Your Journey</h1>
+        <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e] sm:text-5xl">Your History</h1>
         <p className="max-w-2xl text-base leading-7 text-[#6f6258] sm:text-lg">
-          Reflecting on your core values builds consistency and purpose. Here is a more editorial view of your progress over time.
+          This is the evidence layer. Every saved reflection becomes part of the record of how your values actually show up.
         </p>
       </header>
 
@@ -19,9 +76,9 @@ const HistoryView: React.FC = () => {
               <Flame className="h-10 w-10" />
               <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">Current streak</p>
               <p className="mt-3 font-['Plus_Jakarta_Sans'] text-6xl font-extrabold tracking-[-0.06em]">
-                12 <span className="text-2xl font-medium">days</span>
+                {streak} <span className="text-2xl font-medium">days</span>
               </p>
-              <p className="mt-8 text-sm text-[#d4ebb8]">Personal best: 24 days</p>
+              <p className="mt-8 text-sm text-[#d4ebb8]">{weeklyCount} reflections in the last 7 days</p>
             </div>
             <div className="pointer-events-none absolute -bottom-10 -right-8 opacity-10">
               <Flame className="h-40 w-40" />
@@ -30,10 +87,10 @@ const HistoryView: React.FC = () => {
 
           <section className="rounded-[2.4rem] bg-[#f1ebe5] p-8 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#7f7269]">Total reflections</p>
-            <p className="mt-3 font-['Plus_Jakarta_Sans'] text-5xl font-extrabold tracking-[-0.05em] text-[#35680e]">158</p>
+            <p className="mt-3 font-['Plus_Jakarta_Sans'] text-5xl font-extrabold tracking-[-0.05em] text-[#35680e]">{reflections.length}</p>
             <div className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#006a45]">
-              <ArrowUpRight className="h-4 w-4" />
-              +14 this week
+              <CalendarDays className="h-4 w-4" />
+              Last entry {formatReflectionDate(reflections[0].date)}
             </div>
           </section>
         </div>
@@ -41,56 +98,27 @@ const HistoryView: React.FC = () => {
         <section className="rounded-[2.4rem] bg-[#f9f2ed] p-8 shadow-[0_14px_30px_rgba(41,33,27,0.04)] md:col-span-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18] sm:text-3xl">Practice Consistency</h2>
-              <p className="mt-2 text-sm text-[#6f6258]">Frequency of reflections over the past 6 months</p>
+              <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18] sm:text-3xl">7-day consistency</h2>
+              <p className="mt-2 text-sm text-[#6f6258]">Reflections saved over the last week</p>
             </div>
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">
-              <span>Less</span>
-              <div className="flex gap-1">
-                <div className="h-3 w-3 rounded-sm bg-[#e8e1dc]" />
-                <div className="h-3 w-3 rounded-sm bg-[#b7f48b]" />
-                <div className="h-3 w-3 rounded-sm bg-[#6ea24b]" />
-                <div className="h-3 w-3 rounded-sm bg-[#234e00]" />
-              </div>
-              <span>More</span>
-            </div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Recent cadence</div>
           </div>
 
-          <div className="mt-8 overflow-x-auto">
-            <div className="grid min-w-[24rem] grid-cols-7 items-end gap-3">
-              {trendBars.map((value, index) => (
-                <div key={`${value}-${index}`} className="flex flex-col items-center gap-3">
+          <div className="mt-8 grid grid-cols-7 gap-3">
+            {trendBars.map((day) => (
+              <div key={day.label} className="flex flex-col items-center gap-3">
+                <div className="flex h-40 w-full items-end">
                   <div
-                    className={`w-full rounded-t-[1.25rem] ${index === trendBars.length - 1 ? 'bg-[#234e00]' : index % 3 === 0 ? 'bg-[#35680e]' : index % 2 === 0 ? 'bg-[#b7f48b]' : 'bg-[#e8e1dc]'}`}
-                    style={{ height: `${value * 4}px` }}
+                    className="w-full rounded-t-[1rem] bg-[#35680e]"
+                    style={{ height: `${Math.max(12, (day.count / maxTrend) * 100)}%`, opacity: day.count ? 1 : 0.18 }}
                   />
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8a7668]">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}
-                  </span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex items-center gap-4 rounded-[2rem] bg-white px-5 py-4 shadow-[0_10px_22px_rgba(41,33,27,0.04)]">
-              <div className="rounded-full bg-[#ffdcc7] p-3 text-[#964900]">
-                <Sparkles className="h-5 w-5" />
+                <div className="text-center">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">{day.label}</p>
+                  <p className="mt-1 text-sm font-bold text-[#1e1b18]">{day.count}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8a7668]">Consistency score</p>
-                <p className="mt-1 font-semibold text-[#1e1b18]">84% excellent</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 rounded-[2rem] bg-white px-5 py-4 shadow-[0_10px_22px_rgba(41,33,27,0.04)]">
-              <div className="rounded-full bg-[#d7f2dd] p-3 text-[#006a45]">
-                <CalendarDays className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8a7668]">Best month</p>
-                <p className="mt-1 font-semibold text-[#1e1b18]">October 2023</p>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
@@ -101,28 +129,45 @@ const HistoryView: React.FC = () => {
               <Brain className="h-8 w-8" />
             </div>
             <div>
-              <h2 className="font-['Plus_Jakarta_Sans'] text-3xl font-bold tracking-[-0.04em] text-[#35680e]">Mindfulness</h2>
-              <p className="mt-2 text-sm text-[#6f6258]">42 reflections this month</p>
+              <h2 className="font-['Plus_Jakarta_Sans'] text-3xl font-bold tracking-[-0.04em] text-[#35680e]">
+                {topValue ? `${valueEmoji(topValue.name)} ${topValue.name}` : 'No signal yet'}
+              </h2>
+              <p className="mt-2 text-sm text-[#6f6258]">
+                {topValue ? `${practicedMap[topValue.name]} reflections logged` : 'Keep practicing to surface a pattern'}
+              </p>
             </div>
           </div>
+          {topValue && (
+            <button
+              onClick={() => {
+                onSelectValue(topValue.name);
+                onOpenPractice();
+              }}
+              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#35680e]"
+            >
+              Practice this value again
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
         </section>
 
         <section className="rounded-[2.4rem] bg-white p-8 shadow-[0_14px_30px_rgba(41,33,27,0.04)] md:col-span-6">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">Recent history</h2>
-            <button className="inline-flex items-center gap-1 text-sm font-semibold text-[#35680e]">
-              View all
-              <ArrowUpRight className="h-4 w-4" />
+            <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">Recent reflections</h2>
+            <button onClick={onOpenPractice} className="inline-flex items-center gap-1 text-sm font-semibold text-[#35680e]">
+              Add another
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
 
           <div className="mt-6 space-y-4">
-            {recentReflections.map((item) => (
-              <article key={`${item.value}-${item.date}`} className="rounded-[1.75rem] bg-[#faf5f1] px-5 py-4">
+            {reflections.slice(0, 6).map((item) => (
+              <article key={item.id} className="rounded-[1.75rem] bg-[#faf5f1] px-5 py-4">
                 <div className="flex items-center justify-between gap-4">
                   <p className="font-['Inter'] text-[11px] font-bold uppercase tracking-[0.18em] text-[#35680e]">{item.value}</p>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">{item.date}</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">{formatReflectionDate(item.date)}</span>
                 </div>
+                <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">{item.practiceTitle}</p>
                 <p className="mt-3 text-sm leading-7 text-[#6f6258]">{item.note}</p>
               </article>
             ))}

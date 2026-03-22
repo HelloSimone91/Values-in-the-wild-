@@ -11,6 +11,7 @@ const DATA_DIR = path.join(__dirname, 'data');
 const STORE_FILE = path.join(DATA_DIR, 'store.json');
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 const DIST_INDEX = path.join(DIST_DIR, 'index.html');
+const VALUES_FILE = process.env.VALUES_FILE || '/Users/simonedeangelis/howdyhuman.com/Values-en.json';
 
 const PORT = Number(process.env.PORT || 8787);
 const MAX_EVENTS = Number(process.env.MAX_EVENTS || 5000);
@@ -73,6 +74,17 @@ app.use(
 
 app.get('/api/v1/health', (_req, res) => {
   res.json({ ok: true, now: Date.now() });
+});
+
+app.get('/api/v1/values', async (_req, res) => {
+  try {
+    const raw = await fs.readFile(VALUES_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
+    res.json({ values: parsed.values || [] });
+  } catch (error) {
+    console.error('Failed to load values file:', error);
+    res.status(500).json({ error: 'Failed to load values definitions.' });
+  }
 });
 
 app.get('/api/v1/users/:userId/action-plan', (req, res) => {

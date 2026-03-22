@@ -1,177 +1,182 @@
 export type AppView = 'library' | 'practice' | 'history';
 
-export interface ValueCard {
+export interface ValueDefinition {
   name: string;
-  emoji: string;
-  subtitle: string;
   description: string;
-  reflections: number;
+  example: string;
+  category: string;
+  tags: string[];
 }
 
 export interface PracticeItem {
+  id: string;
   title: string;
   value: string;
   description: string;
   duration: string;
   accent: 'green' | 'orange' | 'purple';
+  prompt: string;
 }
 
-export interface RecentReflection {
+export interface ReflectionEntry {
+  id: string;
   value: string;
   note: string;
   date: string;
+  practiceTitle: string;
 }
 
-export const libraryValues: ValueCard[] = [
-  {
-    name: 'Acceptance',
-    emoji: '🤲',
-    subtitle: 'Radical Presence',
-    description: 'Meeting your current reality without flinching, so you can act from truth instead of resistance.',
-    reflections: 8,
-  },
-  {
-    name: 'Authenticity',
-    emoji: '💎',
-    subtitle: 'True Self',
-    description: 'Choosing honest expression over polished performance, especially when the stakes feel personal.',
-    reflections: 15,
-  },
-  {
-    name: 'Bravery',
-    emoji: '🛡️',
-    subtitle: 'Fierce Action',
-    description:
-      'The willingness to confront uncertainty, pain, or exposure when something more important than comfort is at stake.',
-    reflections: 12,
-  },
-  {
-    name: 'Compassion',
-    emoji: '🌿',
-    subtitle: 'Shared Humanity',
-    description: 'Making room for your own softness and other people’s complexity without collapsing your boundaries.',
-    reflections: 9,
-  },
-  {
-    name: 'Connection',
-    emoji: '🔗',
-    subtitle: 'Interdependence',
-    description: 'Treating belonging as a practice, not a byproduct, by moving toward people with care and curiosity.',
-    reflections: 11,
-  },
-  {
-    name: 'Curiosity',
-    emoji: '🔍',
-    subtitle: "Beginner's Mind",
-    description: 'Approaching the familiar with questions instead of conclusions, so life keeps opening.',
-    reflections: 18,
-  },
-  {
-    name: 'Creativity',
-    emoji: '🎨',
-    subtitle: 'Soul Expression',
-    description: 'Turning inner material into outer form through making, experimenting, sketching, and shaping.',
-    reflections: 7,
-  },
-  {
-    name: 'Discipline',
-    emoji: '⏰',
-    subtitle: 'Steady Flow',
-    description: 'Building trust with yourself through repeated follow-through, especially on ordinary days.',
-    reflections: 13,
-  },
-  {
-    name: 'Clarity',
-    emoji: '🔭',
-    subtitle: 'Single Focus',
-    description: 'Reducing noise until the next right move becomes visible and easy to name.',
-    reflections: 10,
-  },
-  {
-    name: 'Collaboration',
-    emoji: '🤝',
-    subtitle: 'United Aim',
-    description: 'Creating better work with others by sharing authorship, inviting input, and holding a common standard.',
-    reflections: 6,
-  },
-];
+export const categoryAccent: Record<string, 'green' | 'orange' | 'purple'> = {
+  'Core Values': 'purple',
+  Personal: 'green',
+  Aspirations: 'orange',
+  Growth: 'green',
+  Interpersonal: 'orange',
+  Mindset: 'purple',
+  Social: 'green',
+};
 
-export const microPractices: PracticeItem[] = [
-  {
-    title: 'Pre-Meeting Breath',
-    value: 'Patience',
-    description: 'Take one deliberate breath before a hard conversation so your tone arrives before your reaction.',
-    duration: '1 min',
-    accent: 'green',
-  },
-  {
-    title: "The Difficult 'No'",
-    value: 'Courage',
-    description: 'Decline one request that does not align with your priorities, with warmth and precision.',
-    duration: '1 min',
-    accent: 'orange',
-  },
-  {
-    title: 'Signal Appreciation',
-    value: 'Gratitude',
-    description: 'Send a short note naming one thing someone did well today without adding extra context.',
-    duration: '1 min',
-    accent: 'purple',
-  },
-  {
-    title: 'Desk Reset',
-    value: 'Clarity',
-    description: 'Clear one square foot of physical space so the next task begins in a cleaner field.',
-    duration: '1 min',
-    accent: 'green',
-  },
-];
+const titleCase = (value: string) =>
+  value
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join(' ');
 
-export const deepDivePractices: PracticeItem[] = [
-  {
-    title: 'Values Journaling',
-    value: 'Gratitude',
-    description: 'Map three wins from the week back to the value that made each one possible.',
-    duration: '15 min',
-    accent: 'orange',
-  },
-  {
-    title: 'Silent Listening',
-    value: 'Empathy',
-    description: 'Spend 20 minutes with someone you care about and resist the urge to interrupt, fix, or redirect.',
-    duration: '20 min',
-    accent: 'green',
-  },
-  {
-    title: 'The Idea Forge',
-    value: 'Creativity',
-    description: 'Make something for 30 minutes with no goal beyond output and honest experimentation.',
-    duration: '30 min',
-    accent: 'purple',
-  },
-];
+export const accentClass = {
+  green: 'bg-[#d7f2dd] text-[#255b31]',
+  orange: 'bg-[#ffdcc7] text-[#723600]',
+  purple: 'bg-[#ece6ff] text-[#4f457f]',
+};
 
-export const recentReflections: RecentReflection[] = [
-  {
-    value: 'Bravery',
-    note: 'Asked the uncomfortable question in the team review instead of waiting for a cleaner moment.',
-    date: 'Today',
-  },
-  {
-    value: 'Discipline',
-    note: 'Finished the writing block before checking messages. The work felt lighter after the first ten minutes.',
-    date: 'Yesterday',
-  },
-  {
-    value: 'Connection',
-    note: 'Called my sister back without multitasking and stayed present through the whole conversation.',
-    date: 'Mar 19',
-  },
-  {
-    value: 'Curiosity',
-    note: 'Followed a strange question for half an hour and found a new direction for the project.',
-    date: 'Mar 18',
-  },
-];
+export const valueEmoji = (valueName: string) => {
+  const mapping: Record<string, string> = {
+    Acceptance: '🤲',
+    Accountability: '🧭',
+    Achievement: '🏁',
+    Action: '⚡',
+    Adventure: '🧳',
+    Advocacy: '📣',
+    Ambition: '🚀',
+    Appreciation: '🌞',
+    Approachability: '💬',
+    Authenticity: '💎',
+    Balance: '⚖️',
+    Beauty: '🌷',
+    Bravery: '🛡️',
+    Compassion: '🌿',
+    Connection: '🔗',
+    Courage: '🦁',
+    Creativity: '🎨',
+    Curiosity: '🔍',
+    Discipline: '⏰',
+    Empathy: '💙',
+    Equality: '＝',
+    Exploration: '🗺️',
+    Clarity: '🔭',
+    Collaboration: '🤝',
+    Gratitude: '✨',
+    Mindfulness: '🧠',
+  };
 
-export const trendBars = [12, 18, 15, 24, 21, 14, 28];
+  return mapping[valueName] || '✦';
+};
+
+export const createMicroPractices = (value: ValueDefinition): PracticeItem[] => {
+  const tags = value.tags.slice(0, 4);
+  const accent = categoryAccent[value.category] || 'green';
+
+  return tags.map((tag, index) => ({
+    id: `${value.name}-micro-${index}`,
+    title: `${titleCase(tag)} in motion`,
+    value: value.name,
+    description: `For one minute, choose one small way to ${tag} this value in a concrete moment today.`,
+    duration: '1 min',
+    accent,
+    prompt: `Where can you ${tag} ${value.name.toLowerCase()} in the next hour?`,
+  }));
+};
+
+export const createDeepDivePractices = (value: ValueDefinition): PracticeItem[] => {
+  const accent = categoryAccent[value.category] || 'purple';
+  const firstTag = value.tags[0] || 'practice';
+  const secondTag = value.tags[1] || 'reflect';
+
+  return [
+    {
+      id: `${value.name}-deep-example`,
+      title: `${value.name} in real life`,
+      value: value.name,
+      description: value.example,
+      duration: '15 min',
+      accent,
+      prompt: `Write about a recent moment where you either lived or avoided ${value.name.toLowerCase()}.`,
+    },
+    {
+      id: `${value.name}-deep-tags`,
+      title: `${titleCase(firstTag)} and ${titleCase(secondTag)}`,
+      value: value.name,
+      description: `Use the verbs "${firstTag}" and "${secondTag}" as prompts to design a deeper practice around ${value.name.toLowerCase()}.`,
+      duration: '20 min',
+      accent,
+      prompt: `What would it look like to ${firstTag} and ${secondTag} ${value.name.toLowerCase()} this week?`,
+    },
+    {
+      id: `${value.name}-deep-definition`,
+      title: `Define your version of ${value.name}`,
+      value: value.name,
+      description: value.description,
+      duration: '30 min',
+      accent,
+      prompt: `Translate the definition of ${value.name.toLowerCase()} into a personal rule, ritual, or standard.`,
+    },
+  ];
+};
+
+export const formatReflectionDate = (date: string) => {
+  const target = new Date(date);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const targetKey = target.toDateString();
+  if (targetKey === today.toDateString()) return 'Today';
+  if (targetKey === yesterday.toDateString()) return 'Yesterday';
+
+  return target.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+};
+
+export const buildTrendBars = (reflections: ReflectionEntry[]) => {
+  const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const today = new Date();
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (6 - index));
+    return date;
+  });
+
+  return days.map((date, index) => {
+    const count = reflections.filter((entry) => {
+      const entryDate = new Date(entry.date);
+      return entryDate.toDateString() === date.toDateString();
+    }).length;
+
+    return {
+      label: labels[index],
+      count,
+    };
+  });
+};
+
+export const calculateStreak = (reflections: ReflectionEntry[]) => {
+  const dates = new Set(reflections.map((entry) => new Date(entry.date).toDateString()));
+  const cursor = new Date();
+  let streak = 0;
+
+  while (dates.has(cursor.toDateString())) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
+};
