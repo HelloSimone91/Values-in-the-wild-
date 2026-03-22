@@ -1,4 +1,4 @@
-# Valu
+# Values in the Wild
 
 Editorial values app rebuilt from the `stitch.zip` concepts.
 
