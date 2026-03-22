@@ -47,18 +47,18 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#ece6ff] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#4f457f]">
             <Compass className="h-3.5 w-3.5" />
-            Values Library
+            Values in the Wild
           </div>
           <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e] sm:text-5xl lg:text-6xl">
-            Definitions you can actually <span className="italic text-[#ff8000]">work with</span>
+            A field guide to the values you <span className="italic text-[#ff8000]">actually live</span>
           </h1>
           <p className="max-w-3xl text-base leading-7 text-[#6f6258] sm:text-lg">
-            Search the full library, read grounded definitions, and move directly from a value into a daily practice flow.
+            Browse the Values in the Wild field guide, read grounded definitions, and move directly from a value into practice.
           </p>
         </div>
 
         <div className="rounded-[2rem] bg-white p-5 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
-          <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Search the library</label>
+          <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Search the field guide</label>
           <div className="relative mt-3">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9f948a]" />
             <input
@@ -90,7 +90,7 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
 
       <section className="space-y-6">
         <p className="text-sm text-[#6f6258]">
-          {filteredValues.length} values
+          {filteredValues.length} values in the field guide
           {selectedValueName ? ` · current focus: ${selectedValueName}` : ''}
         </p>
 
@@ -131,7 +131,7 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
                     }}
                     className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-4 py-2 text-sm font-bold text-white"
                   >
-                    Open details
+                    Open value page
                     <ArrowRight className="h-4 w-4" />
                   </button>
                   <button
@@ -141,7 +141,7 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
                     }}
                     className="rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e]"
                   >
-                    Practice
+                    Take into practice
                   </button>
                 </div>
               </article>

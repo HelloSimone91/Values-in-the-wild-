@@ -64,16 +64,16 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#ffdcc7] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#964900]">
             <Sparkles className="h-3.5 w-3.5" />
-            Practice Studio
+            Values in the Wild
           </div>
           <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold leading-[0.92] tracking-[-0.05em] text-[#35680e] sm:text-5xl lg:text-6xl">
-            Live <span className="italic text-[#ff8000]">{selectedValue.name}</span>
+            Practice <span className="italic text-[#ff8000]">{selectedValue.name}</span> in the wild
           </h1>
           <p className="max-w-3xl text-base leading-7 text-[#6f6258] sm:text-lg">{selectedValue.description}</p>
         </div>
 
         <div className="rounded-[2rem] bg-white p-5 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
-          <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Practice a different value</label>
+          <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Switch value</label>
           <select
             value={selectedValue.name}
             onChange={(event) => onSelectValue(event.target.value)}
@@ -92,7 +92,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
         <div className="rounded-[2.5rem] bg-[#35680e] p-7 text-white shadow-[0_24px_48px_rgba(53,104,14,0.18)] sm:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">Current value</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">Today's value</p>
               <h2 className="mt-4 font-['Plus_Jakarta_Sans'] text-3xl font-extrabold tracking-[-0.05em] sm:text-4xl">
                 {valueEmoji(selectedValue.name)} {selectedValue.name}
               </h2>
@@ -118,7 +118,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
             </div>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Reflection</p>
-              <p className="mt-1 text-sm text-[#6f6258]">Choose a practice, then capture what happened.</p>
+              <p className="mt-1 text-sm text-[#6f6258]">Choose a prompt, then log what actually happened in the wild.</p>
             </div>
           </div>
 
@@ -202,7 +202,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
               <div className="rounded-full bg-[#ece6ff] p-2 text-[#4f457f]">
                 <NotebookPen className="h-5 w-5" />
               </div>
-              <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18] sm:text-3xl">Deep dives</h2>
+              <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18] sm:text-3xl">Longer sessions</h2>
             </div>
             <span className="rounded-full bg-[#f1ebe5] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6258]">15-30 minutes</span>
           </div>
@@ -237,7 +237,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Log a reflection</p>
             <h2 className="mt-3 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">
-              Capture how this value showed up today
+              Add a field note from today
             </h2>
           </div>
           <span className="rounded-full bg-[#f1ebe5] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6258]">
@@ -248,13 +248,13 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
         <textarea
           value={reflection}
           onChange={(event) => setReflection(event.target.value)}
-          placeholder={`What did ${selectedValue.name.toLowerCase()} look like in a real moment today?`}
+          placeholder={`What did ${selectedValue.name.toLowerCase()} look like in the wild today?`}
           className="mt-6 min-h-[170px] w-full rounded-[1.8rem] border border-[#ece3dc] bg-[#fff8f3] px-5 py-4 text-sm leading-7 text-[#1e1b18] outline-none transition focus:border-[#35680e]"
         />
 
         <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="max-w-2xl text-sm leading-6 text-[#6f6258]">
-            Save a specific example, not a general intention. The history view will use these entries to build streaks and trends.
+            Save a specific moment, not a general intention. Field notes power your streaks, trends, and value history.
           </p>
           <button
             onClick={handleSaveReflection}

@@ -91,9 +91,9 @@ const App: React.FC = () => {
   );
 
   const navItems: { id: AppView; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: 'library', label: 'Library', icon: LibraryBig },
+    { id: 'library', label: 'Field Guide', icon: LibraryBig },
     { id: 'practice', label: 'Practice', icon: BookOpenText },
-    { id: 'history', label: 'History', icon: History },
+    { id: 'history', label: 'Field Notes', icon: History },
   ];
 
   const handleSelectValue = (name: string) => {
@@ -133,7 +133,7 @@ const App: React.FC = () => {
         <div className="flex min-h-[50vh] items-center justify-center">
           <div className="inline-flex items-center gap-3 rounded-full bg-[#f1ebe5] px-5 py-3 text-sm font-semibold text-[#6f6258]">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Loading Values in the Wild
+            Loading the Values in the Wild field guide
           </div>
         </div>
       );
@@ -145,7 +145,7 @@ const App: React.FC = () => {
           <h1 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em]">Unable to load app data</h1>
           <p className="mt-3 text-sm leading-7">{valuesError || reflectionsError}</p>
           <p className="mt-3 text-sm leading-7">
-            Check that `Values-en.json` exists at the configured location and that the backend is running.
+            Check that the Values in the Wild library file is available and that the backend is running.
           </p>
         </div>
       );
@@ -201,7 +201,7 @@ const App: React.FC = () => {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <div className="flex min-w-0 flex-col">
             <span className="font-['Plus_Jakarta_Sans'] text-2xl font-black tracking-[-0.05em] text-[#35680e]">Values in the Wild</span>
-            <span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#8a7668]">Editorial values practice</span>
+            <span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#8a7668]">Field guide to lived values</span>
           </div>
 
           <nav className="hidden items-center gap-8 md:flex">

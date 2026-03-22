@@ -37,7 +37,7 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
     <div className="space-y-10">
       <button onClick={onBack} className="inline-flex items-center gap-2 text-sm font-semibold text-[#35680e]">
         <ArrowLeft className="h-4 w-4" />
-        Back to library
+        Back to field guide
       </button>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
@@ -53,15 +53,15 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
               </h1>
             </div>
             <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] ${accentClass[accent]}`}>
-              value detail
+              field note
             </span>
           </div>
 
           <p className="mt-8 max-w-3xl text-base leading-8 text-[#f2f8ea] sm:text-lg">{value.description}</p>
 
           <div className="mt-8 rounded-[2rem] bg-white/10 p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">What it looks like</p>
-            <p className="mt-3 text-sm leading-7 text-white">{value.example}</p>
+            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">In the wild</p>
+            <p className="mt-2 text-sm leading-7 text-white">{value.example}</p>
           </div>
 
           <div className="mt-8 flex flex-wrap gap-2">
@@ -76,19 +76,19 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
         <aside className="rounded-[2.5rem] bg-[#f9f2ed] p-8 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
           <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">
             <Sparkles className="h-3.5 w-3.5" />
-            Next step
+            Take it into practice
           </div>
           <h2 className="mt-6 font-['Plus_Jakarta_Sans'] text-3xl font-bold tracking-[-0.04em] text-[#1e1b18]">
-            Move this value into behavior
+            Turn this value into a lived move
           </h2>
           <p className="mt-4 text-sm leading-7 text-[#6f6258]">
-            Open practice prompts built from this value’s definition, example, and tags.
+            Open prompts built from this value’s definition, example, and tags, then log what happened in the wild.
           </p>
           <button
             onClick={() => onStartPractice(value.name)}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#35680e] px-6 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
           >
-            Practice {value.name}
+            Practice {value.name} in the wild
             <ArrowRight className="h-4 w-4" />
           </button>
         </aside>
@@ -97,7 +97,7 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
       <section className="rounded-[2.6rem] bg-white p-8 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Related values</p>
         <h2 className="mt-3 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">
-          Close neighbors in the library
+          Nearby values in the field guide
         </h2>
 
         {relatedValues.length ? (
@@ -120,7 +120,7 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
             ))}
           </div>
         ) : (
-          <p className="mt-6 text-sm leading-7 text-[#6f6258]">No close neighbors found for this definition yet.</p>
+          <p className="mt-6 text-sm leading-7 text-[#6f6258]">No nearby values found for this definition yet.</p>
         )}
       </section>
     </div>
