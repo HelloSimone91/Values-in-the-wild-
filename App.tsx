@@ -6,6 +6,7 @@ import HistoryView from './components/HistoryView';
 import PracticeView from './components/PracticeView';
 import ValueDetailView from './components/ValueDetailView';
 import ValuesLibraryView from './components/ValuesLibraryView';
+import valuesSeed from './data/Values-en.json';
 import { findValueBySlug, ReflectionEntry, slugifyValueName, ValueDefinition } from './stitchData';
 import { loadReflections, saveReflections } from './services/reflectionPersistenceService';
 import { getOrCreateUserId, hasSeenLanding, markLandingSeen } from './services/userSessionService';
@@ -80,13 +81,23 @@ const App: React.FC = () => {
       setValuesError(null);
 
       try {
-        const response = await fetch('/api/v1/values');
-        if (!response.ok) throw new Error('Failed to load values definitions.');
+        let loadedValues: ValueDefinition[] = [];
 
-        const payload = await response.json();
+        try {
+          const response = await fetch('/api/v1/values');
+          if (response.ok) {
+            const payload = (await response.json()) as { values?: ValueDefinition[] };
+            loadedValues = payload.values || [];
+          }
+        } catch {
+          // Static hosting falls back to the bundled values file below.
+        }
+
+        if (!loadedValues.length) {
+          loadedValues = (valuesSeed.values || []) as ValueDefinition[];
+        }
+
         if (cancelled) return;
-
-        const loadedValues = (payload.values || []) as ValueDefinition[];
         setValues(loadedValues);
 
         if (loadedValues.length && !selectedValueName) {
