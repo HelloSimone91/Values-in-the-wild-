@@ -2,25 +2,22 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpenText, History, LibraryBig, Loader2, UserCircle2 } from 'lucide-react';
 import HistoryView from './components/HistoryView';
 import PracticeView from './components/PracticeView';
+import ValueDetailView from './components/ValueDetailView';
 import ValuesLibraryView from './components/ValuesLibraryView';
 import { AppView, ReflectionEntry, ValueDefinition } from './stitchData';
-
-const REFLECTIONS_KEY = 'valu_reflections';
+import { loadReflections, saveReflections } from './services/reflectionPersistenceService';
+import { getOrCreateUserId } from './services/userSessionService';
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppView>('library');
   const [values, setValues] = useState<ValueDefinition[]>([]);
   const [selectedValueName, setSelectedValueName] = useState<string>('');
-  const [reflections, setReflections] = useState<ReflectionEntry[]>(() => {
-    const saved = localStorage.getItem(REFLECTIONS_KEY);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
   const [isLoadingValues, setIsLoadingValues] = useState(true);
+  const [isLoadingReflections, setIsLoadingReflections] = useState(true);
   const [valuesError, setValuesError] = useState<string | null>(null);
-
-  useEffect(() => {
-    localStorage.setItem(REFLECTIONS_KEY, JSON.stringify(reflections));
-  }, [reflections]);
+  const [reflectionsError, setReflectionsError] = useState<string | null>(null);
+  const [userId] = useState(() => getOrCreateUserId());
 
   useEffect(() => {
     let cancelled = false;
@@ -59,6 +56,35 @@ const App: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSavedReflections = async () => {
+      setIsLoadingReflections(true);
+      setReflectionsError(null);
+
+      try {
+        const loaded = await loadReflections(userId);
+        if (!cancelled) {
+          setReflections(loaded);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setReflectionsError(error instanceof Error ? error.message : 'Failed to load reflection history.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingReflections(false);
+        }
+      }
+    };
+
+    loadSavedReflections();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
   const selectedValue = useMemo(
     () => values.find((value) => value.name === selectedValueName) || values[0] || null,
     [selectedValueName, values]
@@ -79,43 +105,63 @@ const App: React.FC = () => {
     setView('practice');
   };
 
+  const handleOpenValue = (valueName: string) => {
+    setSelectedValueName(valueName);
+    setView('value');
+  };
+
   const handleAddReflection = (entry: Omit<ReflectionEntry, 'id' | 'date'>) => {
-    setReflections((prev) => [
-      {
-        id: `reflection_${Date.now()}`,
-        date: new Date().toISOString(),
-        ...entry,
-      },
-      ...prev,
-    ]);
+    setReflections((prev) => {
+      const nextReflections = [
+        {
+          id: `reflection_${Date.now()}`,
+          date: new Date().toISOString(),
+          ...entry,
+        },
+        ...prev,
+      ];
+
+      void saveReflections(userId, nextReflections);
+      return nextReflections;
+    });
     setView('history');
   };
 
   const renderView = () => {
-    if (isLoadingValues) {
+    if (isLoadingValues || isLoadingReflections) {
       return (
         <div className="flex min-h-[50vh] items-center justify-center">
           <div className="inline-flex items-center gap-3 rounded-full bg-[#f1ebe5] px-5 py-3 text-sm font-semibold text-[#6f6258]">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Loading values library
+            Loading Values in the Wild
           </div>
         </div>
       );
     }
 
-    if (valuesError) {
+    if (valuesError || reflectionsError) {
       return (
         <div className="rounded-[2rem] bg-[#fff1ef] p-8 text-[#93000a] shadow-[0_14px_30px_rgba(186,26,26,0.08)]">
-          <h1 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em]">Unable to load values</h1>
-          <p className="mt-3 text-sm leading-7">{valuesError}</p>
+          <h1 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em]">Unable to load app data</h1>
+          <p className="mt-3 text-sm leading-7">{valuesError || reflectionsError}</p>
           <p className="mt-3 text-sm leading-7">
-            Check that `Values-en.json` exists at the configured location and restart the server.
+            Check that `Values-en.json` exists at the configured location and that the backend is running.
           </p>
         </div>
       );
     }
 
     switch (view) {
+      case 'value':
+        return selectedValue ? (
+          <ValueDetailView
+            value={selectedValue}
+            values={values}
+            onBack={() => setView('library')}
+            onOpenValue={handleOpenValue}
+            onStartPractice={handleStartPractice}
+          />
+        ) : null;
       case 'practice':
         return (
           <PracticeView
@@ -126,7 +172,15 @@ const App: React.FC = () => {
           />
         );
       case 'history':
-        return <HistoryView reflections={reflections} values={values} onSelectValue={handleSelectValue} onOpenPractice={() => setView('practice')} />;
+        return (
+          <HistoryView
+            reflections={reflections}
+            values={values}
+            onSelectValue={handleSelectValue}
+            onOpenValue={handleOpenValue}
+            onOpenPractice={() => setView('practice')}
+          />
+        );
       case 'library':
       default:
         return (
@@ -134,6 +188,7 @@ const App: React.FC = () => {
             values={values}
             selectedValueName={selectedValue?.name || ''}
             onSelectValue={handleSelectValue}
+            onOpenValue={handleOpenValue}
             onStartPractice={handleStartPractice}
           />
         );
@@ -151,7 +206,7 @@ const App: React.FC = () => {
 
           <nav className="hidden items-center gap-8 md:flex">
             {navItems.map((item) => {
-              const active = view === item.id;
+              const active = item.id === 'library' ? view === 'library' || view === 'value' : view === item.id;
               return (
                 <button
                   key={item.id}
@@ -176,7 +231,7 @@ const App: React.FC = () => {
         <div className="mx-auto grid max-w-md grid-cols-3 gap-3">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const active = view === item.id;
+            const active = item.id === 'library' ? view === 'library' || view === 'value' : view === item.id;
             return (
               <button
                 key={item.id}

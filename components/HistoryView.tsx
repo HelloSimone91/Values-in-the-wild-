@@ -13,10 +13,11 @@ interface HistoryViewProps {
   reflections: ReflectionEntry[];
   values: ValueDefinition[];
   onSelectValue: (name: string) => void;
+  onOpenValue: (name: string) => void;
   onOpenPractice: () => void;
 }
 
-const HistoryView: React.FC<HistoryViewProps> = ({ reflections, values, onSelectValue, onOpenPractice }) => {
+const HistoryView: React.FC<HistoryViewProps> = ({ reflections, values, onSelectValue, onOpenValue, onOpenPractice }) => {
   const streak = useMemo(() => calculateStreak(reflections), [reflections]);
   const trendBars = useMemo(() => buildTrendBars(reflections), [reflections]);
   const weeklyCount = useMemo(() => trendBars.reduce((sum, day) => sum + day.count, 0), [trendBars]);
@@ -141,11 +142,11 @@ const HistoryView: React.FC<HistoryViewProps> = ({ reflections, values, onSelect
             <button
               onClick={() => {
                 onSelectValue(topValue.name);
-                onOpenPractice();
+                onOpenValue(topValue.name);
               }}
               className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#35680e]"
             >
-              Practice this value again
+              Open this value
               <ArrowRight className="h-4 w-4" />
             </button>
           )}
@@ -164,7 +165,15 @@ const HistoryView: React.FC<HistoryViewProps> = ({ reflections, values, onSelect
             {reflections.slice(0, 6).map((item) => (
               <article key={item.id} className="rounded-[1.75rem] bg-[#faf5f1] px-5 py-4">
                 <div className="flex items-center justify-between gap-4">
-                  <p className="font-['Inter'] text-[11px] font-bold uppercase tracking-[0.18em] text-[#35680e]">{item.value}</p>
+                  <button
+                    onClick={() => {
+                      onSelectValue(item.value);
+                      onOpenValue(item.value);
+                    }}
+                    className="font-['Inter'] text-[11px] font-bold uppercase tracking-[0.18em] text-[#35680e]"
+                  >
+                    {item.value}
+                  </button>
                   <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">{formatReflectionDate(item.date)}</span>
                 </div>
                 <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">{item.practiceTitle}</p>

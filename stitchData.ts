@@ -1,4 +1,4 @@
-export type AppView = 'library' | 'practice' | 'history';
+export type AppView = 'library' | 'value' | 'practice' | 'history';
 
 export interface ValueDefinition {
   name: string;

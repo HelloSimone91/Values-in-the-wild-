@@ -11,10 +11,9 @@ const DATA_DIR = path.join(__dirname, 'data');
 const STORE_FILE = path.join(DATA_DIR, 'store.json');
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 const DIST_INDEX = path.join(DIST_DIR, 'index.html');
-const VALUES_FILE = process.env.VALUES_FILE || '/Users/simonedeangelis/howdyhuman.com/Values-en.json';
+const VALUES_FILE = process.env.VALUES_FILE || path.join(__dirname, '..', 'data', 'Values-en.json');
 
 const PORT = Number(process.env.PORT || 8787);
-const MAX_EVENTS = Number(process.env.MAX_EVENTS || 5000);
 
 const parseCorsOrigins = () => {
   const raw = process.env.CORS_ORIGIN || 'http://localhost:3000';
@@ -28,8 +27,7 @@ const parseCorsOrigins = () => {
 const CORS_ORIGINS = parseCorsOrigins();
 
 const defaultStore = {
-  plans: {},
-  events: [],
+  reflections: {},
 };
 
 let store = { ...defaultStore };
@@ -42,8 +40,7 @@ const ensureStore = async () => {
     const raw = await fs.readFile(STORE_FILE, 'utf-8');
     const parsed = JSON.parse(raw);
     store = {
-      plans: parsed.plans || {},
-      events: parsed.events || [],
+      reflections: parsed.reflections || {},
     };
   } catch {
     await queuePersistStore();
@@ -87,61 +84,27 @@ app.get('/api/v1/values', async (_req, res) => {
   }
 });
 
-app.get('/api/v1/users/:userId/action-plan', (req, res) => {
+app.get('/api/v1/users/:userId/reflections', (req, res) => {
   const { userId } = req.params;
-  const plan = store.plans[userId] || null;
-  res.json(plan);
+  const reflections = store.reflections[userId] || [];
+  res.json({ reflections });
 });
 
-app.put('/api/v1/users/:userId/action-plan', async (req, res) => {
+app.put('/api/v1/users/:userId/reflections', async (req, res) => {
   const { userId } = req.params;
-  const { plan } = req.body || {};
+  const { reflections } = req.body || {};
 
   if (typeof userId !== 'string' || !userId.trim()) {
     return res.status(400).json({ error: 'Invalid userId.' });
   }
 
-  if (plan !== null && typeof plan !== 'object') {
-    return res.status(400).json({ error: 'Body must include { plan: object | null }.' });
+  if (!Array.isArray(reflections)) {
+    return res.status(400).json({ error: 'Body must include { reflections: ReflectionEntry[] }.' });
   }
 
-  if (plan && (!Array.isArray(plan.days) || !plan.id)) {
-    return res.status(400).json({ error: 'Plan must include id and days.' });
-  }
-
-  if (plan === null) {
-    delete store.plans[userId];
-  } else {
-    store.plans[userId] = plan;
-  }
-
+  store.reflections[userId] = reflections;
   await queuePersistStore();
-  res.json({ ok: true, plan: store.plans[userId] || null });
-});
-
-app.post('/api/v1/events', async (req, res) => {
-  const event = req.body || {};
-
-  if (!event.name || typeof event.name !== 'string') {
-    return res.status(400).json({ error: 'Event name is required.' });
-  }
-
-  const normalizedEvent = {
-    ...event,
-    serverReceivedAt: Date.now(),
-  };
-
-  store.events.push(normalizedEvent);
-  if (store.events.length > MAX_EVENTS) {
-    store.events = store.events.slice(-MAX_EVENTS);
-  }
-
-  await queuePersistStore();
-  res.status(201).json({ ok: true });
-});
-
-app.get('/api/v1/events', (_req, res) => {
-  res.json({ count: store.events.length, events: store.events.slice(-100) });
+  res.json({ ok: true, reflections });
 });
 
 if (fsSync.existsSync(DIST_DIR)) {
