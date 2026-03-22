@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ArrowRight, Brain, CalendarDays, Flame, Pencil, Search, SlidersHorizontal, Sparkles, Trash2, X } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, ArrowRight, Brain, CalendarDays, Flame, Pencil, Search, SlidersHorizontal, Sparkles, Trash2, X } from 'lucide-react';
 import {
   buildTrendBars,
   calculateStreak,
@@ -31,10 +31,12 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   onUpdateReflection,
   onDeleteReflection,
 }) => {
+  const PAGE_SIZE = 12;
   const [searchQuery, setSearchQuery] = useState('');
   const [valueFilter, setValueFilter] = useState('All');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [currentPage, setCurrentPage] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState('');
   const [editingPracticeTitle, setEditingPracticeTitle] = useState('');
@@ -94,6 +96,13 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   }, [practicedMap, values]);
 
   const maxTrend = Math.max(...trendBars.map((day) => day.count), 1);
+  const totalPages = Math.max(1, Math.ceil(filteredReflections.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedReflections = filteredReflections.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sortBy, timeFilter, valueFilter]);
 
   const startEditing = (entry: ReflectionEntry) => {
     setEditingId(entry.id);
@@ -366,7 +375,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
             </div>
 
             <div className="mt-6 space-y-4">
-              {filteredReflections.map((item) => {
+              {paginatedReflections.map((item) => {
                 const isEditing = editingId === item.id;
                 return (
                   <article key={item.id} className="rounded-[1.8rem] bg-[#faf5f1] p-5">
@@ -448,6 +457,32 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                 );
               })}
             </div>
+
+            {totalPages > 1 && (
+              <div className="mt-6 flex flex-col gap-3 border-t border-[#eee4dc] pt-6 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-[#6f6258]">
+                  Page {safePage} of {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    disabled={safePage === 1}
+                    className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                    disabled={safePage === totalPages}
+                    className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-[#c9d7bc]"
+                  >
+                    Next
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
         </>
       )}

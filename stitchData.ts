@@ -82,6 +82,16 @@ export const valueEmoji = (valueName: string) => {
   return mapping[valueName] || '✦';
 };
 
+export const slugifyValueName = (valueName: string) =>
+  valueName
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+export const findValueBySlug = (values: ValueDefinition[], slug: string) =>
+  values.find((value) => slugifyValueName(value.name) === slug) || null;
+
 export const createMicroPractices = (value: ValueDefinition): PracticeItem[] => {
   const tags = value.tags.slice(0, 4);
   const accent = categoryAccent[value.category] || 'green';

@@ -43,12 +43,16 @@ export const saveReflections = async (userId: string, reflections: ReflectionEnt
   if (!API_BASE) return;
 
   try {
-    await fetch(`${API_BASE}/api/v1/users/${userId}/reflections`, {
+    const response = await fetch(`${API_BASE}/api/v1/users/${userId}/reflections`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reflections }),
     });
-  } catch {
-    // Local cache already updated.
+
+    if (!response.ok) {
+      throw new Error('Failed to save field notes.');
+    }
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('Failed to save field notes.');
   }
 };
