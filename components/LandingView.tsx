@@ -12,7 +12,7 @@ const LandingView: React.FC<LandingViewProps> = ({ valueCount, onEnterFieldGuide
     <div className="space-y-8">
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)] lg:items-end">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#ece6ff] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#4f457f]">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#eef5e8] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">
             <Sparkles className="h-3.5 w-3.5" />
             Values in the Wild
           </div>
@@ -32,7 +32,7 @@ const LandingView: React.FC<LandingViewProps> = ({ valueCount, onEnterFieldGuide
             </button>
             <button
               onClick={onStartPractice}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#f1ebe5] px-6 py-3 text-sm font-semibold text-[#35680e]"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d8cdc4] bg-white px-6 py-3 text-sm font-semibold text-[#35680e]"
             >
               Begin practice
               <BookOpenText className="h-4 w-4" />

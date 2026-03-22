@@ -45,7 +45,7 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
     <div className="space-y-8">
       <header className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)] lg:items-end">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#ece6ff] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#4f457f]">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#eef5e8] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">
             <Compass className="h-3.5 w-3.5" />
             Values in the Wild
           </div>
@@ -139,7 +139,7 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
                       onSelectValue(value.name);
                       onStartPractice(value.name);
                     }}
-                    className="rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e]"
+                    className="rounded-full border border-[#e4d8cf] bg-white px-4 py-2 text-sm font-semibold text-[#35680e]"
                   >
                     Begin practice
                   </button>

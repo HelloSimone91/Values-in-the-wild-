@@ -74,7 +74,7 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
         </div>
 
         <aside className="rounded-[2.5rem] bg-[#f9f2ed] p-7 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-8">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#eef5e8] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">
             <Sparkles className="h-3.5 w-3.5" />
             Practice
           </div>

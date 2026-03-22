@@ -136,7 +136,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
     return (
       <section className="rounded-[2.6rem] bg-[#f9f2ed] p-8 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
         <div className="max-w-2xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#eef5e8] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">
             <Sparkles className="h-3.5 w-3.5" />
             No field notes yet
           </div>
@@ -333,7 +333,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
             <section className="rounded-[2.4rem] bg-white p-7 shadow-[0_14px_30px_rgba(41,33,27,0.04)] md:col-span-6">
               <div className="flex items-center justify-between gap-4">
                 <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">Recent field notes</h2>
-                <button onClick={onOpenPractice} className="inline-flex items-center gap-1 text-sm font-semibold text-[#35680e]">
+                <button onClick={onOpenPractice} className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-4 py-2 text-sm font-bold text-white">
                   Add field note
                   <ArrowRight className="h-4 w-4" />
                 </button>
