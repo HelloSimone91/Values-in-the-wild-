@@ -1,15 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpenText, History, LibraryBig, Loader2, UserCircle2 } from 'lucide-react';
+import LandingView from './components/LandingView';
 import HistoryView from './components/HistoryView';
 import PracticeView from './components/PracticeView';
 import ValueDetailView from './components/ValueDetailView';
 import ValuesLibraryView from './components/ValuesLibraryView';
 import { AppView, ReflectionEntry, ValueDefinition } from './stitchData';
 import { loadReflections, saveReflections } from './services/reflectionPersistenceService';
-import { getOrCreateUserId } from './services/userSessionService';
+import { getOrCreateUserId, hasSeenLanding, markLandingSeen } from './services/userSessionService';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<AppView>('library');
+  const [view, setView] = useState<AppView>(() => (hasSeenLanding() ? 'library' : 'landing'));
   const [values, setValues] = useState<ValueDefinition[]>([]);
   const [selectedValueName, setSelectedValueName] = useState<string>('');
   const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
@@ -96,18 +97,25 @@ const App: React.FC = () => {
     { id: 'history', label: 'Field Notes', icon: History },
   ];
 
+  const navigateTo = (nextView: AppView) => {
+    if (view === 'landing' && nextView !== 'landing') {
+      markLandingSeen();
+    }
+    setView(nextView);
+  };
+
   const handleSelectValue = (name: string) => {
     setSelectedValueName(name);
   };
 
   const handleStartPractice = (valueName: string) => {
     setSelectedValueName(valueName);
-    setView('practice');
+    navigateTo('practice');
   };
 
   const handleOpenValue = (valueName: string) => {
     setSelectedValueName(valueName);
-    setView('value');
+    navigateTo('value');
   };
 
   const handleAddReflection = (entry: Omit<ReflectionEntry, 'id' | 'date'>) => {
@@ -124,7 +132,25 @@ const App: React.FC = () => {
       void saveReflections(userId, nextReflections);
       return nextReflections;
     });
-    setView('history');
+    navigateTo('history');
+  };
+
+  const handleUpdateReflection = (reflectionId: string, updates: Pick<ReflectionEntry, 'note' | 'practiceTitle'>) => {
+    setReflections((prev) => {
+      const nextReflections = prev.map((entry) =>
+        entry.id === reflectionId ? { ...entry, ...updates } : entry
+      );
+      void saveReflections(userId, nextReflections);
+      return nextReflections;
+    });
+  };
+
+  const handleDeleteReflection = (reflectionId: string) => {
+    setReflections((prev) => {
+      const nextReflections = prev.filter((entry) => entry.id !== reflectionId);
+      void saveReflections(userId, nextReflections);
+      return nextReflections;
+    });
   };
 
   const renderView = () => {
@@ -152,12 +178,26 @@ const App: React.FC = () => {
     }
 
     switch (view) {
+      case 'landing':
+        return (
+          <LandingView
+            valueCount={values.length}
+            onEnterFieldGuide={() => navigateTo('library')}
+            onStartPractice={() => {
+              if (selectedValue) {
+                handleStartPractice(selectedValue.name);
+              } else {
+                navigateTo('library');
+              }
+            }}
+          />
+        );
       case 'value':
         return selectedValue ? (
           <ValueDetailView
             value={selectedValue}
             values={values}
-            onBack={() => setView('library')}
+            onBack={() => navigateTo('library')}
             onOpenValue={handleOpenValue}
             onStartPractice={handleStartPractice}
           />
@@ -178,7 +218,9 @@ const App: React.FC = () => {
             values={values}
             onSelectValue={handleSelectValue}
             onOpenValue={handleOpenValue}
-            onOpenPractice={() => setView('practice')}
+            onOpenPractice={() => navigateTo('practice')}
+            onUpdateReflection={handleUpdateReflection}
+            onDeleteReflection={handleDeleteReflection}
           />
         );
       case 'library':
@@ -210,7 +252,7 @@ const App: React.FC = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setView(item.id)}
+                  onClick={() => navigateTo(item.id)}
                   className={`font-['Plus_Jakarta_Sans'] text-sm font-bold tracking-tight transition-colors ${active ? 'border-b-2 border-[#35680e] pb-1 text-[#35680e]' : 'text-[#85786e] hover:text-[#35680e]'}`}
                 >
                   {item.label}
@@ -235,7 +277,7 @@ const App: React.FC = () => {
             return (
               <button
                 key={item.id}
-                onClick={() => setView(item.id)}
+                onClick={() => navigateTo(item.id)}
                 className={`flex min-h-[64px] flex-col items-center justify-center rounded-full px-3 py-2 transition-all ${active ? 'bg-[#35680e] text-white shadow-[0_16px_28px_rgba(53,104,14,0.2)]' : 'text-[#85786e]'}`}
               >
                 <Icon className="h-5 w-5" />
