@@ -52,7 +52,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
     return (
       <section className="rounded-[2.5rem] bg-[#f9f2ed] p-8 text-center shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
         <p className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">
-          Choose a value to start practicing.
+          Choose a value to begin practice.
         </p>
       </section>
     );
@@ -126,9 +126,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
             {allPractices.slice(0, 4).map((practice) => {
               const active = activePractice?.id === practice.id;
               return (
-                <button
-                  key={practice.id}
-                  onClick={() => setActivePracticeId(practice.id)}
+              <button
+                key={practice.id}
+                onClick={() => setActivePracticeId(practice.id)}
                   className={`w-full rounded-[1.6rem] border px-4 py-4 text-left transition ${
                     active
                       ? 'border-[#35680e] bg-white shadow-[0_14px_26px_rgba(53,104,14,0.08)]'
@@ -172,7 +172,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
                     onClick={() => setActivePracticeId(practice.id)}
                     className="text-sm font-semibold text-[#35680e]"
                   >
-                    Select
+                    Use prompt
                   </button>
                 </div>
                 <h3 className="font-['Plus_Jakarta_Sans'] text-xl font-bold tracking-[-0.03em] text-[#1e1b18]">{practice.title}</h3>
@@ -186,10 +186,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
         <aside className="relative overflow-hidden rounded-[2.4rem] bg-[#35680e] p-8 text-white shadow-[0_24px_48px_rgba(53,104,14,0.2)] lg:col-span-5">
           <div className="relative z-10">
             <div className="inline-flex items-center rounded-full bg-[#234e00] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">
-              Active prompt
+              Current prompt
             </div>
             <h2 className="mt-6 font-['Plus_Jakarta_Sans'] text-3xl font-bold tracking-[-0.04em]">
-              {activePractice?.title || 'Choose a practice'}
+              {activePractice?.title || 'Choose a prompt'}
             </h2>
             <p className="mt-4 text-sm leading-7 text-[#d4ebb8]">{activePractice?.description}</p>
             <p className="mt-5 text-sm leading-7 text-white">{activePractice?.prompt}</p>
@@ -224,7 +224,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
                   onClick={() => setActivePracticeId(practice.id)}
                   className="mt-8 rounded-full bg-white px-5 py-3 text-sm font-bold text-[#234e00] shadow-[0_10px_24px_rgba(53,104,14,0.08)]"
                 >
-                  Focus this prompt
+                  Use prompt
                 </button>
               </article>
             ))}
@@ -235,20 +235,20 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
       <section className="rounded-[2.6rem] bg-white p-7 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Log a reflection</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Field note</p>
             <h2 className="mt-3 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">
               Add a field note from today
             </h2>
           </div>
           <span className="rounded-full bg-[#f1ebe5] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6258]">
-            {activePractice?.title || 'No practice selected'}
+            {activePractice?.title || 'No prompt selected'}
           </span>
         </div>
 
         <textarea
           value={reflection}
           onChange={(event) => setReflection(event.target.value)}
-          placeholder={`What did ${selectedValue.name.toLowerCase()} look like in the wild today?`}
+          placeholder={`Write one real moment where ${selectedValue.name.toLowerCase()} showed up in the wild today.`}
           className="mt-6 min-h-[170px] w-full rounded-[1.8rem] border border-[#ece3dc] bg-[#fff8f3] px-5 py-4 text-sm leading-7 text-[#1e1b18] outline-none transition focus:border-[#35680e]"
         />
 
@@ -261,7 +261,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
             disabled={!reflection.trim() || !activePractice}
             className="inline-flex items-center justify-center gap-2 rounded-full bg-[#35680e] px-6 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)] transition hover:bg-[#2e5a0c] disabled:cursor-not-allowed disabled:bg-[#c9d7bc]"
           >
-            Save reflection
+            Save field note
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>

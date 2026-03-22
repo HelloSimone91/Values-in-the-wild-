@@ -141,7 +141,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
             onClick={onOpenPractice}
             className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-6 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
           >
-            Start with practice
+            Begin practice
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
@@ -177,7 +177,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
               <input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="value, note, or prompt"
+                placeholder="Search by value, note, or prompt"
                 className="w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] py-3 pl-11 pr-4 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
               />
             </div>
@@ -229,7 +229,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-[#6f6258]">{filteredReflections.length} matching field notes</p>
           <button onClick={clearFilters} className="rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e]">
-            Clear filters
+            Reset filters
           </button>
         </div>
       </section>
@@ -317,7 +317,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                   }}
                   className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#35680e]"
                 >
-                  Open this value
+                  View value
                   <ArrowRight className="h-4 w-4" />
                 </button>
               )}
@@ -327,7 +327,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
               <div className="flex items-center justify-between gap-4">
                 <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">Recent field notes</h2>
                 <button onClick={onOpenPractice} className="inline-flex items-center gap-1 text-sm font-semibold text-[#35680e]">
-                  Log another
+                  Add field note
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -360,7 +360,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">All matching notes</p>
                 <h2 className="mt-3 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">
-                  Edit, refine, or remove field notes
+                  Revise or remove field notes
                 </h2>
               </div>
             </div>
@@ -412,7 +412,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                             className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#35680e]"
                           >
                             <Pencil className="h-4 w-4" />
-                            Edit
+                            Revise
                           </button>
                           <button
                             onClick={() => {
@@ -423,7 +423,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                             className="inline-flex items-center gap-2 rounded-full bg-[#fff1ef] px-4 py-2 text-sm font-semibold text-[#93000a]"
                           >
                             <Trash2 className="h-4 w-4" />
-                            Delete
+                            Remove
                           </button>
                         </div>
                       ) : (
@@ -432,14 +432,14 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                             onClick={saveEditing}
                             className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-4 py-2 text-sm font-bold text-white"
                           >
-                            Save
+                            Save changes
                           </button>
                           <button
                             onClick={cancelEditing}
                             className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#6f6258]"
                           >
                             <X className="h-4 w-4" />
-                            Cancel
+                            Discard
                           </button>
                         </div>
                       )}

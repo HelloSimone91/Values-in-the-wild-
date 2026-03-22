@@ -37,7 +37,7 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
     <div className="space-y-10">
       <button onClick={onBack} className="inline-flex items-center gap-2 text-sm font-semibold text-[#35680e]">
         <ArrowLeft className="h-4 w-4" />
-        Back to field guide
+        Back to guide
       </button>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
@@ -88,7 +88,7 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
             onClick={() => onStartPractice(value.name)}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#35680e] px-6 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
           >
-            Practice {value.name} in the wild
+            Begin {value.name} practice
             <ArrowRight className="h-4 w-4" />
           </button>
         </aside>

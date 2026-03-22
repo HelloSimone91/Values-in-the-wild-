@@ -64,7 +64,7 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Try courage, belonging, or boundaries"
+              placeholder="Search courage, belonging, or boundaries"
               className="w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] py-3 pl-11 pr-4 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
             />
           </div>
@@ -131,7 +131,7 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
                     }}
                     className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-4 py-2 text-sm font-bold text-white"
                   >
-                    Open value page
+                    View value
                     <ArrowRight className="h-4 w-4" />
                   </button>
                   <button
@@ -141,7 +141,7 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
                     }}
                     className="rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e]"
                   >
-                    Take into practice
+                    Begin practice
                   </button>
                 </div>
               </article>

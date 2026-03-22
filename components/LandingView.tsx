@@ -27,14 +27,14 @@ const LandingView: React.FC<LandingViewProps> = ({ valueCount, onEnterFieldGuide
               onClick={onEnterFieldGuide}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-[#35680e] px-6 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
             >
-              Enter the field guide
+              Browse the field guide
               <ArrowRight className="h-4 w-4" />
             </button>
             <button
               onClick={onStartPractice}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-[#f1ebe5] px-6 py-3 text-sm font-semibold text-[#35680e]"
             >
-              Start with practice
+              Begin practice
               <BookOpenText className="h-4 w-4" />
             </button>
           </div>
