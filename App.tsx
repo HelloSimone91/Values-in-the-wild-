@@ -319,7 +319,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#fff8f3] text-[#1e1b18]">
       <header className="sticky top-0 z-50 border-b border-[#efe6df] bg-[rgba(255,248,243,0.82)] backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <div className="flex min-w-0 flex-col">
             <span className="font-['Plus_Jakarta_Sans'] text-2xl font-black tracking-[-0.05em] text-[#35680e]">Values in the Wild</span>
             <span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#8a7668]">Field guide to lived values</span>
@@ -348,7 +348,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-5 pb-28 pt-10 sm:px-6 md:px-8 md:pb-16 md:pt-14">{renderRoute()}</main>
+      <main className="mx-auto max-w-7xl px-5 pb-28 pt-8 sm:px-6 md:px-8 md:pb-16 md:pt-10">{renderRoute()}</main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#efe6df] bg-[rgba(255,248,243,0.88)] px-4 pb-6 pt-3 backdrop-blur-xl md:hidden">
         <div className="mx-auto grid max-w-md grid-cols-3 gap-3">

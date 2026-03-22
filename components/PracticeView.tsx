@@ -59,9 +59,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
   }
 
   return (
-    <div className="space-y-10">
-      <header className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)] lg:items-end">
-        <div className="space-y-4">
+    <div className="space-y-8">
+      <header className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)] lg:items-end">
+        <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#ffdcc7] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#964900]">
             <Sparkles className="h-3.5 w-3.5" />
             Values in the Wild
@@ -69,10 +69,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
           <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold leading-[0.92] tracking-[-0.05em] text-[#35680e] sm:text-5xl lg:text-6xl">
             Practice <span className="italic text-[#ff8000]">{selectedValue.name}</span> in the wild
           </h1>
-          <p className="max-w-3xl text-base leading-7 text-[#6f6258] sm:text-lg">{selectedValue.description}</p>
+          <p className="max-w-2xl text-base leading-7 text-[#6f6258] sm:text-lg line-clamp-2">{selectedValue.description}</p>
         </div>
 
-        <div className="rounded-[2rem] bg-white p-5 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
+        <div className="rounded-[2rem] bg-white p-4 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-5">
           <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Switch value</label>
           <select
             value={selectedValue.name}
@@ -88,7 +88,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
         </div>
       </header>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
+      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
         <div className="rounded-[2.5rem] bg-[#35680e] p-7 text-white shadow-[0_24px_48px_rgba(53,104,14,0.18)] sm:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -101,7 +101,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
               {selectedValue.category}
             </span>
           </div>
-          <p className="mt-6 text-sm leading-7 text-[#d4ebb8]">{selectedValue.example}</p>
+          <p className="mt-5 line-clamp-3 text-sm leading-6 text-[#d4ebb8]">{selectedValue.example}</p>
           <div className="mt-6 flex flex-wrap gap-2">
             {selectedValue.tags.slice(0, 5).map((tag) => (
               <span key={tag} className="rounded-full border border-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#f2f8ea]">
@@ -111,18 +111,18 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
           </div>
         </div>
 
-        <div className="rounded-[2.5rem] bg-[#f9f2ed] p-7 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-8">
+        <div className="rounded-[2.5rem] bg-[#f9f2ed] p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-7">
           <div className="flex items-center gap-3">
             <div className="rounded-full bg-[#d7f2dd] p-2 text-[#255b31]">
               <CheckCircle2 className="h-5 w-5" />
             </div>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Reflection</p>
-              <p className="mt-1 text-sm text-[#6f6258]">Choose a prompt, then log what actually happened in the wild.</p>
+              <p className="mt-1 text-sm text-[#6f6258]">Choose a prompt and log what happened.</p>
             </div>
           </div>
 
-          <div className="mt-6 space-y-3">
+          <div className="mt-5 space-y-3">
             {allPractices.slice(0, 4).map((practice) => {
               const active = activePractice?.id === practice.id;
               return (
@@ -138,7 +138,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="font-['Plus_Jakarta_Sans'] text-lg font-bold tracking-[-0.03em] text-[#1e1b18]">{practice.title}</p>
-                      <p className="mt-1 text-sm text-[#6f6258]">{practice.duration}</p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#8a7668]">{practice.duration}</p>
                     </div>
                     <ArrowRight className={`h-4 w-4 transition ${active ? 'text-[#35680e]' : 'text-[#9f948a]'}`} />
                   </div>
@@ -149,8 +149,8 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-12">
-        <div className="space-y-6 lg:col-span-7">
+      <section className="grid gap-5 lg:grid-cols-12">
+        <div className="space-y-5 lg:col-span-7">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-[#ffdcc7] p-2 text-[#964900]">
@@ -161,10 +161,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
             <span className="rounded-full bg-[#f1ebe5] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6258]">1 minute</span>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {microPractices.map((practice) => (
-              <article key={practice.id} className="rounded-[2rem] bg-[#f9f2ed] p-7 shadow-[0_14px_32px_rgba(41,33,27,0.04)]">
-                <div className="mb-6 flex items-start justify-between gap-4">
+              <article key={practice.id} className="rounded-[2rem] bg-[#f9f2ed] p-6 shadow-[0_14px_32px_rgba(41,33,27,0.04)]">
+                <div className="mb-5 flex items-start justify-between gap-4">
                   <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] ${accentClass[practice.accent]}`}>
                     {practice.value}
                   </span>
@@ -176,14 +176,14 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
                   </button>
                 </div>
                 <h3 className="font-['Plus_Jakarta_Sans'] text-xl font-bold tracking-[-0.03em] text-[#1e1b18]">{practice.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[#6f6258]">{practice.description}</p>
-                <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8c7768]">{practice.prompt}</p>
+                <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#6f6258]">{practice.description}</p>
+                <p className="mt-4 line-clamp-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8c7768]">{practice.prompt}</p>
               </article>
             ))}
           </div>
         </div>
 
-        <aside className="relative overflow-hidden rounded-[2.4rem] bg-[#35680e] p-8 text-white shadow-[0_24px_48px_rgba(53,104,14,0.2)] lg:col-span-5">
+        <aside className="relative overflow-hidden rounded-[2.4rem] bg-[#35680e] p-7 text-white shadow-[0_24px_48px_rgba(53,104,14,0.2)] lg:col-span-5 sm:p-8">
           <div className="relative z-10">
             <div className="inline-flex items-center rounded-full bg-[#234e00] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">
               Current prompt
@@ -191,12 +191,12 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
             <h2 className="mt-6 font-['Plus_Jakarta_Sans'] text-3xl font-bold tracking-[-0.04em]">
               {activePractice?.title || 'Choose a prompt'}
             </h2>
-            <p className="mt-4 text-sm leading-7 text-[#d4ebb8]">{activePractice?.description}</p>
-            <p className="mt-5 text-sm leading-7 text-white">{activePractice?.prompt}</p>
+            <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#d4ebb8]">{activePractice?.description}</p>
+            <p className="mt-4 text-sm leading-6 text-white">{activePractice?.prompt}</p>
           </div>
         </aside>
 
-        <section className="space-y-6 lg:col-span-12">
+        <section className="space-y-5 lg:col-span-12">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-[#ece6ff] p-2 text-[#4f457f]">
@@ -207,18 +207,18 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
             <span className="rounded-full bg-[#f1ebe5] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6258]">15-30 minutes</span>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             {deepDivePractices.map((practice) => (
               <article
                 key={practice.id}
-                className="flex min-h-[24rem] flex-col justify-between rounded-[2.4rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.45),rgba(241,235,229,0.98))] p-7 shadow-[0_18px_34px_rgba(41,33,27,0.05)]"
+                className="flex min-h-[21rem] flex-col justify-between rounded-[2.4rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.45),rgba(241,235,229,0.98))] p-6 shadow-[0_18px_34px_rgba(41,33,27,0.05)]"
               >
                 <div>
                   <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] ${accentClass[practice.accent]}`}>
                     {practice.value}
                   </span>
                   <h3 className="mt-4 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">{practice.title}</h3>
-                  <p className="mt-4 text-sm leading-7 text-[#6f6258]">{practice.description}</p>
+                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#6f6258]">{practice.description}</p>
                 </div>
                 <button
                   onClick={() => setActivePracticeId(practice.id)}
@@ -232,12 +232,12 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
         </section>
       </section>
 
-      <section className="rounded-[2.6rem] bg-white p-7 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-8">
+      <section className="rounded-[2.6rem] bg-white p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-7">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Field note</p>
             <h2 className="mt-3 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">
-              Add a field note from today
+              Add today’s note
             </h2>
           </div>
           <span className="rounded-full bg-[#f1ebe5] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6258]">
@@ -253,9 +253,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
         />
 
         <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="max-w-2xl text-sm leading-6 text-[#6f6258]">
-            Save a specific moment, not a general intention. Field notes power your streaks, trends, and value history.
-          </p>
+          <p className="max-w-2xl text-sm leading-6 text-[#6f6258]">Save a specific moment, not an intention.</p>
           <button
             onClick={handleSaveReflection}
             disabled={!reflection.trim() || !activePractice}

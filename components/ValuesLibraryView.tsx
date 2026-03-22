@@ -42,9 +42,9 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
   const featuredValues = filteredValues.slice(0, 18);
 
   return (
-    <div className="space-y-10">
-      <header className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)] lg:items-end">
-        <div className="space-y-4">
+    <div className="space-y-8">
+      <header className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)] lg:items-end">
+        <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#ece6ff] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#4f457f]">
             <Compass className="h-3.5 w-3.5" />
             Values in the Wild
@@ -52,13 +52,13 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
           <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e] sm:text-5xl lg:text-6xl">
             A field guide to the values you <span className="italic text-[#ff8000]">actually live</span>
           </h1>
-          <p className="max-w-3xl text-base leading-7 text-[#6f6258] sm:text-lg">
-            Browse the Values in the Wild field guide, read grounded definitions, and move directly from a value into practice.
+          <p className="max-w-2xl text-base leading-7 text-[#6f6258] sm:text-lg">
+            Browse the guide, then move any value straight into practice.
           </p>
         </div>
 
-        <div className="rounded-[2rem] bg-white p-5 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
-          <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Search the field guide</label>
+        <div className="rounded-[2rem] bg-white p-4 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-5">
+          <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Search</label>
           <div className="relative mt-3">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9f948a]" />
             <input
@@ -88,13 +88,13 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
         })}
       </section>
 
-      <section className="space-y-6">
+      <section className="space-y-5">
         <p className="text-sm text-[#6f6258]">
           {filteredValues.length} values in the field guide
           {selectedValueName ? ` · current focus: ${selectedValueName}` : ''}
         </p>
 
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {featuredValues.map((value) => {
             const accent = categoryAccent[value.category] || 'green';
             const active = selectedValueName === value.name;
@@ -114,16 +114,16 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
                   </span>
                   <span className="text-2xl">{valueEmoji(value.name)}</span>
                 </div>
-                <h2 className="mt-5 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">{value.name}</h2>
-                <p className="mt-3 line-clamp-4 text-sm leading-7 text-[#6f6258]">{value.description}</p>
-                <div className="mt-5 flex flex-wrap gap-2">
+                <h2 className="mt-4 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">{value.name}</h2>
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-[#6f6258]">{value.description}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
                   {value.tags.slice(0, 3).map((tag) => (
                     <span key={tag} className="rounded-full bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">
                       {tag}
                     </span>
                   ))}
                 </div>
-                <div className="mt-6 flex flex-wrap gap-3">
+                <div className="mt-5 flex flex-wrap gap-3">
                   <button
                     onClick={() => {
                       onSelectValue(value.name);
