@@ -36,6 +36,7 @@ To enable real-user auth locally, also set:
 The frontend uses Supabase magic links. The backend verifies bearer tokens and stores reflections against the authenticated user id.
 
 The repo includes a bundled copy at `data/Values-en.json`. `VALUES_FILE` is optional and only needed if you want to override that source.
+Approved editorial overlays live in `data/ValueSiteContent.json`. This file is merged onto the base values dataset at runtime so stronger reviewed copy can ship without exposing raw source text.
 
 If you want to serve the production build through the Node backend instead:
 

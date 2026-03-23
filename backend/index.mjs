@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 const DIST_INDEX = path.join(DIST_DIR, 'index.html');
 const VALUES_FILE = process.env.VALUES_FILE || path.join(__dirname, '..', 'data', 'Values-en.json');
+const SITE_CONTENT_FILE = path.join(__dirname, '..', 'data', 'ValueSiteContent.json');
 
 const PORT = Number(process.env.PORT || 8787);
 
@@ -25,6 +26,12 @@ const parseCorsOrigins = () => {
 };
 
 const CORS_ORIGINS = parseCorsOrigins();
+
+const mergeValuesWithSiteContent = (values = [], siteContentByValue = {}) =>
+  values.map((value) => ({
+    ...value,
+    siteContent: siteContentByValue[value.name] || value.siteContent,
+  }));
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
@@ -45,9 +52,13 @@ app.get('/api/v1/health', (_req, res) => {
 
 app.get('/api/v1/values', async (_req, res) => {
   try {
-    const raw = await fs.readFile(VALUES_FILE, 'utf-8');
-    const parsed = JSON.parse(raw);
-    res.json({ values: parsed.values || [] });
+    const [rawValues, rawSiteContent] = await Promise.all([
+      fs.readFile(VALUES_FILE, 'utf-8'),
+      fs.readFile(SITE_CONTENT_FILE, 'utf-8').catch(() => '{}'),
+    ]);
+    const parsedValues = JSON.parse(rawValues);
+    const parsedSiteContent = JSON.parse(rawSiteContent);
+    res.json({ values: mergeValuesWithSiteContent(parsedValues.values || [], parsedSiteContent || {}) });
   } catch (error) {
     console.error('Failed to load values file:', error);
     res.status(500).json({ error: 'Failed to load values definitions.' });

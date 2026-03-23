@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ArrowLeft, ArrowRight, Compass, Sparkles, Star } from 'lucide-react';
-import { accentClass, categoryAccent, ValueDefinition } from '../stitchData';
+import { accentClass, categoryAccent, getValueWildMoments, ValueDefinition } from '../stitchData';
 
 interface ValueDetailViewProps {
   value: ValueDefinition;
@@ -25,7 +25,8 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
   onStartPractice,
   onToggleFavorite,
 }) => {
-  const wildMoments = value.inTheWild?.length ? value.inTheWild : [value.example];
+  const siteContent = value.siteContent;
+  const wildMoments = getValueWildMoments(value, 3);
   const relatedValues = useMemo(() => {
     return values
       .filter((candidate) => candidate.name !== value.name)
@@ -42,6 +43,14 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
 
   const accent = categoryAccent[value.category] || 'green';
   const favorite = favoriteValues.includes(value.name);
+  const summary = siteContent?.summary?.value || '';
+  const shortDefinition = siteContent?.shortDefinition?.value || '';
+  const longDefinition = siteContent?.longDefinition?.value || '';
+  const misalignment = siteContent?.misalignment?.value || '';
+  const habitIdeas = siteContent?.habitIdeas?.value || [];
+  const journalPrompts = siteContent?.journalPrompts?.value || [];
+  const conversationStarters = siteContent?.conversationStarters?.value || [];
+  const popCultureSpotlight = siteContent?.popCultureSpotlight?.value;
 
   return (
     <div className="space-y-8">
@@ -87,6 +96,7 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
           </div>
 
           <p className="mt-7 max-w-3xl text-base leading-7 text-[#f2f8ea] sm:text-lg">{value.description}</p>
+          {summary ? <p className="mt-4 max-w-3xl text-sm leading-7 text-[#d4ebb8] sm:text-base">{summary}</p> : null}
 
           <div className="mt-7 rounded-[2rem] bg-white/10 p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">In the wild</p>
@@ -134,6 +144,85 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
           </button>
         </aside>
       </section>
+
+      {(shortDefinition || longDefinition || misalignment) && (
+        <section className="grid gap-4 lg:grid-cols-3">
+          {shortDefinition ? (
+            <article className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">At a glance</p>
+              <p className="mt-3 text-sm leading-7 text-[#1e1b18]">{shortDefinition}</p>
+            </article>
+          ) : null}
+          {longDefinition ? (
+            <article className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)] lg:col-span-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Longer read</p>
+              <p className="mt-3 text-sm leading-7 text-[#1e1b18]">{longDefinition}</p>
+            </article>
+          ) : null}
+          {misalignment ? (
+            <article className="rounded-[2rem] bg-[#f9f2ed] p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)] lg:col-span-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">When it slips</p>
+              <p className="mt-3 text-sm leading-7 text-[#1e1b18]">{misalignment}</p>
+            </article>
+          ) : null}
+        </section>
+      )}
+
+      {(habitIdeas.length > 0 || conversationStarters.length > 0 || journalPrompts.length > 0 || popCultureSpotlight) && (
+        <section className="grid gap-4 xl:grid-cols-2">
+          {habitIdeas.length > 0 ? (
+            <article className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Habit ideas</p>
+              <ul className="mt-4 space-y-3">
+                {habitIdeas.map((idea) => (
+                  <li key={idea} className="flex gap-3 text-sm leading-6 text-[#1e1b18]">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#35680e]" />
+                    <span>{idea}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
+          {conversationStarters.length > 0 ? (
+            <article className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Conversation starters</p>
+              <ul className="mt-4 space-y-3">
+                {conversationStarters.map((prompt) => (
+                  <li key={prompt} className="flex gap-3 text-sm leading-6 text-[#1e1b18]">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#ff8000]" />
+                    <span>{prompt}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
+          {journalPrompts.length > 0 ? (
+            <article className="rounded-[2rem] bg-white p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Journal prompts</p>
+              <ul className="mt-4 space-y-3">
+                {journalPrompts.map((prompt) => (
+                  <li key={prompt} className="flex gap-3 text-sm leading-6 text-[#1e1b18]">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#4f457f]" />
+                    <span>{prompt}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
+          {popCultureSpotlight ? (
+            <article className="rounded-[2rem] bg-[#f9f2ed] p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Pop culture spotlight</p>
+              <h2 className="mt-3 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">
+                {popCultureSpotlight.title}
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-[#1e1b18]">{popCultureSpotlight.summary}</p>
+              <p className="mt-4 rounded-[1.4rem] bg-white px-4 py-3 text-sm leading-6 text-[#6f6258]">
+                {popCultureSpotlight.takeaway}
+              </p>
+            </article>
+          ) : null}
+        </section>
+      )}
 
       <section className="rounded-[2.6rem] bg-white p-7 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Related values</p>
