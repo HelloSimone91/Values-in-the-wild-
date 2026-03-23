@@ -13,6 +13,8 @@ type TimeFilter = 'all' | '7d' | '30d' | '90d';
 type SortOption = 'newest' | 'oldest' | 'value';
 
 interface HistoryViewProps {
+  authEnabled: boolean;
+  isAuthenticated: boolean;
   reflections: ReflectionEntry[];
   values: ValueDefinition[];
   onSelectValue: (name: string) => void;
@@ -20,9 +22,12 @@ interface HistoryViewProps {
   onOpenPractice: () => void;
   onUpdateReflection: (reflectionId: string, updates: Pick<ReflectionEntry, 'note' | 'practiceTitle'>) => void;
   onDeleteReflection: (reflectionId: string) => void;
+  onRequestSignIn: () => void;
 }
 
 const HistoryView: React.FC<HistoryViewProps> = ({
+  authEnabled,
+  isAuthenticated,
   reflections,
   values,
   onSelectValue,
@@ -30,6 +35,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   onOpenPractice,
   onUpdateReflection,
   onDeleteReflection,
+  onRequestSignIn,
 }) => {
   const PAGE_SIZE = 12;
   const [searchQuery, setSearchQuery] = useState('');
@@ -131,6 +137,41 @@ const HistoryView: React.FC<HistoryViewProps> = ({
     setTimeFilter('all');
     setSortBy('newest');
   };
+
+  if (authEnabled && !isAuthenticated) {
+    return (
+      <section className="rounded-[2.6rem] bg-[#f9f2ed] p-8 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
+        <div className="max-w-2xl space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#eef5e8] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">
+            <Sparkles className="h-3.5 w-3.5" />
+            Sign in to view field notes
+          </div>
+          <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e] sm:text-5xl">
+            Your saved notes live with your account.
+          </h1>
+          <p className="text-base leading-7 text-[#6f6258] sm:text-lg">
+            Sign in with a magic link to unlock history, streaks, and editing across devices.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={onRequestSignIn}
+              className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-6 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
+            >
+              Sign in
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              onClick={onOpenPractice}
+              className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-[#35680e] shadow-[0_14px_30px_rgba(41,33,27,0.04)]"
+            >
+              Browse practice
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (!reflections.length) {
     return (

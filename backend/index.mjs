@@ -5,6 +5,7 @@ import fsSync from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { hasDatabase, initDatabase, listReflections, replaceReflections } from './database.mjs';
+import { hasSupabaseAuth, requireAuthenticatedUser } from './supabase.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,7 +35,12 @@ app.use(
 );
 
 app.get('/api/v1/health', (_req, res) => {
-  res.json({ ok: true, now: Date.now(), database: hasDatabase() ? 'configured' : 'missing' });
+  res.json({
+    ok: true,
+    now: Date.now(),
+    database: hasDatabase() ? 'configured' : 'missing',
+    auth: hasSupabaseAuth() ? 'configured' : 'missing',
+  });
 });
 
 app.get('/api/v1/values', async (_req, res) => {
@@ -57,6 +63,10 @@ const isValidReflection = (entry) => {
 };
 
 app.get('/api/v1/users/:userId/reflections', async (req, res) => {
+  if (hasSupabaseAuth()) {
+    return res.status(403).json({ error: 'Use /api/v1/me/reflections when auth is enabled.' });
+  }
+
   const { userId } = req.params;
 
   if (typeof userId !== 'string' || !userId.trim()) {
@@ -73,6 +83,10 @@ app.get('/api/v1/users/:userId/reflections', async (req, res) => {
 });
 
 app.put('/api/v1/users/:userId/reflections', async (req, res) => {
+  if (hasSupabaseAuth()) {
+    return res.status(403).json({ error: 'Use /api/v1/me/reflections when auth is enabled.' });
+  }
+
   const { userId } = req.params;
   const { reflections } = req.body || {};
 
@@ -97,6 +111,40 @@ app.put('/api/v1/users/:userId/reflections', async (req, res) => {
   }
 });
 
+app.get('/api/v1/me/reflections', async (req, res) => {
+  try {
+    const user = await requireAuthenticatedUser(req);
+    const reflections = await listReflections(user.id);
+    return res.json({ reflections });
+  } catch (error) {
+    const status = typeof error?.status === 'number' ? error.status : 503;
+    console.error('Failed to load authenticated reflections:', error);
+    return res.status(status).json({ error: error.message || 'Failed to load reflections.' });
+  }
+});
+
+app.put('/api/v1/me/reflections', async (req, res) => {
+  const { reflections } = req.body || {};
+
+  if (!Array.isArray(reflections)) {
+    return res.status(400).json({ error: 'Body must include { reflections: ReflectionEntry[] }.' });
+  }
+
+  if (!reflections.every(isValidReflection)) {
+    return res.status(400).json({ error: 'Each reflection must include id, value, note, practiceTitle, and date.' });
+  }
+
+  try {
+    const user = await requireAuthenticatedUser(req);
+    await replaceReflections(user.id, reflections);
+    return res.json({ ok: true, reflections });
+  } catch (error) {
+    const status = typeof error?.status === 'number' ? error.status : 503;
+    console.error('Failed to save authenticated reflections:', error);
+    return res.status(status).json({ error: error.message || 'Failed to save reflections.' });
+  }
+});
+
 if (fsSync.existsSync(DIST_DIR)) {
   app.use(express.static(DIST_DIR));
 
@@ -117,4 +165,5 @@ app.listen(PORT, () => {
   console.log(`Values API listening on http://localhost:${PORT}`);
   console.log(`CORS origin: ${Array.isArray(CORS_ORIGINS) ? CORS_ORIGINS.join(', ') : '*'}`);
   console.log(`Database: ${hasDatabase() ? 'configured' : 'missing DATABASE_URL'}`);
+  console.log(`Auth: ${hasSupabaseAuth() ? 'configured' : 'missing Supabase env'}`);
 });

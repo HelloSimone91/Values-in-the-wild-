@@ -8,7 +8,9 @@ The current product has four connected surfaces:
 - `Practice`: prompts generated from the selected value
 - `History`: persistent reflections, streaks, and recent entries
 
-Reflections are now stored in Postgres through the backend API. The frontend contract is unchanged.
+Reflections are stored in Postgres through the backend API. Authentication is optional by configuration:
+- without Supabase env vars, the app stays in local mode
+- with Supabase env vars, field notes and history are tied to authenticated users
 
 ## Run locally
 
@@ -22,6 +24,14 @@ This starts:
 - the backend API on `http://localhost:8787`
 
 For backend persistence, set `DATABASE_URL` to a Postgres instance. If `DATABASE_URL` is missing, the API still starts, but reflection endpoints return a storage error and the frontend falls back to local browser storage.
+
+To enable real-user auth locally, also set:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
+
+The frontend uses Supabase magic links. The backend verifies bearer tokens and stores reflections against the authenticated user id.
 
 The repo includes a bundled copy at `data/Values-en.json`. `VALUES_FILE` is optional and only needed if you want to override that source.
 
@@ -41,6 +51,21 @@ The repo includes:
 - [Dockerfile](/Users/simonedeangelis/Downloads/embodied_-values-detective/Dockerfile) for container deployment
 
 Production uses the Node backend to serve the built Vite frontend and the existing API routes.
+
+## Supabase auth setup
+
+1. Create a Supabase project.
+2. In Supabase Auth settings, enable email magic links.
+3. Add your redirect URLs:
+- local: `http://localhost:3000/guide`
+- production: `https://valuesinthewild.com/guide`
+- production: `https://www.valuesinthewild.com/guide`
+4. Add the Supabase URL + publishable key to both the frontend (`VITE_*`) and backend env vars on Render.
+
+When auth is configured:
+- `GET /api/v1/me/reflections` requires `Authorization: Bearer <access_token>`
+- `PUT /api/v1/me/reflections` requires `Authorization: Bearer <access_token>`
+- the legacy `/api/v1/users/:userId/reflections` route remains available for local-mode fallback
 
 ## Postgres
 

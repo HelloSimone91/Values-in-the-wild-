@@ -9,15 +9,26 @@ import {
 } from '../stitchData';
 
 interface PracticeViewProps {
+  authEnabled: boolean;
+  isAuthenticated: boolean;
   selectedValue: ValueDefinition | null;
   values: ValueDefinition[];
   onSelectValue: (name: string) => void;
   onAddReflection: (entry: Omit<ReflectionEntry, 'id' | 'date'>) => void;
+  onRequestSignIn: () => void;
 }
 
 type PracticeMode = 'micro' | 'deep';
 
-const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSelectValue, onAddReflection }) => {
+const PracticeView: React.FC<PracticeViewProps> = ({
+  authEnabled,
+  isAuthenticated,
+  selectedValue,
+  values,
+  onSelectValue,
+  onAddReflection,
+  onRequestSignIn,
+}) => {
   const [activePracticeId, setActivePracticeId] = useState<string>('');
   const [practiceMode, setPracticeMode] = useState<PracticeMode>('micro');
   const [reflection, setReflection] = useState('');
@@ -48,6 +59,11 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
   const activePractice = allPractices.find((practice) => practice.id === activePracticeId) || visiblePractices[0] || null;
 
   const handleSaveReflection = () => {
+    if (authEnabled && !isAuthenticated) {
+      onRequestSignIn();
+      return;
+    }
+
     if (!selectedValue || !activePractice || !reflection.trim()) return;
 
     onAddReflection({
@@ -201,21 +217,39 @@ const PracticeView: React.FC<PracticeViewProps> = ({ selectedValue, values, onSe
             </div>
           </div>
 
-          <textarea
-            value={reflection}
-            onChange={(event) => setReflection(event.target.value)}
-            placeholder={`Write one real moment where ${selectedValue.name.toLowerCase()} showed up in the wild today.`}
-            className="mt-6 min-h-[190px] w-full rounded-[1.8rem] border border-[#ece3dc] bg-[#fff8f3] px-5 py-4 text-sm leading-7 text-[#1e1b18] outline-none transition focus:border-[#35680e]"
-          />
+          {authEnabled && !isAuthenticated ? (
+            <div className="mt-6 rounded-[1.8rem] border border-[#dce7d2] bg-[#f6fbf2] p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">Sign in required</p>
+              <p className="mt-3 text-sm leading-6 text-[#4d5b43]">
+                Save field notes to your account so history, streaks, and notes follow you across devices.
+              </p>
+              <button
+                onClick={onRequestSignIn}
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#35680e] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
+              >
+                Sign in to save
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <textarea
+              value={reflection}
+              onChange={(event) => setReflection(event.target.value)}
+              placeholder={`Write one real moment where ${selectedValue.name.toLowerCase()} showed up in the wild today.`}
+              className="mt-6 min-h-[190px] w-full rounded-[1.8rem] border border-[#ece3dc] bg-[#fff8f3] px-5 py-4 text-sm leading-7 text-[#1e1b18] outline-none transition focus:border-[#35680e]"
+            />
+          )}
 
           <div className="mt-5 space-y-4">
-            <p className="text-sm leading-6 text-[#6f6258]">Save a specific moment, not an intention.</p>
+            <p className="text-sm leading-6 text-[#6f6258]">
+              {authEnabled && !isAuthenticated ? 'Sign in first, then save a specific moment.' : 'Save a specific moment, not an intention.'}
+            </p>
             <button
               onClick={handleSaveReflection}
-              disabled={!reflection.trim() || !activePractice}
+              disabled={(authEnabled ? !isAuthenticated : !reflection.trim()) || !activePractice || (!authEnabled && !reflection.trim())}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#35680e] px-6 py-3.5 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)] transition hover:bg-[#2e5a0c] disabled:cursor-not-allowed disabled:bg-[#c9d7bc]"
             >
-              Save field note
+              {authEnabled && !isAuthenticated ? 'Sign in to save' : 'Save field note'}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>

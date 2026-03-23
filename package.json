@@ -13,6 +13,7 @@
     "start:api": "node backend/index.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.99.3",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "lucide-react": "^0.556.0",

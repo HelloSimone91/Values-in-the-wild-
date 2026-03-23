@@ -4,48 +4,91 @@ const REFLECTIONS_KEY = 'values_in_the_wild_reflections';
 const configuredBase = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
 const API_BASE = configuredBase || (import.meta.env.DEV ? 'http://localhost:8787' : '');
 
-const readLocalReflections = (): ReflectionEntry[] => {
+interface ReflectionPersistenceOptions {
+  accessToken?: string | null;
+  authEnabled?: boolean;
+  userId?: string;
+}
+
+const getCacheKey = (userId = 'anonymous'): string => `${REFLECTIONS_KEY}_${userId}`;
+
+const readLocalReflections = (cacheKey: string): ReflectionEntry[] => {
   try {
-    const raw = localStorage.getItem(REFLECTIONS_KEY);
+    const raw = localStorage.getItem(cacheKey) || localStorage.getItem(REFLECTIONS_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 };
 
-const writeLocalReflections = (reflections: ReflectionEntry[]) => {
-  localStorage.setItem(REFLECTIONS_KEY, JSON.stringify(reflections));
+const writeLocalReflections = (cacheKey: string, reflections: ReflectionEntry[]) => {
+  localStorage.setItem(cacheKey, JSON.stringify(reflections));
 };
 
-export const loadReflections = async (userId: string): Promise<ReflectionEntry[]> => {
+export const loadReflections = async ({
+  accessToken,
+  authEnabled = false,
+  userId,
+}: ReflectionPersistenceOptions): Promise<ReflectionEntry[]> => {
+  const cacheKey = getCacheKey(userId);
+
+  if (authEnabled && !accessToken) {
+    return [];
+  }
+
   if (!API_BASE) {
-    return readLocalReflections();
+    return readLocalReflections(cacheKey);
   }
 
   try {
-    const response = await fetch(`${API_BASE}/api/v1/users/${userId}/reflections`);
+    const response = await fetch(
+      authEnabled ? `${API_BASE}/api/v1/me/reflections` : `${API_BASE}/api/v1/users/${userId}/reflections`,
+      {
+        headers: accessToken
+          ? {
+              Authorization: `Bearer ${accessToken}`,
+            }
+          : undefined,
+      }
+    );
     if (response.ok) {
       const payload = (await response.json()) as { reflections?: ReflectionEntry[] };
       const reflections = payload.reflections || [];
-      writeLocalReflections(reflections);
+      writeLocalReflections(cacheKey, reflections);
       return reflections;
     }
   } catch {
     // Fall back to local cache.
   }
 
-  return readLocalReflections();
+  return readLocalReflections(cacheKey);
 };
 
-export const saveReflections = async (userId: string, reflections: ReflectionEntry[]): Promise<void> => {
-  writeLocalReflections(reflections);
+export const saveReflections = async (
+  { accessToken, authEnabled = false, userId }: ReflectionPersistenceOptions,
+  reflections: ReflectionEntry[]
+): Promise<void> => {
+  const cacheKey = getCacheKey(userId);
+
+  if (authEnabled && !accessToken) {
+    throw new Error('Sign in to save field notes.');
+  }
+
+  writeLocalReflections(cacheKey, reflections);
 
   if (!API_BASE) return;
 
   try {
-    const response = await fetch(`${API_BASE}/api/v1/users/${userId}/reflections`, {
+    const response = await fetch(authEnabled ? `${API_BASE}/api/v1/me/reflections` : `${API_BASE}/api/v1/users/${userId}/reflections`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken
+          ? {
+              Authorization: `Bearer ${accessToken}`,
+            }
+          : {}),
+      },
       body: JSON.stringify({ reflections }),
     });
 

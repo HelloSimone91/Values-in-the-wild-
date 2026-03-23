@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpenText, CheckCircle2, History, LibraryBig, Loader2, TriangleAlert, UserCircle2, X } from 'lucide-react';
+import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
+import AuthDialog from './components/AuthDialog';
 import LandingView from './components/LandingView';
 import HistoryView from './components/HistoryView';
 import PracticeView from './components/PracticeView';
@@ -9,6 +11,7 @@ import ValuesLibraryView from './components/ValuesLibraryView';
 import valuesSeed from './data/Values-en.json';
 import { findValueBySlug, ReflectionEntry, slugifyValueName, ValueDefinition } from './stitchData';
 import { loadReflections, saveReflections } from './services/reflectionPersistenceService';
+import { getCurrentSession, getSupabaseClient, isSupabaseConfigured, sendMagicLink, signOutUser } from './services/supabaseClient';
 import { getOrCreateUserId, hasSeenLanding, markLandingSeen } from './services/userSessionService';
 
 type ToastTone = 'success' | 'error';
@@ -28,10 +31,18 @@ const App: React.FC = () => {
   const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
   const [isLoadingValues, setIsLoadingValues] = useState(true);
   const [isLoadingReflections, setIsLoadingReflections] = useState(true);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(isSupabaseConfigured());
   const [valuesError, setValuesError] = useState<string | null>(null);
   const [reflectionsError, setReflectionsError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [userId] = useState(() => getOrCreateUserId());
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+  const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
+  const [anonymousUserId] = useState(() => getOrCreateUserId());
+
+  const authEnabled = isSupabaseConfigured();
+  const userId = session?.user.id || anonymousUserId;
+  const accessToken = session?.access_token || null;
 
   const guideMatch = matchPath('/guide/:valueSlug', location.pathname);
   const practiceMatch = matchPath('/practice/:valueSlug', location.pathname);
@@ -72,6 +83,48 @@ const App: React.FC = () => {
     setToasts((prev) => [...prev, { id, message, tone }]);
     window.setTimeout(() => removeToast(id), 3200);
   };
+
+  useEffect(() => {
+    if (!authEnabled) {
+      setIsLoadingAuth(false);
+      return;
+    }
+
+    let active = true;
+    const supabase = getSupabaseClient();
+
+    const bootstrapSession = async () => {
+      try {
+        const nextSession = await getCurrentSession();
+        if (active) {
+          setSession(nextSession);
+        }
+      } catch (error) {
+        if (active) {
+          pushToast(error instanceof Error ? error.message : 'Unable to load your session.', 'error');
+        }
+      } finally {
+        if (active) {
+          setIsLoadingAuth(false);
+        }
+      }
+    };
+
+    void bootstrapSession();
+
+    if (!supabase) return;
+
+    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return;
+      setSession(nextSession);
+      setIsLoadingAuth(false);
+    });
+
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
+  }, [authEnabled]);
 
   useEffect(() => {
     let cancelled = false;
@@ -128,7 +181,19 @@ const App: React.FC = () => {
       setReflectionsError(null);
 
       try {
-        const loaded = await loadReflections(userId);
+        if (authEnabled && !accessToken) {
+          if (!cancelled) {
+            setReflections([]);
+            setIsLoadingReflections(false);
+          }
+          return;
+        }
+
+        const loaded = await loadReflections({
+          accessToken,
+          authEnabled,
+          userId,
+        });
         if (!cancelled) {
           setReflections(loaded);
         }
@@ -147,7 +212,7 @@ const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [accessToken, authEnabled, userId]);
 
   useEffect(() => {
     if (location.pathname === '/' && hasSeenLanding()) {
@@ -186,7 +251,45 @@ const App: React.FC = () => {
     enterApp(`/guide/${slugifyValueName(valueName)}`);
   };
 
+  const requestSignIn = () => {
+    if (!authEnabled) {
+      pushToast('Authentication is not configured for this environment.', 'error');
+      return;
+    }
+
+    setIsAuthDialogOpen(true);
+  };
+
+  const handleSendMagicLink = async (email: string) => {
+    setIsSendingMagicLink(true);
+    try {
+      await sendMagicLink(email, `${window.location.origin}/guide`);
+      setIsAuthDialogOpen(false);
+      pushToast(`Magic link sent to ${email}.`, 'success');
+    } catch (error) {
+      pushToast(error instanceof Error ? error.message : 'Unable to send magic link.', 'error');
+    } finally {
+      setIsSendingMagicLink(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+      navigate('/guide');
+      pushToast('Signed out.', 'success');
+    } catch (error) {
+      pushToast(error instanceof Error ? error.message : 'Unable to sign out.', 'error');
+    }
+  };
+
   const handleAddReflection = (entry: Omit<ReflectionEntry, 'id' | 'date'>) => {
+    if (authEnabled && !session) {
+      requestSignIn();
+      pushToast('Sign in to save field notes.', 'error');
+      return;
+    }
+
     const newReflection: ReflectionEntry = {
       id: `reflection_${Date.now()}`,
       date: new Date().toISOString(),
@@ -198,18 +301,24 @@ const App: React.FC = () => {
     setReflections(nextReflections);
     enterApp('/notes');
 
-    void saveReflections(userId, nextReflections).catch((error) => {
+    void saveReflections({ accessToken, authEnabled, userId }, nextReflections).catch((error) => {
       setReflections(previous);
       pushToast(error instanceof Error ? error.message : 'Unable to save field note.', 'error');
     });
   };
 
   const handleUpdateReflection = (reflectionId: string, updates: Pick<ReflectionEntry, 'note' | 'practiceTitle'>) => {
+    if (authEnabled && !session) {
+      requestSignIn();
+      pushToast('Sign in to revise field notes.', 'error');
+      return;
+    }
+
     const previous = reflections;
     const nextReflections = previous.map((entry) => (entry.id === reflectionId ? { ...entry, ...updates } : entry));
     setReflections(nextReflections);
 
-    void saveReflections(userId, nextReflections)
+    void saveReflections({ accessToken, authEnabled, userId }, nextReflections)
       .then(() => pushToast('Field note updated.', 'success'))
       .catch((error) => {
         setReflections(previous);
@@ -218,11 +327,17 @@ const App: React.FC = () => {
   };
 
   const handleDeleteReflection = (reflectionId: string) => {
+    if (authEnabled && !session) {
+      requestSignIn();
+      pushToast('Sign in to remove field notes.', 'error');
+      return;
+    }
+
     const previous = reflections;
     const nextReflections = previous.filter((entry) => entry.id !== reflectionId);
     setReflections(nextReflections);
 
-    void saveReflections(userId, nextReflections)
+    void saveReflections({ accessToken, authEnabled, userId }, nextReflections)
       .then(() => pushToast('Field note removed.', 'success'))
       .catch((error) => {
         setReflections(previous);
@@ -231,7 +346,7 @@ const App: React.FC = () => {
   };
 
   const renderRoute = () => {
-    if (isLoadingValues || isLoadingReflections) {
+    if (isLoadingValues || isLoadingReflections || isLoadingAuth) {
       return (
         <div className="flex min-h-[50vh] items-center justify-center">
           <div className="inline-flex items-center gap-3 rounded-full bg-[#f1ebe5] px-5 py-3 text-sm font-semibold text-[#6f6258]">
@@ -287,11 +402,14 @@ const App: React.FC = () => {
         <PracticeView
           selectedValue={selectedValue}
           values={values}
+          authEnabled={authEnabled}
+          isAuthenticated={Boolean(session)}
           onSelectValue={(name) => {
             handleSelectValue(name);
             handleStartPractice(name);
           }}
           onAddReflection={handleAddReflection}
+          onRequestSignIn={requestSignIn}
         />
       );
     }
@@ -299,6 +417,8 @@ const App: React.FC = () => {
     if (currentView === 'history') {
       return (
         <HistoryView
+          authEnabled={authEnabled}
+          isAuthenticated={Boolean(session)}
           reflections={reflections}
           values={values}
           onSelectValue={handleSelectValue}
@@ -312,6 +432,7 @@ const App: React.FC = () => {
           }}
           onUpdateReflection={handleUpdateReflection}
           onDeleteReflection={handleDeleteReflection}
+          onRequestSignIn={requestSignIn}
         />
       );
     }
@@ -353,9 +474,20 @@ const App: React.FC = () => {
             })}
           </nav>
 
-          <button className="rounded-full p-2 text-[#35680e] transition-colors hover:bg-[#f1ebe5]">
-            <UserCircle2 className="h-6 w-6" />
-          </button>
+          {authEnabled ? (
+            <button
+              onClick={session ? handleSignOut : requestSignIn}
+              className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e] transition-colors hover:bg-[#e5ddd6]"
+            >
+              <UserCircle2 className="h-5 w-5" />
+              {session ? 'Sign out' : 'Sign in'}
+            </button>
+          ) : (
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e]">
+              <UserCircle2 className="h-5 w-5" />
+              Local mode
+            </div>
+          )}
         </div>
       </header>
 
@@ -404,6 +536,13 @@ const App: React.FC = () => {
           })}
         </div>
       )}
+
+      <AuthDialog
+        isOpen={isAuthDialogOpen}
+        isSubmitting={isSendingMagicLink}
+        onClose={() => setIsAuthDialogOpen(false)}
+        onSubmit={handleSendMagicLink}
+      />
     </div>
   );
 };
