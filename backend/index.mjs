@@ -4,11 +4,10 @@ import { promises as fs } from 'fs';
 import fsSync from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { hasDatabase, initDatabase, listReflections, replaceReflections } from './database.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DATA_DIR = path.join(__dirname, 'data');
-const STORE_FILE = path.join(DATA_DIR, 'store.json');
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 const DIST_INDEX = path.join(DIST_DIR, 'index.html');
 const VALUES_FILE = process.env.VALUES_FILE || path.join(__dirname, '..', 'data', 'Values-en.json');
@@ -26,41 +25,6 @@ const parseCorsOrigins = () => {
 
 const CORS_ORIGINS = parseCorsOrigins();
 
-const defaultStore = {
-  reflections: {},
-};
-
-let store = { ...defaultStore };
-let persistQueue = Promise.resolve();
-
-const ensureStore = async () => {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-
-  try {
-    const raw = await fs.readFile(STORE_FILE, 'utf-8');
-    const parsed = JSON.parse(raw);
-    store = {
-      reflections: parsed.reflections || {},
-    };
-  } catch {
-    await queuePersistStore();
-  }
-};
-
-const persistStore = async () => {
-  const tempFile = `${STORE_FILE}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`;
-  const payload = JSON.stringify(store, null, 2);
-  await fs.writeFile(tempFile, payload, 'utf-8');
-  await fs.rename(tempFile, STORE_FILE);
-};
-
-const queuePersistStore = async () => {
-  persistQueue = persistQueue.then(() => persistStore()).catch((error) => {
-    console.error('Persist queue error:', error);
-  });
-  return persistQueue;
-};
-
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use(
@@ -70,7 +34,7 @@ app.use(
 );
 
 app.get('/api/v1/health', (_req, res) => {
-  res.json({ ok: true, now: Date.now() });
+  res.json({ ok: true, now: Date.now(), database: hasDatabase() ? 'configured' : 'missing' });
 });
 
 app.get('/api/v1/values', async (_req, res) => {
@@ -84,10 +48,28 @@ app.get('/api/v1/values', async (_req, res) => {
   }
 });
 
-app.get('/api/v1/users/:userId/reflections', (req, res) => {
+const isValidReflection = (entry) => {
+  if (!entry || typeof entry !== 'object') return false;
+
+  return [entry.id, entry.value, entry.note, entry.practiceTitle, entry.date].every(
+    (field) => typeof field === 'string' && field.trim()
+  );
+};
+
+app.get('/api/v1/users/:userId/reflections', async (req, res) => {
   const { userId } = req.params;
-  const reflections = store.reflections[userId] || [];
-  res.json({ reflections });
+
+  if (typeof userId !== 'string' || !userId.trim()) {
+    return res.status(400).json({ error: 'Invalid userId.' });
+  }
+
+  try {
+    const reflections = await listReflections(userId);
+    return res.json({ reflections });
+  } catch (error) {
+    console.error('Failed to load reflections:', error);
+    return res.status(503).json({ error: 'Reflection storage is not configured.' });
+  }
 });
 
 app.put('/api/v1/users/:userId/reflections', async (req, res) => {
@@ -102,9 +84,17 @@ app.put('/api/v1/users/:userId/reflections', async (req, res) => {
     return res.status(400).json({ error: 'Body must include { reflections: ReflectionEntry[] }.' });
   }
 
-  store.reflections[userId] = reflections;
-  await queuePersistStore();
-  res.json({ ok: true, reflections });
+  if (!reflections.every(isValidReflection)) {
+    return res.status(400).json({ error: 'Each reflection must include id, value, note, practiceTitle, and date.' });
+  }
+
+  try {
+    await replaceReflections(userId, reflections);
+    return res.json({ ok: true, reflections });
+  } catch (error) {
+    console.error('Failed to save reflections:', error);
+    return res.status(503).json({ error: 'Reflection storage is not configured.' });
+  }
 });
 
 if (fsSync.existsSync(DIST_DIR)) {
@@ -121,9 +111,10 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-await ensureStore();
+await initDatabase();
 
 app.listen(PORT, () => {
   console.log(`Values API listening on http://localhost:${PORT}`);
   console.log(`CORS origin: ${Array.isArray(CORS_ORIGINS) ? CORS_ORIGINS.join(', ') : '*'}`);
+  console.log(`Database: ${hasDatabase() ? 'configured' : 'missing DATABASE_URL'}`);
 });
