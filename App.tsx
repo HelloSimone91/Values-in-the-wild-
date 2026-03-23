@@ -15,6 +15,7 @@ import { clearLocalReflections, loadLocalReflections, loadReflections, saveRefle
 import { getCurrentSession, getSupabaseClient, isSupabaseConfigured, sendMagicLink, signOutUser } from './services/supabaseClient';
 import { EntryMode, getEntryMode, getOrCreateUserId, hasSeenLanding, markLandingSeen, setEntryMode } from './services/userSessionService';
 import { trackEvent } from './services/analyticsService';
+import { loadAdminAccess } from './services/adminAccessService';
 import { AnalyticsDebugPayload, loadAnalyticsDebug } from './services/analyticsDebugService';
 
 type ToastTone = 'success' | 'error';
@@ -46,6 +47,8 @@ const App: React.FC = () => {
   const [analyticsDebug, setAnalyticsDebug] = useState<AnalyticsDebugPayload>({ events: [], summary: [], windowHours: 168 });
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
+  const [isCheckingAdminAccess, setIsCheckingAdminAccess] = useState(false);
   const [anonymousUserId] = useState(() => getOrCreateUserId());
   const [entryMode, setEntryModeState] = useState<EntryMode | null>(() => getEntryMode());
   const previousSessionUserId = useRef<string | null>(null);
@@ -206,9 +209,39 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (!isAnalyticsDebugRoute) return;
-    if (authEnabled && !session) return;
+    if (authEnabled && (!session || !hasAdminAccess)) return;
     void refreshAnalyticsDebug();
-  }, [accessToken, authEnabled, isAnalyticsDebugRoute, session]);
+  }, [accessToken, authEnabled, hasAdminAccess, isAnalyticsDebugRoute, session]);
+
+  useEffect(() => {
+    if (!authEnabled || !session) {
+      setHasAdminAccess(false);
+      setIsCheckingAdminAccess(false);
+      return;
+    }
+
+    let active = true;
+    setIsCheckingAdminAccess(true);
+
+    void loadAdminAccess(accessToken)
+      .then((payload) => {
+        if (!active) return;
+        setHasAdminAccess(Boolean(payload.admin));
+      })
+      .catch(() => {
+        if (!active) return;
+        setHasAdminAccess(false);
+      })
+      .finally(() => {
+        if (active) {
+          setIsCheckingAdminAccess(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [accessToken, authEnabled, session]);
 
   useEffect(() => {
     let cancelled = false;
@@ -603,8 +636,9 @@ const App: React.FC = () => {
         <AnalyticsDebugView
           error={analyticsError}
           events={analyticsDebug.events}
+          hasAdminAccess={!authEnabled ? false : hasAdminAccess}
           isAuthenticated={!authEnabled || Boolean(session)}
-          isLoading={isLoadingAnalytics}
+          isLoading={isLoadingAnalytics || isCheckingAdminAccess}
           onRefresh={refreshAnalyticsDebug}
           summary={analyticsDebug.summary}
           windowHours={analyticsDebug.windowHours}
@@ -651,15 +685,17 @@ const App: React.FC = () => {
 
           {authEnabled ? (
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => enterApp('/debug/analytics')}
-                className={`hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors lg:inline-flex ${
-                  currentView === 'debug' ? 'bg-[#35680e] text-white' : 'bg-[#f1ebe5] text-[#35680e] hover:bg-[#e5ddd6]'
-                }`}
-              >
-                <Activity className="h-4 w-4" />
-                Debug
-              </button>
+              {session && hasAdminAccess && (
+                <button
+                  onClick={() => enterApp('/debug/analytics')}
+                  className={`hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors lg:inline-flex ${
+                    currentView === 'debug' ? 'bg-[#35680e] text-white' : 'bg-[#f1ebe5] text-[#35680e] hover:bg-[#e5ddd6]'
+                  }`}
+                >
+                  <Activity className="h-4 w-4" />
+                  Debug
+                </button>
+              )}
               {!session && isGuestMode && (
                 <div className="hidden rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e] sm:inline-flex">
                   Guest mode
@@ -675,15 +711,6 @@ const App: React.FC = () => {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => enterApp('/debug/analytics')}
-                className={`hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors lg:inline-flex ${
-                  currentView === 'debug' ? 'bg-[#35680e] text-white' : 'bg-[#f1ebe5] text-[#35680e] hover:bg-[#e5ddd6]'
-                }`}
-              >
-                <Activity className="h-4 w-4" />
-                Debug
-              </button>
               <div className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e]">
                 <UserCircle2 className="h-5 w-5" />
                 Local mode

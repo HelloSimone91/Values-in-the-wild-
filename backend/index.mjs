@@ -5,7 +5,7 @@ import fsSync from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { hasDatabase, initDatabase, listRecentEvents, listReflections, recordEvent, replaceReflections, summarizeRecentEvents } from './database.mjs';
-import { hasSupabaseAuth, requireAuthenticatedUser } from './supabase.mjs';
+import { hasSupabaseAuth, isAdminUser, requireAdminUser, requireAuthenticatedUser } from './supabase.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -147,6 +147,25 @@ app.put('/api/v1/me/reflections', async (req, res) => {
   }
 });
 
+app.get('/api/v1/me/access', async (req, res) => {
+  if (!hasSupabaseAuth()) {
+    return res.json({ admin: false, authConfigured: false });
+  }
+
+  try {
+    const user = await requireAuthenticatedUser(req);
+    return res.json({
+      admin: isAdminUser(user),
+      authConfigured: true,
+      email: user.email || null,
+      userId: user.id,
+    });
+  } catch (error) {
+    const status = typeof error?.status === 'number' ? error.status : 401;
+    return res.status(status).json({ error: error.message || 'Invalid or expired session.' });
+  }
+});
+
 app.post('/api/v1/events', async (req, res) => {
   const { anonymousId, eventName, metadata } = req.body || {};
 
@@ -190,11 +209,13 @@ app.get('/api/v1/events', async (req, res) => {
 
   if (hasSupabaseAuth()) {
     try {
-      await requireAuthenticatedUser(req);
+      await requireAdminUser(req);
     } catch (error) {
-      const status = typeof error?.status === 'number' ? error.status : 401;
-      return res.status(status).json({ error: error.message || 'Invalid or expired session.' });
+      const status = typeof error?.status === 'number' ? error.status : 403;
+      return res.status(status).json({ error: error.message || 'You do not have access to analytics debug.' });
     }
+  } else {
+    return res.status(403).json({ error: 'Analytics debug requires configured auth and an admin allowlist.' });
   }
 
   try {

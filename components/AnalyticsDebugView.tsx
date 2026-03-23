@@ -18,6 +18,7 @@ interface AnalyticsSummaryItem {
 interface AnalyticsDebugViewProps {
   error: string | null;
   events: AnalyticsEvent[];
+  hasAdminAccess: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
   onRefresh: () => void;
@@ -28,6 +29,7 @@ interface AnalyticsDebugViewProps {
 const AnalyticsDebugView: React.FC<AnalyticsDebugViewProps> = ({
   error,
   events,
+  hasAdminAccess,
   isAuthenticated,
   isLoading,
   onRefresh,
@@ -52,6 +54,39 @@ const AnalyticsDebugView: React.FC<AnalyticsDebugViewProps> = ({
       </section>
     );
   }
+
+  if (!hasAdminAccess) {
+    return (
+      <section className="rounded-[2.6rem] bg-[#f9f2ed] p-8 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
+        <div className="max-w-2xl space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#eef5e8] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">
+            <Bug className="h-3.5 w-3.5" />
+            Analytics debug
+          </div>
+          <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e] sm:text-5xl">
+            Admin access required.
+          </h1>
+          <p className="text-base leading-7 text-[#6f6258] sm:text-lg">
+            This route is limited to the configured admin allowlist.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const summaryMap = summary.reduce<Record<string, number>>((acc, item) => {
+    acc[item.eventName] = item.count;
+    return acc;
+  }, {});
+
+  const guestSessions = summaryMap.guest_mode_selected || 0;
+  const signInRequests = summaryMap.sign_in_requested || 0;
+  const successfulSignIns = summaryMap.auth_signed_in || 0;
+  const guestNotesClaimed = summaryMap.guest_notes_claimed || 0;
+
+  const signInRequestRate = guestSessions > 0 ? Math.round((signInRequests / guestSessions) * 100) : 0;
+  const signInSuccessRate = signInRequests > 0 ? Math.round((successfulSignIns / signInRequests) * 100) : 0;
+  const claimRate = successfulSignIns > 0 ? Math.round((guestNotesClaimed / successfulSignIns) * 100) : 0;
 
   return (
     <div className="space-y-8">
@@ -84,6 +119,38 @@ const AnalyticsDebugView: React.FC<AnalyticsDebugViewProps> = ({
           <p className="mt-2 text-sm leading-6">{error}</p>
         </section>
       )}
+
+      <section className="rounded-[2.4rem] bg-white p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-7">
+        <div className="flex items-center gap-3">
+          <div className="rounded-full bg-[#f1ebe5] p-2 text-[#35680e]">
+            <BarChart3 className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Guest to account conversion</p>
+          </div>
+        </div>
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-[1.5rem] bg-[#fff8f3] p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Guest sessions</p>
+            <p className="mt-3 font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e]">{guestSessions}</p>
+          </div>
+          <div className="rounded-[1.5rem] bg-[#fff8f3] p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Sign-in requests</p>
+            <p className="mt-3 font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e]">{signInRequests}</p>
+            <p className="mt-2 text-xs leading-5 text-[#6f6258]">{signInRequestRate}% of guest sessions</p>
+          </div>
+          <div className="rounded-[1.5rem] bg-[#fff8f3] p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Successful sign-ins</p>
+            <p className="mt-3 font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e]">{successfulSignIns}</p>
+            <p className="mt-2 text-xs leading-5 text-[#6f6258]">{signInSuccessRate}% of sign-in requests</p>
+          </div>
+          <div className="rounded-[1.5rem] bg-[#fff8f3] p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Guest notes claimed</p>
+            <p className="mt-3 font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e]">{guestNotesClaimed}</p>
+            <p className="mt-2 text-xs leading-5 text-[#6f6258]">{claimRate}% of successful sign-ins</p>
+          </div>
+        </div>
+      </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="rounded-[2.4rem] bg-white p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-7">

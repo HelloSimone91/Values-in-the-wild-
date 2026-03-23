@@ -63,6 +63,9 @@ Production uses the Node backend to serve the built Vite frontend and the existi
 - production: `https://valuesinthewild.com/guide`
 - production: `https://www.valuesinthewild.com/guide`
 4. Add the Supabase URL + publishable key to both the frontend (`VITE_*`) and backend env vars on Render.
+5. Add at least one analytics admin allowlist env var on Render:
+- `ADMIN_EMAILS=you@example.com`
+- or `ADMIN_USER_IDS=<supabase-user-id>`
 
 When auth is configured:
 - `GET /api/v1/me/reflections` requires `Authorization: Bearer <access_token>`
@@ -101,3 +104,4 @@ Current tracked events include:
 - `guest_notes_claimed`
 
 Use `/debug/analytics` in the app to inspect recent events and counts. When auth is configured, that route requires a signed-in session.
+To lock that route down properly, configure `ADMIN_EMAILS` and/or `ADMIN_USER_IDS`. Only allowlisted users can access the analytics endpoint or see the debug button.
