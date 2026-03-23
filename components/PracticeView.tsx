@@ -82,16 +82,19 @@ const PracticeView: React.FC<PracticeViewProps> = ({
     if (!selectedValue) return;
 
     if (practiceMode === 'micro') {
-      if (!selectedChecklistItems.length) return;
+      const trimmedQuickNote = quickNote.trim();
+      if (!selectedChecklistItems.length && !trimmedQuickNote) return;
 
       const quickLines = selectedChecklistItems.map((item) => `- ${item.summary}`);
-      if (quickNote.trim()) {
-        quickLines.push('', `Note: ${quickNote.trim()}`);
-      }
+      const quickEntryNote = quickLines.length
+        ? trimmedQuickNote
+          ? `Observed today:\n${quickLines.join('\n')}\n\nNote: ${trimmedQuickNote}`
+          : `Observed today:\n${quickLines.join('\n')}`
+        : trimmedQuickNote;
 
       onAddReflection({
         value: selectedValue.name,
-        note: `Observed today:\n${quickLines.join('\n')}`,
+        note: quickEntryNote,
         practiceTitle: 'Values observed',
       });
       setCheckedQuickItems([]);
@@ -301,12 +304,34 @@ const PracticeView: React.FC<PracticeViewProps> = ({
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm leading-6 text-white">Check anything you noticed today. You can add a short note below if the moment needs context.</p>
+                  <p className="text-sm leading-6 text-white">
+                    Check anything you noticed today, or write a short note below if the moment does not fit the checklist.
+                  </p>
                 )
               ) : (
                 <p className="text-sm leading-6 text-white">{activePractice?.prompt}</p>
               )}
             </div>
+          </div>
+
+          <div className="mt-6">
+            <label className="block">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">
+                {practiceMode === 'micro' ? 'Your note' : 'Your field note'}
+              </span>
+              <textarea
+                value={practiceMode === 'micro' ? quickNote : deepReflection}
+                onChange={(event) => (practiceMode === 'micro' ? setQuickNote(event.target.value) : setDeepReflection(event.target.value))}
+                placeholder={
+                  practiceMode === 'micro'
+                    ? `Optional: add a brief note about where you saw ${selectedValue.name.toLowerCase()} today.`
+                    : `Write one real moment where ${selectedValue.name.toLowerCase()} showed up in the wild today.`
+                }
+                className={`mt-3 w-full rounded-[1.8rem] border border-[#ece3dc] bg-[#fff8f3] px-5 py-4 text-sm leading-7 text-[#1e1b18] outline-none transition focus:border-[#35680e] ${
+                  practiceMode === 'micro' ? 'min-h-[130px]' : 'min-h-[190px]'
+                }`}
+              />
+            </label>
           </div>
 
           {authConfigured && isGuestMode && (
@@ -325,26 +350,13 @@ const PracticeView: React.FC<PracticeViewProps> = ({
             </div>
           )}
 
-          <textarea
-            value={practiceMode === 'micro' ? quickNote : deepReflection}
-            onChange={(event) => (practiceMode === 'micro' ? setQuickNote(event.target.value) : setDeepReflection(event.target.value))}
-            placeholder={
-              practiceMode === 'micro'
-                ? `Optional: add a brief note about where you saw ${selectedValue.name.toLowerCase()} today.`
-                : `Write one real moment where ${selectedValue.name.toLowerCase()} showed up in the wild today.`
-            }
-            className={`mt-6 w-full rounded-[1.8rem] border border-[#ece3dc] bg-[#fff8f3] px-5 py-4 text-sm leading-7 text-[#1e1b18] outline-none transition focus:border-[#35680e] ${
-              practiceMode === 'micro' ? 'min-h-[130px]' : 'min-h-[190px]'
-            }`}
-          />
-
           <div className="mt-5 space-y-4">
             <p className="text-sm leading-6 text-[#6f6258]">
               {authConfigured && isGuestMode ? 'Guest notes stay on this device. Sign in later if you want sync.' : noteHint}
             </p>
             <button
               onClick={handleSaveReflection}
-              disabled={practiceMode === 'micro' ? !selectedChecklistItems.length : !deepReflection.trim() || !activePractice}
+              disabled={practiceMode === 'micro' ? !selectedChecklistItems.length && !quickNote.trim() : !deepReflection.trim() || !activePractice}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#35680e] px-6 py-3.5 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)] transition hover:bg-[#2e5a0c] disabled:cursor-not-allowed disabled:bg-[#c9d7bc]"
             >
               {practiceMode === 'micro' ? 'Save observation' : 'Save field note'}
