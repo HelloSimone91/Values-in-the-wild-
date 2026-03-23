@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Brain, CalendarDays, Flame, Pencil, Search, SlidersHorizontal, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Brain, CalendarDays, Flame, Pencil, Search, SlidersHorizontal, Sparkles, Star, Trash2, X } from 'lucide-react';
 import {
   buildTrendBars,
   calculateStreak,
@@ -14,6 +14,7 @@ type SortOption = 'newest' | 'oldest' | 'value';
 
 interface HistoryViewProps {
   authConfigured: boolean;
+  favoriteValues: string[];
   isGuestMode: boolean;
   isAuthenticated: boolean;
   reflections: ReflectionEntry[];
@@ -28,6 +29,7 @@ interface HistoryViewProps {
 
 const HistoryView: React.FC<HistoryViewProps> = ({
   authConfigured,
+  favoriteValues,
   isGuestMode,
   isAuthenticated,
   reflections,
@@ -102,6 +104,23 @@ const HistoryView: React.FC<HistoryViewProps> = ({
     const [name] = Object.entries(practicedMap).sort((a, b) => b[1] - a[1])[0] || [];
     return values.find((value) => value.name === name) || null;
   }, [practicedMap, values]);
+
+  const favoriteSummaries = useMemo(() => {
+    return favoriteValues
+      .map((name) => {
+        const value = values.find((entry) => entry.name === name) || null;
+        const totalNotes = reflections.filter((entry) => entry.value === name).length;
+        const visibleNotes = filteredReflections.filter((entry) => entry.value === name).length;
+
+        return {
+          name,
+          totalNotes,
+          value,
+          visibleNotes,
+        };
+      })
+      .filter((entry) => entry.value);
+  }, [favoriteValues, filteredReflections, reflections, values]);
 
   const maxTrend = Math.max(...trendBars.map((day) => day.count), 1);
   const totalPages = Math.max(1, Math.ceil(filteredReflections.length / PAGE_SIZE));
@@ -387,6 +406,65 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                   </article>
                 ))}
               </div>
+            </section>
+
+            <section className="rounded-[2.4rem] bg-[#fffdf9] p-7 shadow-[0_14px_30px_rgba(41,33,27,0.04)] md:col-span-12">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">
+                    <Star className="h-3.5 w-3.5 text-[#35680e]" />
+                    Favorites
+                  </p>
+                  <h2 className="mt-3 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">Pinned values in your notes</h2>
+                </div>
+                {!!favoriteSummaries.length && (
+                  <p className="text-sm text-[#6f6258]">Click a favorite to filter Field Notes by that value.</p>
+                )}
+              </div>
+
+              {!favoriteSummaries.length ? (
+                <p className="mt-5 text-sm leading-6 text-[#6f6258]">
+                  Favorite a value in the guide and it will appear here with its note count.
+                </p>
+              ) : (
+                <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {favoriteSummaries.map((favorite) => {
+                    const isActive = valueFilter === favorite.name;
+
+                    return (
+                      <article key={favorite.name} className="rounded-[1.8rem] bg-[#faf5f1] p-5">
+                        <div className="flex items-start justify-between gap-4">
+                          <button
+                            onClick={() => setValueFilter(isActive ? 'All' : favorite.name)}
+                            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] transition ${
+                              isActive ? 'bg-[#35680e] text-white' : 'bg-white text-[#35680e]'
+                            }`}
+                          >
+                            <Star className={`h-3.5 w-3.5 ${isActive ? 'fill-current' : ''}`} />
+                            {favorite.name}
+                          </button>
+                          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">
+                            {favorite.totalNotes} total note{favorite.totalNotes === 1 ? '' : 's'}
+                          </span>
+                        </div>
+                        <p className="mt-4 text-sm leading-6 text-[#6f6258]">
+                          {favorite.visibleNotes} note{favorite.visibleNotes === 1 ? '' : 's'} visible with current filters.
+                        </p>
+                        <button
+                          onClick={() => {
+                            onSelectValue(favorite.name);
+                            onOpenValue(favorite.name);
+                          }}
+                          className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#35680e]"
+                        >
+                          View value
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
             </section>
           </div>
 

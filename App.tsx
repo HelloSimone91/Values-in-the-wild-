@@ -1,15 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, BookOpenText, CheckCircle2, History, LibraryBig, Loader2, TriangleAlert, UserCircle2, X } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
-import AnalyticsDebugView from './components/AnalyticsDebugView';
-import AuthDialog from './components/AuthDialog';
-import LandingView from './components/LandingView';
-import HistoryView from './components/HistoryView';
-import PracticeView from './components/PracticeView';
-import ValueDetailView from './components/ValueDetailView';
-import ValuesLibraryView from './components/ValuesLibraryView';
-import valuesSeed from './data/Values-en.json';
 import { findValueBySlug, ReflectionEntry, slugifyValueName, ValueDefinition } from './stitchData';
 import { clearLocalReflections, loadLocalReflections, loadReflections, saveReflections } from './services/reflectionPersistenceService';
 import { getCurrentSession, getSupabaseClient, isSupabaseConfigured, sendMagicLink, signOutUser } from './services/supabaseClient';
@@ -26,12 +18,41 @@ interface Toast {
   tone: ToastTone;
 }
 
+const LandingView = lazy(() => import('./components/LandingView'));
+const ValueDetailView = lazy(() => import('./components/ValueDetailView'));
+const PracticeView = lazy(() => import('./components/PracticeView'));
+const HistoryView = lazy(() => import('./components/HistoryView'));
+const ValuesLibraryView = lazy(() => import('./components/ValuesLibraryView'));
+const AnalyticsDebugView = lazy(() => import('./components/AnalyticsDebugView'));
+const AuthDialog = lazy(() => import('./components/AuthDialog'));
+
+const RouteSuspenseFallback: React.FC = () => (
+  <div className="flex min-h-[50vh] items-center justify-center">
+    <div className="inline-flex items-center gap-3 rounded-full bg-[#f1ebe5] px-5 py-3 text-sm font-semibold text-[#6f6258]">
+      <Loader2 className="h-4 w-4 animate-spin" />
+      Loading the Values in the Wild field guide
+    </div>
+  </div>
+);
+
 const App: React.FC = () => {
+  const FAVORITES_STORAGE_KEY = 'values-in-the-wild:favorites';
   const location = useLocation();
   const navigate = useNavigate();
 
   const [values, setValues] = useState<ValueDefinition[]>([]);
   const [selectedValueName, setSelectedValueName] = useState<string>('');
+  const [favoriteValues, setFavoriteValues] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+
+    try {
+      const storedValue = window.localStorage.getItem(FAVORITES_STORAGE_KEY);
+      const parsedValue = storedValue ? JSON.parse(storedValue) : [];
+      return Array.isArray(parsedValue) ? parsedValue.filter((entry): entry is string => typeof entry === 'string') : [];
+    } catch {
+      return [];
+    }
+  });
   const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
   const [isLoadingValues, setIsLoadingValues] = useState(true);
   const [isLoadingReflections, setIsLoadingReflections] = useState(true);
@@ -109,6 +130,14 @@ const App: React.FC = () => {
       metadata,
     });
   };
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favoriteValues));
+    } catch {
+      // Ignore storage failures so the guide still works in restricted browsers.
+    }
+  }, [favoriteValues]);
 
   useEffect(() => {
     if (!authEnabled) {
@@ -264,7 +293,8 @@ const App: React.FC = () => {
         }
 
         if (!loadedValues.length) {
-          loadedValues = (valuesSeed.values || []) as ValueDefinition[];
+          const localValuesModule = await import('./data/Values-en.json');
+          loadedValues = (localValuesModule.default.values || []) as ValueDefinition[];
         }
 
         if (cancelled) return;
@@ -363,6 +393,26 @@ const App: React.FC = () => {
 
   const handleSelectValue = (name: string) => {
     setSelectedValueName(name);
+  };
+
+  const handleToggleFavorite = (valueName: string) => {
+    setFavoriteValues((currentFavorites) =>
+      currentFavorites.includes(valueName)
+        ? currentFavorites.filter((name) => name !== valueName)
+        : [...currentFavorites, valueName]
+    );
+  };
+
+  const handleFilterCategory = (category: string) => {
+    const params = new URLSearchParams();
+    params.set('category', category);
+    enterApp(`/guide?${params.toString()}`);
+  };
+
+  const handleFilterTag = (tag: string) => {
+    const params = new URLSearchParams();
+    params.set('tag', tag);
+    enterApp(`/guide?${params.toString()}`);
   };
 
   const handleStartPractice = (valueName: string) => {
@@ -582,9 +632,13 @@ const App: React.FC = () => {
         <ValueDetailView
           value={selectedValue}
           values={values}
+          favoriteValues={favoriteValues}
+          onFilterCategory={handleFilterCategory}
+          onFilterTag={handleFilterTag}
           onBack={() => navigate('/guide')}
           onOpenValue={handleOpenValue}
           onStartPractice={handleStartPractice}
+          onToggleFavorite={handleToggleFavorite}
         />
       ) : null;
     }
@@ -611,6 +665,7 @@ const App: React.FC = () => {
       return (
         <HistoryView
           authConfigured={authEnabled}
+          favoriteValues={favoriteValues}
           isGuestMode={isGuestMode}
           isAuthenticated={Boolean(session)}
           reflections={reflections}
@@ -650,9 +705,11 @@ const App: React.FC = () => {
       <ValuesLibraryView
         values={values}
         selectedValueName={selectedValue?.name || ''}
+        favoriteValues={favoriteValues}
         onSelectValue={handleSelectValue}
         onOpenValue={handleOpenValue}
         onStartPractice={handleStartPractice}
+        onToggleFavorite={handleToggleFavorite}
       />
     );
   };
@@ -720,7 +777,9 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-5 pb-28 pt-8 sm:px-6 md:px-8 md:pb-16 md:pt-10">{renderRoute()}</main>
+      <main className="mx-auto max-w-7xl px-5 pb-28 pt-8 sm:px-6 md:px-8 md:pb-16 md:pt-10">
+        <Suspense fallback={<RouteSuspenseFallback />}>{renderRoute()}</Suspense>
+      </main>
 
       {!!session && !!claimableGuestReflections.length && (
         <div className="mx-auto -mt-20 mb-10 max-w-7xl px-5 sm:px-6 md:px-8">
@@ -797,12 +856,14 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <AuthDialog
-        isOpen={isAuthDialogOpen}
-        isSubmitting={isSendingMagicLink}
-        onClose={() => setIsAuthDialogOpen(false)}
-        onSubmit={handleSendMagicLink}
-      />
+      <Suspense fallback={null}>
+        <AuthDialog
+          isOpen={isAuthDialogOpen}
+          isSubmitting={isSendingMagicLink}
+          onClose={() => setIsAuthDialogOpen(false)}
+          onSubmit={handleSendMagicLink}
+        />
+      </Suspense>
     </div>
   );
 };

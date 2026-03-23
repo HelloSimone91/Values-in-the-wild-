@@ -12,6 +12,8 @@ dist
 dist-ssr
 *.local
 backend/data/store.json
+output/
+scripts/__pycache__/
 
 # Editor directories and files
 .vscode/*

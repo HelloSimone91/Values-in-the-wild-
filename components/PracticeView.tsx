@@ -34,6 +34,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({
   const [activePracticeId, setActivePracticeId] = useState<string>('');
   const [practiceMode, setPracticeMode] = useState<PracticeMode>('micro');
   const [reflection, setReflection] = useState('');
+  const wildMoments = selectedValue?.inTheWild?.length ? selectedValue.inTheWild : selectedValue ? [selectedValue.example] : [];
 
   const microPractices = useMemo(
     () => (selectedValue ? createMicroPractices(selectedValue) : []),
@@ -59,6 +60,13 @@ const PracticeView: React.FC<PracticeViewProps> = ({
   }, [activePracticeId, visiblePractices]);
 
   const activePractice = allPractices.find((practice) => practice.id === activePracticeId) || visiblePractices[0] || null;
+  const libraryEyebrow = practiceMode === 'micro' ? 'Daily checklist' : 'Prompt library';
+  const libraryTitle = practiceMode === 'micro' ? 'Things to notice today' : 'Choose one prompt';
+  const noteEyebrow = practiceMode === 'micro' ? 'What to notice' : 'Current prompt';
+  const noteHint =
+    practiceMode === 'micro'
+      ? 'Save the moment you spotted, not the lesson you think you should have learned.'
+      : 'Save a specific moment, not an intention.';
 
   const handleSaveReflection = () => {
     if (!selectedValue || !activePractice || !reflection.trim()) return;
@@ -125,14 +133,22 @@ const PracticeView: React.FC<PracticeViewProps> = ({
                 {selectedValue.category}
               </span>
             </div>
-            <p className="mt-5 line-clamp-3 text-sm leading-6 text-[#d4ebb8]">{selectedValue.example}</p>
+            <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d8f4bd]">Ways it shows up</p>
+            <ul className="mt-3 space-y-3">
+              {wildMoments.slice(0, 3).map((moment) => (
+                <li key={moment} className="flex gap-3 text-sm leading-6 text-[#f2f8ea]">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#d8f4bd]" />
+                  <span>{moment}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <section className="rounded-[2.5rem] bg-white p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-7">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Prompt library</p>
-                <h2 className="mt-2 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">Choose one prompt</h2>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">{libraryEyebrow}</p>
+                <h2 className="mt-2 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">{libraryTitle}</h2>
               </div>
               <div className="inline-flex rounded-full bg-[#f1ebe5] p-1">
                 <button
@@ -201,7 +217,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({
           </div>
 
           <div className="mt-6 rounded-[2rem] bg-[#35680e] p-6 text-white">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">Current prompt</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">{noteEyebrow}</p>
             <h3 className="mt-3 font-['Plus_Jakarta_Sans'] text-3xl font-bold tracking-[-0.04em]">
               {activePractice?.title || 'Choose a prompt'}
             </h3>
@@ -238,11 +254,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({
           )}
 
           <div className="mt-5 space-y-4">
-            <p className="text-sm leading-6 text-[#6f6258]">
-              {authConfigured && isGuestMode
-                ? 'Guest notes stay on this device. Sign in later if you want sync.'
-                : 'Save a specific moment, not an intention.'}
-            </p>
+            <p className="text-sm leading-6 text-[#6f6258]">{authConfigured && isGuestMode ? 'Guest notes stay on this device. Sign in later if you want sync.' : noteHint}</p>
             <button
               onClick={handleSaveReflection}
               disabled={!reflection.trim() || !activePractice}

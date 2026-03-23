@@ -4,6 +4,7 @@ export interface ValueDefinition {
   name: string;
   description: string;
   example: string;
+  inTheWild?: string[];
   category: string;
   tags: string[];
 }
@@ -43,6 +44,25 @@ const titleCase = (value: string) =>
     .map((part) => part[0].toUpperCase() + part.slice(1))
     .join(' ');
 
+const collapseSpace = (value: string) => value.replace(/\s+/g, ' ').trim();
+
+const checklistFallbacks: Record<string, string> = {
+  'Core Values': 'Watch for a moment when this value asks for honesty over convenience.',
+  Personal: 'Watch for a routine, boundary, or body-level choice that quietly reflects this value.',
+  Aspirations: 'Watch for the tiny move that turns longing into something lived.',
+  Growth: 'Watch for a repetition, correction, or next step that builds this value.',
+  Interpersonal: 'Watch for this value in tone, follow-through, or the quality of attention between people.',
+  Mindset: 'Watch for this value in the pause between reaction and response.',
+  Social: 'Watch for this value in who is included, supported, resourced, or protected.',
+};
+
+const microChecklistTitles = [
+  'Spot it live',
+  'See it in someone',
+  'Catch it under pressure',
+  'Notice the quiet version',
+];
+
 export const accentClass = {
   green: 'bg-[#d7f2dd] text-[#255b31]',
   orange: 'bg-[#ffdcc7] text-[#723600]',
@@ -77,6 +97,8 @@ export const valueEmoji = (valueName: string) => {
     Collaboration: '🤝',
     Gratitude: '✨',
     Mindfulness: '🧠',
+    Travel: '✈️',
+    Tranquility: '🕊️',
   };
 
   return mapping[valueName] || '✦';
@@ -93,17 +115,28 @@ export const findValueBySlug = (values: ValueDefinition[], slug: string) =>
   values.find((value) => slugifyValueName(value.name) === slug) || null;
 
 export const createMicroPractices = (value: ValueDefinition): PracticeItem[] => {
-  const tags = value.tags.slice(0, 4);
   const accent = categoryAccent[value.category] || 'green';
+  const observations = value.inTheWild?.length ? value.inTheWild.slice(0, 3) : [value.example];
+  const descriptions = [
+    ...observations.map((entry) => `Watch for this: ${collapseSpace(entry)}`),
+    checklistFallbacks[value.category] || checklistFallbacks.Personal,
+  ].slice(0, 4);
 
-  return tags.map((tag, index) => ({
+  const prompts = [
+    `If you notice this today, where does it show up?`,
+    `Did you see someone else model this version today?`,
+    `If the day gets tense, what would this value look like in motion?`,
+    `What is the smallest everyday sign of ${value.name.toLowerCase()} you might miss if you rush?`,
+  ];
+
+  return descriptions.map((description, index) => ({
     id: `${value.name}-micro-${index}`,
-    title: `${titleCase(tag)} in motion`,
+    title: microChecklistTitles[index],
     value: value.name,
-    description: `For one minute, choose one small way to ${tag} this value in a concrete moment today.`,
+    description,
     duration: '1 min',
     accent,
-    prompt: `Where can you ${tag} ${value.name.toLowerCase()} in the next hour?`,
+    prompt: prompts[index],
   }));
 };
 
@@ -111,13 +144,14 @@ export const createDeepDivePractices = (value: ValueDefinition): PracticeItem[] 
   const accent = categoryAccent[value.category] || 'purple';
   const firstTag = value.tags[0] || 'practice';
   const secondTag = value.tags[1] || 'reflect';
+  const livedExample = value.inTheWild?.[0] || value.example;
 
   return [
     {
       id: `${value.name}-deep-example`,
       title: `${value.name} in real life`,
       value: value.name,
-      description: value.example,
+      description: livedExample,
       duration: '15 min',
       accent,
       prompt: `Write about a recent moment where you either lived or avoided ${value.name.toLowerCase()}.`,
