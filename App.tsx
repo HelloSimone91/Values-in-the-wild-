@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'rea
 import { Activity, BookOpenText, CheckCircle2, History, LibraryBig, Loader2, TriangleAlert, UserCircle2, X } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
-import { findValueBySlug, ReflectionEntry, slugifyValueName, ValueDefinition } from './stitchData';
+import { findValueBySlug, mergeValueSiteContent, ReflectionEntry, slugifyValueName, ValueDefinition, ValueSiteContent } from './stitchData';
 import { clearLocalReflections, loadLocalReflections, loadReflections, saveReflections } from './services/reflectionPersistenceService';
 import { getCurrentSession, getSupabaseClient, isSupabaseConfigured, sendMagicLink, signOutUser } from './services/supabaseClient';
 import { EntryMode, getEntryMode, getOrCreateUserId, hasSeenLanding, markLandingSeen, setEntryMode } from './services/userSessionService';
@@ -294,7 +294,11 @@ const App: React.FC = () => {
 
         if (!loadedValues.length) {
           const localValuesModule = await import('./data/Values-en.json');
-          loadedValues = (localValuesModule.default.values || []) as ValueDefinition[];
+          const localSiteContentModule = await import('./data/ValueSiteContent.json');
+          loadedValues = mergeValueSiteContent(
+            (localValuesModule.default.values || []) as ValueDefinition[],
+            (localSiteContentModule.default || {}) as Record<string, ValueSiteContent>
+          );
         }
 
         if (cancelled) return;

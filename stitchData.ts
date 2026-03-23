@@ -1,5 +1,38 @@
 export type AppView = 'landing' | 'library' | 'value' | 'practice' | 'history';
 
+export type SiteContentSource = 'manual' | 'value-stacks' | 'big-ole' | 'values-in-the-wild';
+
+export interface ApprovedSiteField<T> {
+  value: T;
+  source: SiteContentSource;
+  sourcePageId?: string;
+}
+
+export interface PopCultureSpotlight {
+  title: string;
+  summary: string;
+  takeaway: string;
+}
+
+export interface SeoContent {
+  title?: string;
+  description?: string;
+  slug?: string;
+}
+
+export interface ValueSiteContent {
+  summary?: ApprovedSiteField<string>;
+  shortDefinition?: ApprovedSiteField<string>;
+  longDefinition?: ApprovedSiteField<string>;
+  everydayExamples?: ApprovedSiteField<string[]>;
+  misalignment?: ApprovedSiteField<string>;
+  habitIdeas?: ApprovedSiteField<string[]>;
+  journalPrompts?: ApprovedSiteField<string[]>;
+  conversationStarters?: ApprovedSiteField<string[]>;
+  popCultureSpotlight?: ApprovedSiteField<PopCultureSpotlight>;
+  seo?: ApprovedSiteField<SeoContent>;
+}
+
 export interface ValueDefinition {
   name: string;
   description: string;
@@ -7,6 +40,7 @@ export interface ValueDefinition {
   inTheWild?: string[];
   category: string;
   tags: string[];
+  siteContent?: ValueSiteContent;
 }
 
 export interface PracticeItem {
@@ -17,6 +51,18 @@ export interface PracticeItem {
   duration: string;
   accent: 'green' | 'orange' | 'purple';
   prompt: string;
+}
+
+export interface QuickChecklistItem {
+  id: string;
+  value: string;
+  label: string;
+  summary: string;
+}
+
+interface QuickChecklistOverrideItem {
+  label: string;
+  summary: string;
 }
 
 export interface ReflectionEntry {
@@ -46,22 +92,337 @@ const titleCase = (value: string) =>
 
 const collapseSpace = (value: string) => value.replace(/\s+/g, ' ').trim();
 
-const checklistFallbacks: Record<string, string> = {
-  'Core Values': 'Watch for a moment when this value asks for honesty over convenience.',
-  Personal: 'Watch for a routine, boundary, or body-level choice that quietly reflects this value.',
-  Aspirations: 'Watch for the tiny move that turns longing into something lived.',
-  Growth: 'Watch for a repetition, correction, or next step that builds this value.',
-  Interpersonal: 'Watch for this value in tone, follow-through, or the quality of attention between people.',
-  Mindset: 'Watch for this value in the pause between reaction and response.',
-  Social: 'Watch for this value in who is included, supported, resourced, or protected.',
+const dedupeStrings = (values: string[]) => {
+  const seen = new Set<string>();
+
+  return values.filter((value) => {
+    const normalized = collapseSpace(value).toLowerCase();
+    if (!normalized || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
 };
 
-const microChecklistTitles = [
-  'Spot it live',
-  'See it in someone',
-  'Catch it under pressure',
-  'Notice the quiet version',
-];
+const siteList = (field?: ApprovedSiteField<string[]>) => field?.value || [];
+const siteText = (field?: ApprovedSiteField<string>) => field?.value || '';
+
+const quickChecklistFallbacks: Record<string, [string, string, string, string]> = {
+  'Core Values': [
+    'someone making the more honest or responsible move even when it cost them something',
+    'someone following through in a way other people could actually feel',
+    'this value holding in a tense, awkward, or high-stakes moment',
+    'a smaller private choice that still reflected what mattered',
+  ],
+  Personal: [
+    'someone treating themselves with steadiness instead of punishment',
+    'someone honoring a limit, need, or reset without making it dramatic',
+    'this value showing up when the day got messy or inconvenient',
+    'a quiet private choice that made life a little more livable',
+  ],
+  Aspirations: [
+    'someone taking a real step toward what they want instead of only talking about it',
+    'someone choosing growth, stretch, or possibility over staying comfortable',
+    'this value showing up before anyone knew how it would turn out',
+    'a small move that pointed life in the right direction',
+  ],
+  Growth: [
+    'someone practicing, revising, or trying again instead of waiting to feel ready',
+    'someone turning intention into a next step you could actually point to',
+    'this value showing up when effort, uncertainty, or repetition was required',
+    'a modest improvement that could have been easy to overlook',
+  ],
+  Interpersonal: [
+    'someone making another person feel more seen, understood, or included',
+    'someone shaping their tone, timing, or attention around another person with care',
+    'this value showing up in a live conversation, repair, or moment of friction',
+    'a subtle relational cue that changed the feel of the interaction',
+  ],
+  Mindset: [
+    'someone naming what was true a little more clearly or honestly',
+    'someone pausing long enough to think instead of reacting on autopilot',
+    'this value holding in uncertainty, complexity, or conflicting signals',
+    'a quieter mental shift that changed the next choice',
+  ],
+  Social: [
+    'someone using their care, voice, or access to support another person',
+    'someone noticing who needed backing, inclusion, or protection',
+    'this value showing up when silence or passivity would have been easier',
+    'a quiet act of solidarity, generosity, or shared responsibility',
+  ],
+};
+
+const quickChecklistOverrides: Record<string, QuickChecklistOverrideItem[]> = {
+  Acceptance: [
+    {
+      label: 'Did you notice yourself or someone else stop fighting reality and work with what was actually true today?',
+      summary: 'Stopped fighting reality and worked with what was true',
+    },
+    {
+      label: 'Did you notice someone make room for a hard limit without collapsing into self-pity today?',
+      summary: 'Made room for a hard limit without spiraling',
+    },
+    {
+      label: 'Did acceptance show up in a tense moment when the next kind move mattered more than wishing things were different?',
+      summary: 'Chose the next kind move instead of arguing with reality',
+    },
+    {
+      label: 'Did you catch a quieter version of acceptance in a small adjustment, reroute, or reset today?',
+      summary: 'Caught acceptance in a small adjustment or reset',
+    },
+  ],
+  Accountability: [
+    {
+      label: 'Did someone own a miss plainly and start fixing it today?',
+      summary: 'Owned a miss and started fixing it',
+    },
+    {
+      label: 'Did someone follow through on something other people were counting on today?',
+      summary: 'Followed through on something people were counting on',
+    },
+    {
+      label: 'Did accountability show up when it would have been easier to deflect, excuse, or disappear?',
+      summary: 'Stayed accountable instead of deflecting or disappearing',
+    },
+    {
+      label: 'Did you notice a quieter version of accountability in a check-in, update, or cleanup no one had to ask for?',
+      summary: 'Caught accountability in an unprompted check-in or cleanup',
+    },
+  ],
+  Adventure: [
+    {
+      label: 'Did someone say yes to something that felt alive and slightly uncertain today?',
+      summary: 'Said yes to something alive and uncertain',
+    },
+    {
+      label: 'Did you notice someone choose discovery over predictability today?',
+      summary: 'Chose discovery over predictability',
+    },
+    {
+      label: 'Did adventure show up in a moment where comfort had a strong case?',
+      summary: 'Chose adventure when comfort had a strong case',
+    },
+    {
+      label: 'Did you catch a smaller version of adventure in a detour, first try, or spontaneous plan today?',
+      summary: 'Caught adventure in a detour, first try, or spontaneous plan',
+    },
+  ],
+  Ambiguity: [
+    {
+      label: 'Did someone stay with "I do not know yet" instead of forcing a neat answer today?',
+      summary: 'Stayed with not knowing instead of forcing a neat answer',
+    },
+    {
+      label: 'Did you notice someone hold multiple meanings or mixed motives without flattening them today?',
+      summary: 'Held multiple meanings or mixed motives without flattening them',
+    },
+    {
+      label: 'Did ambiguity show up in a decision with incomplete information today?',
+      summary: 'Stayed with ambiguity in a decision with incomplete information',
+    },
+    {
+      label: 'Did you catch a quieter version of ambiguity in a pause, question, or softened opinion today?',
+      summary: 'Caught ambiguity in a pause, question, or softened opinion',
+    },
+  ],
+  Approachability: [
+    {
+      label: 'Did someone make it easy for another person to speak today?',
+      summary: 'Made it easy for another person to speak',
+    },
+    {
+      label: 'Did you notice genuine warmth, space, or curiosity that lowered the social cost of reaching out today?',
+      summary: 'Lowered the social cost of reaching out',
+    },
+    {
+      label: 'Did approachability hold in a tense or status-heavy moment today?',
+      summary: 'Kept approachability even in a tense or status-heavy moment',
+    },
+    {
+      label: 'Did you catch it in small signals like body language, tone, or an unhurried reply today?',
+      summary: 'Caught approachability in body language, tone, or an unhurried reply',
+    },
+  ],
+  Capitalism: [
+    {
+      label: 'Did you notice someone take a business or money risk in hopes of building something today?',
+      summary: 'Took a business or money risk to build something',
+    },
+    {
+      label: 'Did you see a live market moment, like pricing, selling, competing, or investing, that made capitalism visible today?',
+      summary: 'Noticed capitalism in a live market moment',
+    },
+    {
+      label: 'Did capitalism show up in a hard tradeoff about ownership, incentive, or profit today?',
+      summary: 'Caught capitalism in a hard tradeoff about ownership, incentive, or profit',
+    },
+    {
+      label: 'Did you catch it in smaller signals like how people talked about value, growth, or customers today?',
+      summary: 'Caught capitalism in the way people talked about value, growth, or customers',
+    },
+  ],
+  Comfort: [
+    {
+      label: 'Did someone make a space, body, or conversation feel gentler today?',
+      summary: 'Made a space, body, or conversation feel gentler',
+    },
+    {
+      label: 'Did you notice someone actively helping another person relax, settle, or feel safe enough to stay today?',
+      summary: 'Helped another person relax, settle, or feel safe enough to stay',
+    },
+    {
+      label: 'Did comfort show up when stress, pain, or overstimulation were in the room?',
+      summary: 'Brought comfort into stress, pain, or overstimulation',
+    },
+    {
+      label: 'Did you catch it in a blanket, chair, tone of voice, snack, pause, or other small soothing detail today?',
+      summary: 'Caught comfort in a small soothing detail',
+    },
+  ],
+  Craftsmanship: [
+    {
+      label: 'Did you notice someone take extra care with fit, finish, or details today?',
+      summary: 'Took extra care with fit, finish, or details',
+    },
+    {
+      label: 'Did you see someone refuse to leave something sloppy even when no one else would have noticed today?',
+      summary: 'Refused to leave something sloppy even when no one else would notice',
+    },
+    {
+      label: 'Did craftsmanship hold when speed or convenience were tempting?',
+      summary: 'Kept craftsmanship when speed or convenience were tempting',
+    },
+    {
+      label: 'Did you catch it in a tiny correction, refinement, or quality check today?',
+      summary: 'Caught craftsmanship in a tiny correction, refinement, or quality check',
+    },
+  ],
+  Discipline: [
+    {
+      label: 'Did someone keep to a plan even when they did not feel like it today?',
+      summary: 'Kept to a plan even without feeling like it',
+    },
+    {
+      label: 'Did you notice practice, repetition, or structure carrying a person through the day?',
+      summary: 'Let practice, repetition, or structure carry the day',
+    },
+    {
+      label: 'Did discipline show up when distraction or comfort were pulling hard?',
+      summary: 'Stayed disciplined while distraction or comfort were pulling hard',
+    },
+    {
+      label: 'Did you catch it in a small kept promise, routine, or boundary today?',
+      summary: 'Caught discipline in a kept promise, routine, or boundary',
+    },
+  ],
+  Freedom: [
+    {
+      label: 'Did someone make a real choice without coercion today?',
+      summary: 'Made a real choice without coercion',
+    },
+    {
+      label: 'Did you notice someone tell the truth, move, refuse, or create more freely today?',
+      summary: 'Moved, refused, or created more freely',
+    },
+    {
+      label: 'Did freedom show up when control, pressure, or compliance were on the table?',
+      summary: 'Held onto freedom under control, pressure, or compliance',
+    },
+    {
+      label: 'Did you catch it in a smaller moment of agency, permission, or breathing room today?',
+      summary: 'Caught freedom in a moment of agency, permission, or breathing room',
+    },
+  ],
+  Choice: [
+    {
+      label: 'Did someone get a real option today instead of just the performance of options?',
+      summary: 'Had a real option instead of the performance of options',
+    },
+    {
+      label: 'Did you notice a person say no, change course, or pick what actually fit them today?',
+      summary: 'Said no, changed course, or picked what actually fit',
+    },
+    {
+      label: 'Did choice matter in a moment with pressure, urgency, or outside expectation today?',
+      summary: 'Protected real choice in a pressured moment',
+    },
+    {
+      label: 'Did you catch it in a small preference, boundary, or redirect today?',
+      summary: 'Caught choice in a small preference, boundary, or redirect',
+    },
+  ],
+  Stewardship: [
+    {
+      label: 'Did someone care for something as if it had to last beyond them today?',
+      summary: 'Cared for something as if it had to last beyond them',
+    },
+    {
+      label: 'Did you notice someone leave a place, tool, relationship, or resource better than they found it today?',
+      summary: 'Left a place, tool, relationship, or resource better than they found it',
+    },
+    {
+      label: 'Did stewardship hold when short-term convenience could have won today?',
+      summary: 'Kept stewardship when short-term convenience could have won',
+    },
+    {
+      label: 'Did you catch it in maintenance, cleanup, tending, or careful use today?',
+      summary: 'Caught stewardship in maintenance, cleanup, tending, or careful use',
+    },
+  ],
+  Teaching: [
+    {
+      label: 'Did someone explain something at the other person’s pace today?',
+      summary: 'Explained something at the other person’s pace',
+    },
+    {
+      label: 'Did you notice someone use examples, questions, or practice to help understanding land today?',
+      summary: 'Used examples, questions, or practice to help understanding land',
+    },
+    {
+      label: 'Did teaching hold when it would have been easier to rush, show off, or move on?',
+      summary: 'Kept teaching well when it would have been easier to rush or move on',
+    },
+    {
+      label: 'Did you catch it in a small clarification or patient re-explanation today?',
+      summary: 'Caught teaching in a small clarification or patient re-explanation',
+    },
+  ],
+  Tranquility: [
+    {
+      label: 'Did someone lower the noise in a room, conversation, or nervous system today?',
+      summary: 'Lowered the noise in a room, conversation, or nervous system',
+    },
+    {
+      label: 'Did you notice someone slow the pace enough for calm to return today?',
+      summary: 'Slowed the pace enough for calm to return',
+    },
+    {
+      label: 'Did tranquility show up in the middle of stress instead of only after it passed?',
+      summary: 'Found tranquility in the middle of stress',
+    },
+    {
+      label: 'Did you catch it in a breath, walk, pause, or gentle simplification today?',
+      summary: 'Caught tranquility in a breath, walk, pause, or gentle simplification',
+    },
+  ],
+  Vision: [
+    {
+      label: 'Did someone act from a clear picture of what they were building toward today?',
+      summary: 'Acted from a clear picture of what they were building toward',
+    },
+    {
+      label: 'Did you notice someone make a present choice because they could see farther ahead than the moment today?',
+      summary: 'Made a present choice because they could see farther ahead than the moment',
+    },
+    {
+      label: 'Did vision matter in a hard tradeoff or a delayed-reward decision today?',
+      summary: 'Used vision in a hard tradeoff or delayed-reward decision',
+    },
+    {
+      label: 'Did you catch it in a sketch, plan, sentence, or decision that quietly pointed forward today?',
+      summary: 'Caught vision in something that quietly pointed forward',
+    },
+  ],
+};
 
 export const accentClass = {
   green: 'bg-[#d7f2dd] text-[#255b31]',
@@ -115,29 +476,300 @@ export const slugifyValueName = (valueName: string) =>
 export const findValueBySlug = (values: ValueDefinition[], slug: string) =>
   values.find((value) => slugifyValueName(value.name) === slug) || null;
 
-export const createMicroPractices = (value: ValueDefinition): PracticeItem[] => {
-  const accent = categoryAccent[value.category] || 'green';
-  const observations = value.inTheWild?.length ? value.inTheWild.slice(0, 3) : [value.example];
-  const descriptions = [
-    ...observations.map((entry) => `Watch for this: ${collapseSpace(entry)}`),
-    checklistFallbacks[value.category] || checklistFallbacks.Personal,
-  ].slice(0, 4);
+export const mergeValueSiteContent = (
+  values: ValueDefinition[],
+  siteContentByValue: Record<string, ValueSiteContent> = {}
+): ValueDefinition[] =>
+  values.map((value) => ({
+    ...value,
+    siteContent: siteContentByValue[value.name] || value.siteContent,
+  }));
 
-  const prompts = [
-    `If you notice this today, where does it show up?`,
-    `Did you see someone else model this version today?`,
-    `If the day gets tense, what would this value look like in motion?`,
-    `What is the smallest everyday sign of ${value.name.toLowerCase()} you might miss if you rush?`,
+export const getValueSearchText = (value: ValueDefinition) =>
+  [
+    value.name,
+    value.description,
+    value.example,
+    value.inTheWild?.join(' ') || '',
+    value.category,
+    value.tags.join(' '),
+    siteText(value.siteContent?.summary),
+    siteText(value.siteContent?.shortDefinition),
+    siteText(value.siteContent?.longDefinition),
+    siteText(value.siteContent?.misalignment),
+    siteList(value.siteContent?.everydayExamples).join(' '),
+    siteList(value.siteContent?.habitIdeas).join(' '),
+    siteList(value.siteContent?.journalPrompts).join(' '),
+    siteList(value.siteContent?.conversationStarters).join(' '),
+    value.siteContent?.popCultureSpotlight?.value.title || '',
+    value.siteContent?.popCultureSpotlight?.value.summary || '',
+    value.siteContent?.popCultureSpotlight?.value.takeaway || '',
+  ]
+    .join(' ')
+    .toLowerCase();
+
+const toSentenceCase = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+
+const stripTrailingPunctuation = (value: string) => value.replace(/[.?!:;,\s]+$/g, '').trim();
+
+const observationLeadPattern =
+  /^(you can spot|you see|you notice|it shows up|it often shows up|it shows up in|it often shows up in|it often appears|it often appears in|it becomes visible|it often looks like|clarity often arrives as|appreciation gets specific|you can feel|look for)\b/i;
+
+const lowSignalObservationPatterns: RegExp[] = [
+  /\bpoem\b/i,
+  /\bpoems\b/i,
+  /\bverses\b/i,
+  /\breaders?\b/i,
+  /\bpersonally relevant\b/i,
+  /\ballows readers\b/i,
+];
+
+const observationContextPattern =
+  /\b(moment|choice|conversation|decision|repair|question|pause|boundary|tone|follow through|uncertain|uncertainty|conflict|cost|practice|move|adjustment|signal|response|room)\b/i;
+
+const neutralizeExampleLanguage = (value: string) =>
+  value
+    .replace(/\bwith her\b/gi, 'with them')
+    .replace(/\bwith him\b/gi, 'with them')
+    .replace(/\bto her\b/gi, 'to them')
+    .replace(/\bto him\b/gi, 'to them')
+    .replace(/\bfor her\b/gi, 'for them')
+    .replace(/\bfor him\b/gi, 'for them')
+    .replace(/\bher\b/gi, 'their')
+    .replace(/\bhis\b/gi, 'their')
+    .replace(/\bshe\b/gi, 'someone')
+    .replace(/\bhe\b/gi, 'someone')
+    .replace(/\bhim\b/gi, 'them');
+
+const truncateFragment = (value: string, maxLength = 150) => {
+  if (value.length <= maxLength) return value;
+  const trimmed = value.slice(0, maxLength);
+  const lastSpace = trimmed.lastIndexOf(' ');
+  return `${(lastSpace > 80 ? trimmed.slice(0, lastSpace) : trimmed).trim()}...`;
+};
+
+const cleanFragment = (value: string) => truncateFragment(stripTrailingPunctuation(neutralizeExampleLanguage(collapseSpace(value))));
+
+const toInlineFragment = (value: string) => {
+  if (!value) return value;
+  return /^[A-Z]/.test(value) ? value.charAt(0).toLowerCase() + value.slice(1) : value;
+};
+
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const scoreWildMoment = (line: string, example: string) => {
+  const clean = collapseSpace(line);
+  const normalized = clean.toLowerCase();
+  let score = 0;
+
+  if (observationLeadPattern.test(clean)) score += 4;
+  if (observationContextPattern.test(clean)) score += 2;
+  if (normalized === collapseSpace(example).toLowerCase()) score -= 4;
+  if (lowSignalObservationPatterns.some((pattern) => pattern.test(clean))) score -= 8;
+
+  return score;
+};
+
+const createFallbackWildMoments = (value: ValueDefinition): string[] => {
+  const valueName = value.name.toLowerCase();
+
+  switch (value.category) {
+    case 'Core Values':
+      return [
+        `Look for a moment when ${valueName} shaped a real choice instead of staying abstract.`,
+        `You can spot ${valueName} in whether someone follows through when it costs them something.`,
+        `It often becomes clearest in tense moments, repairs, and decisions that leave a trace.`,
+      ];
+    case 'Personal':
+      return [
+        `Look for a small choice that made life more steady, kind, or sustainable.`,
+        `You can spot ${valueName} in how someone treats their limits, pace, or private standards.`,
+        `It often shows up in ordinary adjustments long before it becomes a dramatic decision.`,
+      ];
+    case 'Aspirations':
+      return [
+        `Look for a concrete step toward what matters, not just a fantasy about it.`,
+        `You can spot ${valueName} when someone risks motion, stretch, or visible effort.`,
+        `It often appears before the outcome is certain and before anyone knows whether it will pay off.`,
+      ];
+    case 'Growth':
+      return [
+        `Look for practice, revision, or a next attempt instead of waiting to feel ready.`,
+        `You can spot ${valueName} in what someone does after friction, boredom, or uncertainty enters the room.`,
+        `It often shows up in repeatable small actions more than dramatic breakthroughs.`,
+      ];
+    case 'Interpersonal':
+      return [
+        `Look for a live interaction where another person feels the effect directly.`,
+        `You can spot ${valueName} in tone, timing, listening, and what happens after a misunderstanding.`,
+        `It often appears in small relational moves that change the feel of the moment.`,
+      ];
+    case 'Mindset':
+      return [
+        `Look for the thought pattern or naming move that changed what happened next.`,
+        `You can spot ${valueName} in how someone handles uncertainty, complexity, or a strong first reaction.`,
+        `It often shows up in a pause, question, or reframing that keeps the situation honest.`,
+      ];
+    case 'Social':
+      return [
+        `Look for a moment when someone's care or voice affected more than just themselves.`,
+        `You can spot ${valueName} in who gets included, protected, backed, or taken seriously.`,
+        `It often appears when silence would have been easier and someone stays engaged anyway.`,
+      ];
+    default:
+      return [
+        `Look for a real moment where ${valueName} changed what someone said, did, or chose.`,
+        `You can spot ${valueName} in behavior before you can explain it in theory.`,
+        `It often shows up in the small move that changes the feel of the moment.`,
+      ];
+  }
+};
+
+export const getValueWildMoments = (value: ValueDefinition, max = 3): string[] => {
+  const editorialLines = dedupeStrings(siteList(value.siteContent?.everydayExamples));
+  if (editorialLines.length) {
+    return editorialLines.slice(0, max);
+  }
+
+  const normalizedExample = collapseSpace(value.example).toLowerCase();
+  const rawLines = dedupeStrings([...(value.inTheWild || []), value.example].filter(Boolean));
+  const filteredLines = rawLines
+    .filter((line) => collapseSpace(line).toLowerCase() !== normalizedExample)
+    .filter((line) => !lowSignalObservationPatterns.some((pattern) => pattern.test(line)))
+    .sort((left, right) => scoreWildMoment(right, value.example) - scoreWildMoment(left, value.example));
+
+  return dedupeStrings([...filteredLines, ...createFallbackWildMoments(value)]).slice(0, max);
+};
+
+const extractObservationFragment = (line: string, valueName: string): string | null => {
+  const clean = collapseSpace(line);
+  if (!clean) return null;
+
+  const byMatch = clean.match(
+    /\b(?:practiced|demonstrated|showed|expressed|embraced|excelled at|brought|modeled|used|took|revealed|displayed)\b.*\bby\s+(.+)$/i
+  );
+  if (byMatch?.[1]) {
+    return cleanFragment(byMatch[1]);
+  }
+
+  const patternGroups: RegExp[] = [
+    /^you can spot .* when (.+)$/i,
+    /^you see .* when (.+)$/i,
+    /^you notice .* when (.+)$/i,
+    /^you notice .* in (.+)$/i,
+    new RegExp(`^${escapeRegex(valueName)} shows up when (.+)$`, 'i'),
+    /^it shows up when (.+)$/i,
+    /^it often shows up when (.+)$/i,
+    /^it shows up in (.+)$/i,
+    /^it often shows up in (.+)$/i,
+    /^it often appears in (.+)$/i,
+    /^it becomes visible in (.+)$/i,
+    /^it often looks like (.+)$/i,
+    /^clarity often arrives as (.+)$/i,
+    /^appreciation gets specific:\s*(.+)$/i,
+    /^you can feel .* in (.+)$/i,
+    /^.+ was evident in (.+)$/i,
   ];
 
-  return descriptions.map((description, index) => ({
-    id: `${value.name}-micro-${index}`,
-    title: microChecklistTitles[index],
+  for (const pattern of patternGroups) {
+    const match = clean.match(pattern);
+    if (match?.[1]) {
+      return cleanFragment(match[1]);
+    }
+  }
+
+  return cleanFragment(clean);
+};
+
+const pickFragmentContaining = (lines: string[], matcher: RegExp, valueName: string): string | null => {
+  const target = lines.find((line) => matcher.test(line));
+  return target ? extractObservationFragment(target, valueName) : null;
+};
+
+const uniqueFragment = (candidate: string | null, used: Set<string>, fallback: string) => {
+  const normalizedCandidate = collapseSpace(candidate || '').toLowerCase();
+  if (normalizedCandidate && !used.has(normalizedCandidate)) {
+    used.add(normalizedCandidate);
+    return candidate || fallback;
+  }
+
+  const normalizedFallback = collapseSpace(fallback).toLowerCase();
+  used.add(normalizedFallback);
+  return fallback;
+};
+
+export const createQuickChecklist = (value: ValueDefinition): QuickChecklistItem[] => {
+  const overrideItems = quickChecklistOverrides[value.name];
+  if (overrideItems?.length) {
+    return overrideItems.map((item, index) => ({
+      id: `${value.name}-quick-${index}`,
+      value: value.name,
+      label: item.label,
+      summary: item.summary,
+    }));
+  }
+
+  const sourceLines = getValueWildMoments(value, 4);
+  const categoryFallback = quickChecklistFallbacks[value.category] || quickChecklistFallbacks.Personal;
+  const slotFallbacks: [string, string, string, string] = [
+    categoryFallback[0],
+    `someone living ${value.name.toLowerCase()} in a way you could actually feel`,
+    `someone still choosing ${value.name.toLowerCase()} when it would have been easier to do something else`,
+    `a small, easy-to-miss moment of ${value.name.toLowerCase()}`,
+  ];
+
+  const rawConcreteFragment =
+    extractObservationFragment(sourceLines[0] || '', value.name) ||
+    extractObservationFragment(sourceLines[1] || '', value.name) ||
+    slotFallbacks[0];
+
+  const rawOtherPersonFragment =
+    extractObservationFragment(sourceLines[2] || sourceLines[1] || '', value.name) ||
+    slotFallbacks[1];
+
+  const rawPressureFragment =
+    pickFragmentContaining(
+      sourceLines,
+      /\b(hard|harder|tense|pressure|pressured|mistake|difficult|objection|conflict|awkward|costly|uncertain|reality|fix|repair|consequence)\b/i,
+      value.name
+    ) ||
+    extractObservationFragment(sourceLines[3] || sourceLines[2] || '', value.name) ||
+    slotFallbacks[2];
+
+  const rawQuietFragment =
+    pickFragmentContaining(
+      sourceLines,
+      /\b(quiet|small|subtle|pause|tone|signals|specific|ordinary|everyday|gentle|private|patience|unhurried)\b/i,
+      value.name
+    ) ||
+    extractObservationFragment(sourceLines[2] || sourceLines[1] || '', value.name) ||
+    slotFallbacks[3];
+
+  const used = new Set<string>();
+  const concreteFragment = toInlineFragment(uniqueFragment(rawConcreteFragment, used, slotFallbacks[0]));
+  const otherPersonFragment = toInlineFragment(uniqueFragment(rawOtherPersonFragment, used, slotFallbacks[1]));
+  const pressureFragment = toInlineFragment(uniqueFragment(rawPressureFragment, used, slotFallbacks[2]));
+  const quietFragment = toInlineFragment(uniqueFragment(rawQuietFragment, used, slotFallbacks[3]));
+
+  const labels = [
+    `Did anything like this happen today: ${concreteFragment}?`,
+    `Did you see someone else living it today: ${otherPersonFragment}?`,
+    `Did it show up in a harder moment today: ${pressureFragment}?`,
+    `Did you catch the quieter version today: ${quietFragment}?`,
+  ];
+
+  const summaries = [
+    `Something like this happened: ${concreteFragment}`,
+    `Saw someone else living it: ${otherPersonFragment}`,
+    `It showed up in a harder moment: ${pressureFragment}`,
+    `Caught the quieter version: ${quietFragment}`,
+  ];
+
+  return labels.map((label, index) => ({
+    id: `${value.name}-quick-${index}`,
     value: value.name,
-    description,
-    duration: '1 min',
-    accent,
-    prompt: prompts[index],
+    label,
+    summary: toSentenceCase(summaries[index]),
   }));
 };
 
@@ -145,35 +777,74 @@ export const createDeepDivePractices = (value: ValueDefinition): PracticeItem[] 
   const accent = categoryAccent[value.category] || 'purple';
   const firstTag = value.tags[0] || 'practice';
   const secondTag = value.tags[1] || 'reflect';
-  const livedExample = value.inTheWild?.[0] || value.example;
+  const libraryLine = collapseSpace(getValueWildMoments(value, 1)[0] || value.description);
+  const longDefinition = collapseSpace(siteText(value.siteContent?.longDefinition) || value.description);
+  const journalPrompts = dedupeStrings(siteList(value.siteContent?.journalPrompts)).slice(0, 2);
+  const habitIdeas = dedupeStrings(siteList(value.siteContent?.habitIdeas)).slice(0, 1);
+
+  if (journalPrompts.length) {
+    const editorialPractices = journalPrompts.map((prompt, index) => ({
+      id: `${value.name}-deep-journal-${index}`,
+      title: index === 0 ? 'Journal prompt' : 'Stay with the question',
+      value: value.name,
+      description: prompt,
+      duration: '20 min',
+      accent,
+      prompt,
+    }));
+
+    if (habitIdeas[0]) {
+      editorialPractices.push({
+        id: `${value.name}-deep-ritual`,
+        title: 'Turn it into a ritual',
+        value: value.name,
+        description: habitIdeas[0],
+        duration: '15 min',
+        accent,
+        prompt: `Try this as a lived experiment: ${habitIdeas[0]}`,
+      });
+    } else {
+      editorialPractices.push({
+        id: `${value.name}-deep-definition`,
+        title: `Define your version of ${value.name}`,
+        value: value.name,
+        description: 'Translate the editorial guide into a personal standard you can actually keep.',
+        duration: '20 min',
+        accent,
+        prompt: `Use this guide line as a starting point: "${longDefinition}" What would ${value.name.toLowerCase()} look like in your life if it were specific, embodied, and non-performative?`,
+      });
+    }
+
+    return editorialPractices;
+  }
 
   return [
     {
-      id: `${value.name}-deep-example`,
-      title: `${value.name} in real life`,
+      id: `${value.name}-deep-pressure`,
+      title: `${value.name} under pressure`,
       value: value.name,
-      description: livedExample,
+      description: `Use a real moment when ${value.name.toLowerCase()} became inconvenient, costly, or easy to avoid.`,
       duration: '15 min',
       accent,
-      prompt: `Write about a recent moment where you either lived or avoided ${value.name.toLowerCase()}.`,
+      prompt: `Write about a recent moment when ${value.name.toLowerCase()} was tested. What happened, what did you do, and what would a fuller version of this value have asked of you?`,
     },
     {
       id: `${value.name}-deep-tags`,
       title: `${titleCase(firstTag)} and ${titleCase(secondTag)}`,
       value: value.name,
-      description: `Use the verbs "${firstTag}" and "${secondTag}" as prompts to design a deeper practice around ${value.name.toLowerCase()}.`,
+      description: `Borrow the verbs from your ${value.name.toLowerCase()} entry to design one small experiment for the week.`,
       duration: '20 min',
       accent,
-      prompt: `What would it look like to ${firstTag} and ${secondTag} ${value.name.toLowerCase()} this week?`,
+      prompt: `Your library associates ${value.name.toLowerCase()} with "${firstTag}" and "${secondTag}." Which one feels alive, which one feels neglected, and what is one concrete way to practice it this week?`,
     },
     {
       id: `${value.name}-deep-definition`,
       title: `Define your version of ${value.name}`,
       value: value.name,
-      description: value.description,
-      duration: '30 min',
+      description: `Start with your library language, then rewrite it into a personal rule, boundary, or ritual you can actually live.`,
+      duration: '25 min',
       accent,
-      prompt: `Translate the definition of ${value.name.toLowerCase()} into a personal rule, ritual, or standard.`,
+      prompt: `Your library says: "${libraryLine}" Use that together with this definition: "${longDefinition}" What does ${value.name.toLowerCase()} look like in your life when it is specific, embodied, and non-performative?`,
     },
   ];
 };

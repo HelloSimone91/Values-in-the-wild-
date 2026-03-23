@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Compass, Search, Star } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
-import { accentClass, categoryAccent, ValueDefinition } from '../stitchData';
+import { accentClass, categoryAccent, getValueSearchText, ValueDefinition } from '../stitchData';
 
 interface ValuesLibraryViewProps {
   values: ValueDefinition[];
@@ -69,10 +69,7 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
       if (favoritesOnly && !favoriteValues.includes(value.name)) return false;
       if (!normalizedQuery) return true;
 
-      return [value.name, value.description, value.example, value.inTheWild?.join(' ') || '', value.category, value.tags.join(' ')]
-        .join(' ')
-        .toLowerCase()
-        .includes(normalizedQuery);
+      return getValueSearchText(value).includes(normalizedQuery);
     });
   }, [activeCategory, activeTag, favoriteValues, favoritesOnly, query, values]);
 
