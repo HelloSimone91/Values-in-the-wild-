@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import fsSync from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { hasDatabase, initDatabase, listReflections, replaceReflections } from './database.mjs';
+import { hasDatabase, initDatabase, listReflections, recordEvent, replaceReflections } from './database.mjs';
 import { hasSupabaseAuth, requireAuthenticatedUser } from './supabase.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -61,6 +61,8 @@ const isValidReflection = (entry) => {
     (field) => typeof field === 'string' && field.trim()
   );
 };
+
+const isValidEventName = (value) => typeof value === 'string' && /^[a-z0-9_.-]{3,64}$/i.test(value);
 
 app.get('/api/v1/users/:userId/reflections', async (req, res) => {
   if (hasSupabaseAuth()) {
@@ -142,6 +144,43 @@ app.put('/api/v1/me/reflections', async (req, res) => {
     const status = typeof error?.status === 'number' ? error.status : 503;
     console.error('Failed to save authenticated reflections:', error);
     return res.status(status).json({ error: error.message || 'Failed to save reflections.' });
+  }
+});
+
+app.post('/api/v1/events', async (req, res) => {
+  const { anonymousId, eventName, metadata } = req.body || {};
+
+  if (!isValidEventName(eventName)) {
+    return res.status(400).json({ error: 'Invalid eventName.' });
+  }
+
+  if (anonymousId != null && (typeof anonymousId !== 'string' || !anonymousId.trim())) {
+    return res.status(400).json({ error: 'Invalid anonymousId.' });
+  }
+
+  let userId = null;
+
+  if (req.headers.authorization) {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      userId = user.id;
+    } catch (error) {
+      const status = typeof error?.status === 'number' ? error.status : 401;
+      return res.status(status).json({ error: error.message || 'Invalid or expired session.' });
+    }
+  }
+
+  try {
+    await recordEvent({
+      anonymousId: anonymousId || null,
+      eventName,
+      metadata: metadata && typeof metadata === 'object' ? metadata : {},
+      userId,
+    });
+    return res.status(202).json({ ok: true });
+  } catch (error) {
+    console.error('Failed to record analytics event:', error);
+    return res.status(503).json({ error: 'Analytics storage is not configured.' });
   }
 });
 

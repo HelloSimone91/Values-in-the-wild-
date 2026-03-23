@@ -26,6 +26,12 @@ const writeLocalReflections = (cacheKey: string, reflections: ReflectionEntry[])
   localStorage.setItem(cacheKey, JSON.stringify(reflections));
 };
 
+export const loadLocalReflections = (userId?: string): ReflectionEntry[] => readLocalReflections(getCacheKey(userId));
+
+export const clearLocalReflections = (userId?: string): void => {
+  localStorage.removeItem(getCacheKey(userId));
+};
+
 export const loadReflections = async ({
   accessToken,
   authEnabled = false,

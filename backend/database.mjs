@@ -35,6 +35,22 @@ const ensureTable = async () => {
     CREATE INDEX IF NOT EXISTS reflections_user_date_idx
     ON reflections (user_id, reflection_date DESC);
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS analytics_events (
+      event_id BIGSERIAL PRIMARY KEY,
+      event_name TEXT NOT NULL,
+      user_id TEXT,
+      anonymous_id TEXT,
+      metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS analytics_events_event_created_idx
+    ON analytics_events (event_name, created_at DESC);
+  `);
 };
 
 export const hasDatabase = () => Boolean(pool);
@@ -114,4 +130,23 @@ export const replaceReflections = async (userId, reflections) => {
   } finally {
     client.release();
   }
+};
+
+export const recordEvent = async ({ anonymousId = null, eventName, metadata = {}, userId = null }) => {
+  if (!pool) {
+    throw new Error('DATABASE_URL is not configured.');
+  }
+
+  await pool.query(
+    `
+      INSERT INTO analytics_events (
+        event_name,
+        user_id,
+        anonymous_id,
+        metadata
+      )
+      VALUES ($1, $2, $3, $4::jsonb);
+    `,
+    [eventName, userId, anonymousId, JSON.stringify(metadata || {})]
+  );
 };

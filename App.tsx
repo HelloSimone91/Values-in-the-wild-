@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpenText, CheckCircle2, History, LibraryBig, Loader2, TriangleAlert, UserCircle2, X } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
@@ -10,9 +10,10 @@ import ValueDetailView from './components/ValueDetailView';
 import ValuesLibraryView from './components/ValuesLibraryView';
 import valuesSeed from './data/Values-en.json';
 import { findValueBySlug, ReflectionEntry, slugifyValueName, ValueDefinition } from './stitchData';
-import { loadReflections, saveReflections } from './services/reflectionPersistenceService';
+import { clearLocalReflections, loadLocalReflections, loadReflections, saveReflections } from './services/reflectionPersistenceService';
 import { getCurrentSession, getSupabaseClient, isSupabaseConfigured, sendMagicLink, signOutUser } from './services/supabaseClient';
 import { EntryMode, getEntryMode, getOrCreateUserId, hasSeenLanding, markLandingSeen, setEntryMode } from './services/userSessionService';
+import { trackEvent } from './services/analyticsService';
 
 type ToastTone = 'success' | 'error';
 
@@ -38,8 +39,11 @@ const App: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
+  const [claimableGuestReflections, setClaimableGuestReflections] = useState<ReflectionEntry[]>([]);
+  const [isClaimingGuestNotes, setIsClaimingGuestNotes] = useState(false);
   const [anonymousUserId] = useState(() => getOrCreateUserId());
   const [entryMode, setEntryModeState] = useState<EntryMode | null>(() => getEntryMode());
+  const previousSessionUserId = useRef<string | null>(null);
 
   const authEnabled = isSupabaseConfigured();
   const effectiveEntryMode: EntryMode = !authEnabled ? 'guest' : session ? 'account' : entryMode || 'guest';
@@ -88,6 +92,14 @@ const App: React.FC = () => {
     window.setTimeout(() => removeToast(id), 3200);
   };
 
+  const emitEvent = (eventName: string, metadata: Record<string, unknown> = {}) => {
+    void trackEvent(eventName, {
+      accessToken,
+      anonymousId: session ? null : anonymousUserId,
+      metadata,
+    });
+  };
+
   useEffect(() => {
     if (!authEnabled) {
       setIsLoadingAuth(false);
@@ -131,6 +143,14 @@ const App: React.FC = () => {
   }, [authEnabled]);
 
   useEffect(() => {
+    const currentUserId = session?.user.id || null;
+    if (currentUserId && previousSessionUserId.current !== currentUserId) {
+      emitEvent('auth_signed_in');
+    }
+    previousSessionUserId.current = currentUserId;
+  }, [session]);
+
+  useEffect(() => {
     if (!authEnabled) return;
 
     if (session) {
@@ -144,6 +164,24 @@ const App: React.FC = () => {
       setEntryModeState('guest');
     }
   }, [authEnabled, entryMode, session]);
+
+  useEffect(() => {
+    if (!authEnabled) return;
+
+    if (!session) {
+      setClaimableGuestReflections([]);
+      return;
+    }
+
+    const guestReflections = loadLocalReflections(anonymousUserId);
+    setClaimableGuestReflections(guestReflections);
+  }, [anonymousUserId, authEnabled, session]);
+
+  useEffect(() => {
+    if (currentView === 'landing') {
+      emitEvent('screen_view', { screen: 'landing' });
+    }
+  }, [currentView]);
 
   useEffect(() => {
     let cancelled = false;
@@ -285,10 +323,12 @@ const App: React.FC = () => {
 
     chooseEntryMode('account');
     setIsAuthDialogOpen(true);
+    emitEvent('sign_in_requested', { from: currentView });
   };
 
   const handleContinueAsGuest = () => {
     chooseEntryMode('guest');
+    emitEvent('guest_mode_selected');
     navigate('/guide');
   };
 
@@ -297,6 +337,7 @@ const App: React.FC = () => {
     try {
       await sendMagicLink(email, `${window.location.origin}/guide`);
       setIsAuthDialogOpen(false);
+      emitEvent('magic_link_requested');
       pushToast(`Magic link sent to ${email}.`, 'success');
     } catch (error) {
       pushToast(error instanceof Error ? error.message : 'Unable to send magic link.', 'error');
@@ -310,6 +351,7 @@ const App: React.FC = () => {
       await signOutUser();
       chooseEntryMode('guest');
       navigate('/guide');
+      emitEvent('signed_out');
       pushToast('Signed out.', 'success');
     } catch (error) {
       pushToast(error instanceof Error ? error.message : 'Unable to sign out.', 'error');
@@ -334,10 +376,18 @@ const App: React.FC = () => {
     setReflections(nextReflections);
     enterApp('/notes');
 
-    void saveReflections({ accessToken, authEnabled: useAccountPersistence, localOnly: isGuestMode, userId }, nextReflections).catch((error) => {
-      setReflections(previous);
-      pushToast(error instanceof Error ? error.message : 'Unable to save field note.', 'error');
-    });
+    void saveReflections({ accessToken, authEnabled: useAccountPersistence, localOnly: isGuestMode, userId }, nextReflections)
+      .then(() =>
+        emitEvent('reflection_saved', {
+          mode: isGuestMode ? 'guest' : 'account',
+          value: entry.value,
+          practiceTitle: entry.practiceTitle,
+        })
+      )
+      .catch((error) => {
+        setReflections(previous);
+        pushToast(error instanceof Error ? error.message : 'Unable to save field note.', 'error');
+      });
   };
 
   const handleUpdateReflection = (reflectionId: string, updates: Pick<ReflectionEntry, 'note' | 'practiceTitle'>) => {
@@ -352,7 +402,13 @@ const App: React.FC = () => {
     setReflections(nextReflections);
 
     void saveReflections({ accessToken, authEnabled: useAccountPersistence, localOnly: isGuestMode, userId }, nextReflections)
-      .then(() => pushToast('Field note updated.', 'success'))
+      .then(() => {
+        pushToast('Field note updated.', 'success');
+        emitEvent('reflection_updated', {
+          mode: isGuestMode ? 'guest' : 'account',
+          reflectionId,
+        });
+      })
       .catch((error) => {
         setReflections(previous);
         pushToast(error instanceof Error ? error.message : 'Unable to update field note.', 'error');
@@ -371,11 +427,51 @@ const App: React.FC = () => {
     setReflections(nextReflections);
 
     void saveReflections({ accessToken, authEnabled: useAccountPersistence, localOnly: isGuestMode, userId }, nextReflections)
-      .then(() => pushToast('Field note removed.', 'success'))
+      .then(() => {
+        pushToast('Field note removed.', 'success');
+        emitEvent('reflection_deleted', {
+          mode: isGuestMode ? 'guest' : 'account',
+          reflectionId,
+        });
+      })
       .catch((error) => {
         setReflections(previous);
         pushToast(error instanceof Error ? error.message : 'Unable to remove field note.', 'error');
       });
+  };
+
+  const handleDismissClaimableGuestNotes = () => {
+    setClaimableGuestReflections([]);
+  };
+
+  const handleClaimGuestNotes = async () => {
+    if (!session || !claimableGuestReflections.length) return;
+
+    setIsClaimingGuestNotes(true);
+    const merged = [...reflections];
+    const seenIds = new Set(merged.map((entry) => entry.id));
+
+    for (const guestEntry of claimableGuestReflections) {
+      if (!seenIds.has(guestEntry.id)) {
+        merged.push(guestEntry);
+        seenIds.add(guestEntry.id);
+      }
+    }
+
+    merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    try {
+      await saveReflections({ accessToken, authEnabled: true, localOnly: false, userId }, merged);
+      clearLocalReflections(anonymousUserId);
+      setClaimableGuestReflections([]);
+      setReflections(merged);
+      emitEvent('guest_notes_claimed', { count: claimableGuestReflections.length });
+      pushToast('Guest field notes moved into your account.', 'success');
+    } catch (error) {
+      pushToast(error instanceof Error ? error.message : 'Unable to claim guest field notes.', 'error');
+    } finally {
+      setIsClaimingGuestNotes(false);
+    }
   };
 
   const renderRoute = () => {
@@ -537,6 +633,37 @@ const App: React.FC = () => {
       </header>
 
       <main className="mx-auto max-w-7xl px-5 pb-28 pt-8 sm:px-6 md:px-8 md:pb-16 md:pt-10">{renderRoute()}</main>
+
+      {!!session && !!claimableGuestReflections.length && (
+        <div className="mx-auto -mt-20 mb-10 max-w-7xl px-5 sm:px-6 md:px-8">
+          <section className="rounded-[2rem] border border-[#dce7d2] bg-[#f6fbf2] p-5 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">Claim guest notes</p>
+                <p className="mt-2 text-sm leading-6 text-[#4d5b43]">
+                  You have {claimableGuestReflections.length} guest field note{claimableGuestReflections.length === 1 ? '' : 's'} on this browser.
+                  Move them into your account to keep everything in one history.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleDismissClaimableGuestNotes}
+                  className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#35680e] shadow-[0_14px_30px_rgba(41,33,27,0.04)]"
+                >
+                  Keep separate
+                </button>
+                <button
+                  onClick={handleClaimGuestNotes}
+                  disabled={isClaimingGuestNotes}
+                  className="rounded-full bg-[#35680e] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)] disabled:cursor-not-allowed disabled:bg-[#c9d7bc]"
+                >
+                  {isClaimingGuestNotes ? 'Moving notes…' : 'Move into account'}
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#efe6df] bg-[rgba(255,248,243,0.88)] px-4 pb-6 pt-3 backdrop-blur-xl md:hidden">
         <div className="mx-auto grid max-w-md grid-cols-3 gap-3">

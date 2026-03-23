@@ -12,6 +12,8 @@ Reflections are stored in Postgres through the backend API. Authentication is op
 - without Supabase env vars, the app stays in local mode
 - with Supabase env vars, field notes and history are tied to authenticated users
 
+Guest mode stays available even when auth is configured. Guests can keep notes locally on the current browser, then claim those notes into their account after signing in.
+
 ## Run locally
 
 ```bash
@@ -81,3 +83,19 @@ Schema shape:
 - `updated_at`
 
 The Render blueprint provisions a managed Postgres database and injects `DATABASE_URL` into the web service.
+
+## Basic analytics
+
+The backend also stores a minimal analytics event stream in Postgres via `POST /api/v1/events`.
+
+Current tracked events include:
+- `screen_view`
+- `guest_mode_selected`
+- `sign_in_requested`
+- `magic_link_requested`
+- `auth_signed_in`
+- `signed_out`
+- `reflection_saved`
+- `reflection_updated`
+- `reflection_deleted`
+- `guest_notes_claimed`
