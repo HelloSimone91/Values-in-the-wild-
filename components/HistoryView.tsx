@@ -13,7 +13,8 @@ type TimeFilter = 'all' | '7d' | '30d' | '90d';
 type SortOption = 'newest' | 'oldest' | 'value';
 
 interface HistoryViewProps {
-  authEnabled: boolean;
+  authConfigured: boolean;
+  isGuestMode: boolean;
   isAuthenticated: boolean;
   reflections: ReflectionEntry[];
   values: ValueDefinition[];
@@ -26,7 +27,8 @@ interface HistoryViewProps {
 }
 
 const HistoryView: React.FC<HistoryViewProps> = ({
-  authEnabled,
+  authConfigured,
+  isGuestMode,
   isAuthenticated,
   reflections,
   values,
@@ -138,41 +140,6 @@ const HistoryView: React.FC<HistoryViewProps> = ({
     setSortBy('newest');
   };
 
-  if (authEnabled && !isAuthenticated) {
-    return (
-      <section className="rounded-[2.6rem] bg-[#f9f2ed] p-8 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
-        <div className="max-w-2xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#eef5e8] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">
-            <Sparkles className="h-3.5 w-3.5" />
-            Sign in to view field notes
-          </div>
-          <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e] sm:text-5xl">
-            Your saved notes live with your account.
-          </h1>
-          <p className="text-base leading-7 text-[#6f6258] sm:text-lg">
-            Sign in with a magic link to unlock history, streaks, and editing across devices.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={onRequestSignIn}
-              className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-6 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
-            >
-              Sign in
-              <ArrowRight className="h-4 w-4" />
-            </button>
-            <button
-              onClick={onOpenPractice}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-[#35680e] shadow-[0_14px_30px_rgba(41,33,27,0.04)]"
-            >
-              Browse practice
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   if (!reflections.length) {
     return (
       <section className="rounded-[2.6rem] bg-[#f9f2ed] p-8 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
@@ -207,6 +174,26 @@ const HistoryView: React.FC<HistoryViewProps> = ({
           Search, sort, and revise the moments you’ve already logged.
         </p>
       </header>
+
+      {authConfigured && isGuestMode && !isAuthenticated && (
+        <section className="rounded-[2rem] border border-[#dce7d2] bg-[#f6fbf2] p-5 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">Guest mode</p>
+              <p className="mt-2 text-sm leading-6 text-[#4d5b43]">
+                These field notes stay on this browser only. Sign in if you want them attached to your account and available across devices.
+              </p>
+            </div>
+            <button
+              onClick={onRequestSignIn}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#35680e] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
+            >
+              Sign in for sync
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </section>
+      )}
 
       <section className="rounded-[2.5rem] bg-white p-5 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-6">
         <div className="flex items-center gap-3">

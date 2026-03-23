@@ -12,7 +12,7 @@ import valuesSeed from './data/Values-en.json';
 import { findValueBySlug, ReflectionEntry, slugifyValueName, ValueDefinition } from './stitchData';
 import { loadReflections, saveReflections } from './services/reflectionPersistenceService';
 import { getCurrentSession, getSupabaseClient, isSupabaseConfigured, sendMagicLink, signOutUser } from './services/supabaseClient';
-import { getOrCreateUserId, hasSeenLanding, markLandingSeen } from './services/userSessionService';
+import { EntryMode, getEntryMode, getOrCreateUserId, hasSeenLanding, markLandingSeen, setEntryMode } from './services/userSessionService';
 
 type ToastTone = 'success' | 'error';
 
@@ -39,8 +39,12 @@ const App: React.FC = () => {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
   const [anonymousUserId] = useState(() => getOrCreateUserId());
+  const [entryMode, setEntryModeState] = useState<EntryMode | null>(() => getEntryMode());
 
   const authEnabled = isSupabaseConfigured();
+  const effectiveEntryMode: EntryMode = !authEnabled ? 'guest' : session ? 'account' : entryMode || 'guest';
+  const isGuestMode = effectiveEntryMode === 'guest';
+  const useAccountPersistence = authEnabled && effectiveEntryMode === 'account' && Boolean(session);
   const userId = session?.user.id || anonymousUserId;
   const accessToken = session?.access_token || null;
 
@@ -127,6 +131,21 @@ const App: React.FC = () => {
   }, [authEnabled]);
 
   useEffect(() => {
+    if (!authEnabled) return;
+
+    if (session) {
+      setEntryMode('account');
+      setEntryModeState('account');
+      return;
+    }
+
+    if (!entryMode) {
+      setEntryMode('guest');
+      setEntryModeState('guest');
+    }
+  }, [authEnabled, entryMode, session]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const loadValues = async () => {
@@ -181,7 +200,7 @@ const App: React.FC = () => {
       setReflectionsError(null);
 
       try {
-        if (authEnabled && !accessToken) {
+        if (useAccountPersistence && !accessToken) {
           if (!cancelled) {
             setReflections([]);
             setIsLoadingReflections(false);
@@ -191,7 +210,8 @@ const App: React.FC = () => {
 
         const loaded = await loadReflections({
           accessToken,
-          authEnabled,
+          authEnabled: useAccountPersistence,
+          localOnly: isGuestMode,
           userId,
         });
         if (!cancelled) {
@@ -212,7 +232,7 @@ const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, authEnabled, userId]);
+  }, [accessToken, isGuestMode, useAccountPersistence, userId]);
 
   useEffect(() => {
     if (location.pathname === '/' && hasSeenLanding()) {
@@ -237,6 +257,12 @@ const App: React.FC = () => {
     navigate(href);
   };
 
+  const chooseEntryMode = (mode: EntryMode) => {
+    setEntryMode(mode);
+    setEntryModeState(mode);
+    markLandingSeen();
+  };
+
   const handleSelectValue = (name: string) => {
     setSelectedValueName(name);
   };
@@ -257,7 +283,13 @@ const App: React.FC = () => {
       return;
     }
 
+    chooseEntryMode('account');
     setIsAuthDialogOpen(true);
+  };
+
+  const handleContinueAsGuest = () => {
+    chooseEntryMode('guest');
+    navigate('/guide');
   };
 
   const handleSendMagicLink = async (email: string) => {
@@ -276,6 +308,7 @@ const App: React.FC = () => {
   const handleSignOut = async () => {
     try {
       await signOutUser();
+      chooseEntryMode('guest');
       navigate('/guide');
       pushToast('Signed out.', 'success');
     } catch (error) {
@@ -284,9 +317,9 @@ const App: React.FC = () => {
   };
 
   const handleAddReflection = (entry: Omit<ReflectionEntry, 'id' | 'date'>) => {
-    if (authEnabled && !session) {
+    if (useAccountPersistence && !session) {
       requestSignIn();
-      pushToast('Sign in to save field notes.', 'error');
+      pushToast('Sign in to save account-backed field notes.', 'error');
       return;
     }
 
@@ -301,16 +334,16 @@ const App: React.FC = () => {
     setReflections(nextReflections);
     enterApp('/notes');
 
-    void saveReflections({ accessToken, authEnabled, userId }, nextReflections).catch((error) => {
+    void saveReflections({ accessToken, authEnabled: useAccountPersistence, localOnly: isGuestMode, userId }, nextReflections).catch((error) => {
       setReflections(previous);
       pushToast(error instanceof Error ? error.message : 'Unable to save field note.', 'error');
     });
   };
 
   const handleUpdateReflection = (reflectionId: string, updates: Pick<ReflectionEntry, 'note' | 'practiceTitle'>) => {
-    if (authEnabled && !session) {
+    if (useAccountPersistence && !session) {
       requestSignIn();
-      pushToast('Sign in to revise field notes.', 'error');
+      pushToast('Sign in to revise account-backed field notes.', 'error');
       return;
     }
 
@@ -318,7 +351,7 @@ const App: React.FC = () => {
     const nextReflections = previous.map((entry) => (entry.id === reflectionId ? { ...entry, ...updates } : entry));
     setReflections(nextReflections);
 
-    void saveReflections({ accessToken, authEnabled, userId }, nextReflections)
+    void saveReflections({ accessToken, authEnabled: useAccountPersistence, localOnly: isGuestMode, userId }, nextReflections)
       .then(() => pushToast('Field note updated.', 'success'))
       .catch((error) => {
         setReflections(previous);
@@ -327,9 +360,9 @@ const App: React.FC = () => {
   };
 
   const handleDeleteReflection = (reflectionId: string) => {
-    if (authEnabled && !session) {
+    if (useAccountPersistence && !session) {
       requestSignIn();
-      pushToast('Sign in to remove field notes.', 'error');
+      pushToast('Sign in to remove account-backed field notes.', 'error');
       return;
     }
 
@@ -337,7 +370,7 @@ const App: React.FC = () => {
     const nextReflections = previous.filter((entry) => entry.id !== reflectionId);
     setReflections(nextReflections);
 
-    void saveReflections({ accessToken, authEnabled, userId }, nextReflections)
+    void saveReflections({ accessToken, authEnabled: useAccountPersistence, localOnly: isGuestMode, userId }, nextReflections)
       .then(() => pushToast('Field note removed.', 'success'))
       .catch((error) => {
         setReflections(previous);
@@ -372,8 +405,11 @@ const App: React.FC = () => {
     if (currentView === 'landing') {
       return (
         <LandingView
+          authConfigured={authEnabled}
           valueCount={values.length}
+          onContinueAsGuest={handleContinueAsGuest}
           onEnterFieldGuide={() => enterApp('/guide')}
+          onSignIn={requestSignIn}
           onStartPractice={() => {
             if (selectedValue) {
               handleStartPractice(selectedValue.name);
@@ -402,7 +438,8 @@ const App: React.FC = () => {
         <PracticeView
           selectedValue={selectedValue}
           values={values}
-          authEnabled={authEnabled}
+          authConfigured={authEnabled}
+          isGuestMode={isGuestMode}
           isAuthenticated={Boolean(session)}
           onSelectValue={(name) => {
             handleSelectValue(name);
@@ -417,7 +454,8 @@ const App: React.FC = () => {
     if (currentView === 'history') {
       return (
         <HistoryView
-          authEnabled={authEnabled}
+          authConfigured={authEnabled}
+          isGuestMode={isGuestMode}
           isAuthenticated={Boolean(session)}
           reflections={reflections}
           values={values}
@@ -475,13 +513,20 @@ const App: React.FC = () => {
           </nav>
 
           {authEnabled ? (
-            <button
-              onClick={session ? handleSignOut : requestSignIn}
-              className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e] transition-colors hover:bg-[#e5ddd6]"
-            >
-              <UserCircle2 className="h-5 w-5" />
-              {session ? 'Sign out' : 'Sign in'}
-            </button>
+            <div className="flex items-center gap-2">
+              {!session && isGuestMode && (
+                <div className="hidden rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e] sm:inline-flex">
+                  Guest mode
+                </div>
+              )}
+              <button
+                onClick={session ? handleSignOut : requestSignIn}
+                className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e] transition-colors hover:bg-[#e5ddd6]"
+              >
+                <UserCircle2 className="h-5 w-5" />
+                {session ? 'Sign out' : 'Sign in'}
+              </button>
+            </div>
           ) : (
             <div className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e]">
               <UserCircle2 className="h-5 w-5" />

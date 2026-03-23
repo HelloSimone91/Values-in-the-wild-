@@ -7,6 +7,7 @@ const API_BASE = configuredBase || (import.meta.env.DEV ? 'http://localhost:8787
 interface ReflectionPersistenceOptions {
   accessToken?: string | null;
   authEnabled?: boolean;
+  localOnly?: boolean;
   userId?: string;
 }
 
@@ -28,9 +29,14 @@ const writeLocalReflections = (cacheKey: string, reflections: ReflectionEntry[])
 export const loadReflections = async ({
   accessToken,
   authEnabled = false,
+  localOnly = false,
   userId,
 }: ReflectionPersistenceOptions): Promise<ReflectionEntry[]> => {
   const cacheKey = getCacheKey(userId);
+
+  if (localOnly) {
+    return readLocalReflections(cacheKey);
+  }
 
   if (authEnabled && !accessToken) {
     return [];
@@ -65,10 +71,15 @@ export const loadReflections = async ({
 };
 
 export const saveReflections = async (
-  { accessToken, authEnabled = false, userId }: ReflectionPersistenceOptions,
+  { accessToken, authEnabled = false, localOnly = false, userId }: ReflectionPersistenceOptions,
   reflections: ReflectionEntry[]
 ): Promise<void> => {
   const cacheKey = getCacheKey(userId);
+
+  if (localOnly) {
+    writeLocalReflections(cacheKey, reflections);
+    return;
+  }
 
   if (authEnabled && !accessToken) {
     throw new Error('Sign in to save field notes.');

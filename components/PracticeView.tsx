@@ -9,7 +9,8 @@ import {
 } from '../stitchData';
 
 interface PracticeViewProps {
-  authEnabled: boolean;
+  authConfigured: boolean;
+  isGuestMode: boolean;
   isAuthenticated: boolean;
   selectedValue: ValueDefinition | null;
   values: ValueDefinition[];
@@ -21,7 +22,8 @@ interface PracticeViewProps {
 type PracticeMode = 'micro' | 'deep';
 
 const PracticeView: React.FC<PracticeViewProps> = ({
-  authEnabled,
+  authConfigured,
+  isGuestMode,
   isAuthenticated,
   selectedValue,
   values,
@@ -59,11 +61,6 @@ const PracticeView: React.FC<PracticeViewProps> = ({
   const activePractice = allPractices.find((practice) => practice.id === activePracticeId) || visiblePractices[0] || null;
 
   const handleSaveReflection = () => {
-    if (authEnabled && !isAuthenticated) {
-      onRequestSignIn();
-      return;
-    }
-
     if (!selectedValue || !activePractice || !reflection.trim()) return;
 
     onAddReflection({
@@ -217,17 +214,17 @@ const PracticeView: React.FC<PracticeViewProps> = ({
             </div>
           </div>
 
-          {authEnabled && !isAuthenticated ? (
+          {authConfigured && isGuestMode ? (
             <div className="mt-6 rounded-[1.8rem] border border-[#dce7d2] bg-[#f6fbf2] p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">Sign in required</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">Guest mode</p>
               <p className="mt-3 text-sm leading-6 text-[#4d5b43]">
-                Save field notes to your account so history, streaks, and notes follow you across devices.
+                Field notes stay on this device until you sign in. Use an account if you want sync across devices.
               </p>
               <button
                 onClick={onRequestSignIn}
                 className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#35680e] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
               >
-                Sign in to save
+                Sign in for sync
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -242,14 +239,16 @@ const PracticeView: React.FC<PracticeViewProps> = ({
 
           <div className="mt-5 space-y-4">
             <p className="text-sm leading-6 text-[#6f6258]">
-              {authEnabled && !isAuthenticated ? 'Sign in first, then save a specific moment.' : 'Save a specific moment, not an intention.'}
+              {authConfigured && isGuestMode
+                ? 'Guest notes stay on this device. Sign in later if you want sync.'
+                : 'Save a specific moment, not an intention.'}
             </p>
             <button
               onClick={handleSaveReflection}
-              disabled={(authEnabled ? !isAuthenticated : !reflection.trim()) || !activePractice || (!authEnabled && !reflection.trim())}
+              disabled={!reflection.trim() || !activePractice}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#35680e] px-6 py-3.5 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)] transition hover:bg-[#2e5a0c] disabled:cursor-not-allowed disabled:bg-[#c9d7bc]"
             >
-              {authEnabled && !isAuthenticated ? 'Sign in to save' : 'Save field note'}
+              Save field note
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
