@@ -25,7 +25,7 @@
         {
             "name": "Accountability",
             "description": "Taking responsibility for one's actions and being answerable for their outcomes.",
-            "example": "After the project missed its deadline, the team leader demonstrated accountability by acknowledging the mistakes and developing a plan to fix them.",
+            "example": "After dropping the handoff, they named the miss directly, updated the people affected, and stayed with the repair.",
             "category": "Core Values",
             "tags": [
                 "answer",
@@ -39,7 +39,7 @@
                 "resolve"
             ],
             "inTheWild": [
-                "Admitting fault in a minor car accident and offering to pay for damages.",
+                "Someone names the part that was theirs and starts fixing it before anyone has to chase them.",
                 "Following through on commitments made to friends or coworkers, such as showing up to a meeting or completing a task by a certain deadline.",
                 "Taking ownership of a mistake made at work and working to rectify the situation."
             ]
@@ -47,7 +47,7 @@
         {
             "name": "Achievement",
             "description": "Reaching goals and fulfilling your potential through hard work and determination.",
-            "example": "After years of study and practice, earning her medical degree represented a significant achievement that opened doors to help others.",
+            "example": "After months of practice and early mornings, finishing the race felt like achievement because it came from sustained effort.",
             "category": "Aspirations",
             "tags": [
                 "accomplish",
@@ -69,7 +69,7 @@
         {
             "name": "Action",
             "description": "Taking steps to achieve a goal or complete a task.",
-            "example": "Instead of just talking about helping the homeless, she took action by organizing a community drive for winter clothing and necessities.",
+            "example": "Instead of talking about what someone should do, they sent the message, picked a time, and got the plan moving.",
             "category": "Growth",
             "tags": [
                 "do",
@@ -83,7 +83,7 @@
                 "initiate"
             ],
             "inTheWild": [
-                "Instead of just talking about helping the homeless, she took action by organizing a community drive for winter clothing and necessities.",
+                "Action shows up when someone stops circling the issue and does the next concrete thing.",
                 "Action is the email sent, the call made, the form submitted, the meeting scheduled.",
                 "It becomes visible when someone turns concern into movement before they have perfect certainty."
             ]
@@ -91,7 +91,7 @@
         {
             "name": "Adventure",
             "description": "A willingness to take risks and explore new experiences for enjoyment and growth.",
-            "example": "She embraced adventure by accepting a job in a foreign country where she knew no one and didn't speak the language.",
+            "example": "She chose adventure by booking the trip before every detail was settled and trusting herself to figure the rest out.",
             "category": "Aspirations",
             "tags": [
                 "explore",
@@ -106,14 +106,14 @@
             ],
             "inTheWild": [
                 "Adventure can be as large as moving across the world or as small as saying yes to the thing that makes you feel vividly awake and slightly unsure.",
-                "She embraced adventure by accepting a job in a foreign country where she knew no one and didn't speak the language.",
+                "Adventure can look like saying yes to the plan that feels alive even before it feels fully secure.",
                 "You notice it in the moment someone chooses discovery over predictability and lets curiosity outrank comfort."
             ]
         },
         {
             "name": "Advocacy",
             "description": "Speaking up for what is right and supporting others to create positive change in the community.",
-            "example": "The teacher practiced advocacy by addressing the school board about the need for more resources for students with disabilities.",
+            "example": "When a policy left one person exposed, he stayed in the conversation and pushed for a fairer option.",
             "category": "Social",
             "tags": [
                 "champion",
@@ -127,7 +127,7 @@
                 "lobby"
             ],
             "inTheWild": [
-                "The teacher practiced advocacy by addressing the school board about the need for more resources for students with disabilities.",
+                "Advocacy shows up when someone uses their voice, access, or credibility to back a person with less leverage.",
                 "You see advocacy when someone uses their voice, status, or access on behalf of people who are easier to ignore.",
                 "It often looks like staying in the room after the first objection and pushing for a concrete change, not just a better tone."
             ]
@@ -171,15 +171,15 @@
                 "advance"
             ],
             "inTheWild": [
-                "A student studying hard to achieve good grades and pursue their academic goals.",
-                "An entrepreneur starting a business from scratch and working tirelessly to make it successful.",
-                "An artist practicing and refining their craft, striving to create something truly unique and meaningful."
+                "Someone keeps working toward a bigger future even when nobody is watching yet.",
+                "A person risks being seen trying for more instead of pretending they do not want it.",
+                "You can feel ambition in the hours someone keeps refining, stretching, and reaching past their current level."
             ]
         },
         {
             "name": "Appreciation",
             "description": "Showing gratitude and recognizing the good things or people in life.",
-            "example": "The manager expressed appreciation by writing personalized thank-you notes highlighting each team member's specific contributions to the successful project.",
+            "example": "She expressed appreciation by naming the exact way another person's care changed the day.",
             "category": "Interpersonal",
             "tags": [
                 "value",
@@ -193,7 +193,7 @@
                 "praise"
             ],
             "inTheWild": [
-                "The manager expressed appreciation by writing personalized thank-you notes highlighting each team member's specific contributions to the successful project.",
+                "Appreciation becomes real when someone gets specific about what mattered and why.",
                 "Appreciation gets specific: not \"good job,\" but \"the way you handled that conversation steadied the whole room.\"",
                 "It often appears in the pause someone takes to notice effort, beauty, or care that could easily have gone unremarked."
             ]
@@ -201,7 +201,7 @@
         {
             "name": "Approachability",
             "description": "Being open and friendly to others, making it easy for them to talk and share their thoughts.",
-            "example": "The CEO demonstrated approachability by eating lunch in the company cafeteria and welcoming employees to sit and chat with her.",
+            "example": "He made himself approachable by turning toward the other person, listening without rush, and answering without edge.",
             "category": "Interpersonal",
             "tags": [
                 "welcome",
@@ -215,7 +215,7 @@
                 "interact"
             ],
             "inTheWild": [
-                "The CEO demonstrated approachability by eating lunch in the company cafeteria and welcoming employees to sit and chat with her.",
+                "Approachability shows up when someone lowers the social cost of reaching out.",
                 "You notice it when someone asks a genuine question, leaves conversational space, and does not make other people earn basic warmth.",
                 "It often shows up in the signals around a person: open body language, an unhurried response, and a tone that says you will not be punished for speaking."
             ]
@@ -223,7 +223,7 @@
         {
             "name": "Authenticity",
             "description": "Being true to oneself and honest with others, showing real feelings and beliefs.",
-            "example": "During the job interview, she showed authenticity by honestly discussing both her strengths and areas where she needed growth.",
+            "example": "She chose authenticity by answering plainly instead of performing the version of herself she thought would be most approved.",
             "category": "Core Values",
             "tags": [
                 "express",
@@ -237,9 +237,9 @@
                 "honor"
             ],
             "inTheWild": [
-                "When someone admits to making a mistake and takes responsibility for their actions, even if it means facing consequences or admitting fault. This shows a willingness to be honest and authentic, even in difficult situations.",
-                "When a person chooses to express themselves in a way that is true to their personal style and preferences, rather than conforming to societal expectations or trends. This can be seen in fashion, art, music, and other forms of self-expression, and can demonstrate a commitment to being true to oneself.",
-                "During the job interview, she showed authenticity by honestly discussing both her strengths and areas where she needed growth."
+                "Someone admits the truth about a mistake, a limit, or a desire without trying to spin it into a better image.",
+                "A person chooses the style, language, or life shape that actually fits them instead of what earns the fastest approval.",
+                "Authenticity shows up when someone tells the truth about what they feel, want, or can really offer."
             ]
         },
         {
@@ -619,7 +619,7 @@
         {
             "name": "Communication",
             "description": "Sharing information clearly and respectfully with others to ensure understanding and connection.",
-            "example": "The manager practiced effective communication by explaining project goals clearly, listening to team concerns, and providing regular updates on progress.",
+            "example": "They practiced communication by saying what needed to happen, checking what the other person heard, and clearing up confusion early.",
             "category": "Interpersonal",
             "tags": [
                 "express",
@@ -633,9 +633,9 @@
                 "connect"
             ],
             "inTheWild": [
-                "A couple having a meaningful conversation about their day over dinner, actively listening to each other and expressing their thoughts and feelings.",
-                "A team working together to complete a project, regularly checking in with each other to ensure they are all on the same page.",
-                "A customer service representative patiently listening to a customer's complaint and working to find a solution that meets their needs."
+                "Two people slow down long enough to say what they mean instead of relying on hints or assumptions.",
+                "A group keeps naming decisions, timing, and ownership so nobody has to guess.",
+                "Someone listens closely enough to answer what was actually said, not just what they expected to hear."
             ]
         },
         {
@@ -663,7 +663,7 @@
         {
             "name": "Compassion",
             "description": "Caring for others and wanting to help them when they are suffering or in need.",
-            "example": "The volunteer showed compassion by sitting with homeless individuals, listening to their stories, and connecting them with resources while treating them with dignity.",
+            "example": "She showed compassion by staying present with her grieving friend without trying to rush them out of the pain.",
             "category": "Social",
             "tags": [
                 "care",
@@ -677,9 +677,9 @@
                 "nurture"
             ],
             "inTheWild": [
-                "Holding the door open for someone who is struggling with heavy bags or a stroller.",
-                "Offering a kind word or gesture to someone who is having a bad day.",
-                "Taking the time to listen to someone who is going through a difficult time."
+                "Someone notices another person's strain and responds in a way that eases the load.",
+                "A person offers warmth or help without making someone prove they deserve it first.",
+                "Compassion is often the decision to stay near suffering without turning away or making it about yourself."
             ]
         },
         {
@@ -795,7 +795,7 @@
         {
             "name": "Creativity",
             "description": "Using imagination and original ideas to create something new or solve problems.",
-            "example": "The teacher showed creativity by designing a classroom economy that made learning math concepts engaging through real-world applications.",
+            "example": "When the original plan failed, they made something workable and surprising out of the time, tools, and scraps still available.",
             "category": "Growth",
             "tags": [
                 "invent",
@@ -810,7 +810,7 @@
             ],
             "inTheWild": [
                 "Creativity appears when someone makes something new out of constraint rather than waiting for ideal materials.",
-                "The teacher showed creativity by designing a classroom economy that made learning math concepts engaging through real-world applications.",
+                "Creativity often appears when someone invents a fresh approach instead of being trapped by the first obvious one.",
                 "You notice it in the unexpected solution, the fresh framing, the combination nobody else thought to try."
             ]
         },
@@ -905,7 +905,7 @@
         {
             "name": "Empathy",
             "description": "Understanding and sharing the feelings of others to connect and support them better.",
-            "example": "The manager showed empathy by adjusting deadlines and workloads when a team member shared they were going through a difficult family situation.",
+            "example": "He showed empathy by hearing the fear underneath her words and responding to that, not just to the surface facts.",
             "category": "Social",
             "tags": [
                 "understand",
@@ -919,9 +919,9 @@
                 "acknowledge"
             ],
             "inTheWild": [
-                "Holding the door open for someone who is struggling with bags or a stroller.",
-                "Letting someone go ahead of you in line who appears to be in a hurry.",
-                "Listening attentively to a friend who is going through a difficult time, without trying to offer unsolicited advice."
+                "Empathy shows up when someone notices what another person might be carrying, not just what they are saying out loud.",
+                "A person makes room for another person's pace, stress, or perspective instead of forcing everything back to their own frame.",
+                "It often looks like listening long enough to understand before trying to advise, fix, or compare."
             ]
         },
         {
@@ -948,8 +948,8 @@
         },
         {
             "name": "Experiment",
-            "description": "A value represents the importance or worth of something, guiding decisions and actions in life.",
-            "example": "The teacher encouraged students to experiment with different approaches to problem-solving rather than focusing only on finding the right answer.",
+            "description": "Trying something in order to learn from the result, especially when certainty is not available up front.",
+            "example": "They ran a small version first, watched what happened, and used the signal to shape the next try.",
             "category": "Growth",
             "tags": [
                 "test",
@@ -963,7 +963,7 @@
                 "verify"
             ],
             "inTheWild": [
-                "The teacher encouraged students to experiment with different approaches to problem-solving rather than focusing only on finding the right answer.",
+                "Experiment shows up when someone tests a possibility instead of debating it forever.",
                 "Experiment shows up when a person treats uncertainty as something to test rather than something to avoid.",
                 "It often looks like running a small version first, learning from the signal, and trying again with better information."
             ]
@@ -1169,7 +1169,7 @@
         {
             "name": "Fun",
             "description": "Enjoyment and amusement that brings joy and entertainment to people's lives.",
-            "example": "The teacher incorporated fun into math lessons through games and real-world challenges, helping students develop a love for the subject.",
+            "example": "What started as an ordinary night turned fun once everyone relaxed enough to play, riff, and stay a little longer.",
             "category": "Personal",
             "tags": [
                 "enjoy",
@@ -1184,14 +1184,14 @@
             ],
             "inTheWild": [
                 "Fun shows up where energy lifts: when people get more playful, more inventive, and less guarded with each other.",
-                "The teacher incorporated fun into math lessons through games and real-world challenges, helping students develop a love for the subject.",
+                "Fun often arrives when seriousness loosens and people have room to play.",
                 "It is often the difference between something merely being tolerated and something becoming alive."
             ]
         },
         {
             "name": "Grace",
             "description": "A kind of love and kindness that shows compassion and forgiveness to others, even when they don't deserve it.",
-            "example": "When a new employee made a costly mistake, the manager responded with grace, focusing on learning opportunities rather than blame or punishment.",
+            "example": "When someone else was at their worst, she responded with steadiness and mercy instead of adding more shame to the moment.",
             "category": "Interpersonal",
             "tags": [
                 "move",
@@ -1205,9 +1205,9 @@
                 "accept"
             ],
             "inTheWild": [
-                "Holding the door open for someone who has their hands full, or helping someone carry a heavy load.",
-                "Offering a kind word or gesture to someone who seems upset or in distress, such as asking if they are okay or offering a listening ear.",
-                "Apologizing and taking responsibility for one's mistakes, rather than blaming others or making excuses."
+                "Grace shows up when someone leaves room for another person's humanity in the middle of a mistake.",
+                "A person responds gently when they have every reason to go sharp.",
+                "It can look like softening, forgiving, or giving another chance without pretending nothing happened."
             ]
         },
         {
@@ -1323,7 +1323,7 @@
         {
             "name": "Honesty",
             "description": "Being truthful and transparent in thoughts, words, and actions without hiding or lying.",
-            "example": "When the company encountered financial difficulties, the CEO demonstrated honesty by clearly communicating the challenges to employees and stakeholders.",
+            "example": "When the plan stopped working, he said so plainly instead of pretending everything was still fine.",
             "category": "Core Values",
             "tags": [
                 "truth",
@@ -1337,9 +1337,9 @@
                 "tell"
             ],
             "inTheWild": [
-                "Returning lost items: When someone finds a lost item, they have the opportunity to be honest by returning it to its rightful owner, rather than keeping it for themselves.",
-                "Admitting mistakes: When someone makes a mistake, they can exhibit honesty by admitting it and taking responsibility for their actions, rather than trying to shift the blame or cover it up.",
-                "Giving credit where it's due: When someone achieves success or recognition, they can exhibit honesty by acknowledging the contributions of others who helped them along the way, rather than taking all the credit themselves."
+                "Someone returns what is not theirs even when they could have gotten away with keeping it.",
+                "A person tells the truth about a miss before the evidence forces them to.",
+                "Honesty also looks like giving accurate credit instead of quietly absorbing more than you earned."
             ]
         },
         {
@@ -1411,7 +1411,7 @@
         {
             "name": "Humor",
             "description": "A way of thinking or expressing ideas that makes people laugh or feel good.",
-            "example": "The team leader used humor to help everyone relax during tense situations and to build connections among team members from different backgrounds.",
+            "example": "A well-timed joke let the room exhale without dismissing what was hard.",
             "category": "Interpersonal",
             "tags": [
                 "laugh",
@@ -1425,9 +1425,9 @@
                 "lighten"
             ],
             "inTheWild": [
-                "A group of coworkers sharing funny stories during a lunch break.",
-                "A parent making silly faces or telling jokes to make their child laugh.",
-                "A friend sending a funny meme or joke to brighten up someone's day."
+                "Humor shows up when someone lightens the moment without making another person the punch line.",
+                "A playful comment or story can reopen connection when the room has gotten stiff.",
+                "It often works best as relief, warmth, or perspective, not avoidance."
             ]
         },
         {
@@ -1711,9 +1711,9 @@
                 "serve"
             ],
             "inTheWild": [
-                "A teacher who encourages and challenges their students to reach their full potential, while also providing support and guidance along the way.",
-                "A parent who sets a positive example for their children by modeling responsible behavior, making tough decisions, and prioritizing the needs of the family.",
-                "A coach who inspires and motivates their team to work together towards a common goal, while also providing constructive feedback to help each individual improve."
+                "Leadership shows up when someone names a direction and helps other people move toward it.",
+                "A person goes first on the hard part, making courage and clarity more available to the group.",
+                "You can see leadership in how someone steadies the room, shares responsibility, and keeps the purpose visible."
             ]
         },
         {
@@ -2093,7 +2093,7 @@
         {
             "name": "Patience",
             "description": "The ability to wait calmly and without frustration for something to happen or for a situation to change.",
-            "example": "The teacher showed patience by explaining the concept multiple times using different approaches until each student understood.",
+            "example": "He showed patience by letting the conversation unfold at the other person's pace instead of rushing them to the point.",
             "category": "Mindset",
             "tags": [
                 "wait",
@@ -2203,7 +2203,7 @@
         {
             "name": "Positive Attitude",
             "description": "Staying hopeful and cheerful, even when things are tough, helps to create a better environment and encourages others.",
-            "example": "Despite facing significant project setbacks, the team leader maintained a positive attitude, focusing on solutions and acknowledging each step forward.",
+            "example": "Even after the setback, they kept looking for the next workable move without denying what was hard.",
             "category": "Mindset",
             "tags": [
                 "choose",
@@ -2217,7 +2217,7 @@
                 "show"
             ],
             "inTheWild": [
-                "Despite facing significant project setbacks, the team leader maintained a positive attitude, focusing on solutions and acknowledging each step forward.",
+                "A positive attitude becomes visible when someone keeps possibility in the room after disappointment.",
                 "A positive attitude is not denial; it is the disciplined refusal to let difficulty monopolize the meaning of the moment.",
                 "You see it when someone can acknowledge what is hard without becoming contagious with defeat."
             ]
@@ -2225,7 +2225,7 @@
         {
             "name": "Pragmatism",
             "description": "This value emphasizes practical solutions and actions that work effectively in real-life situations.",
-            "example": "The manager's pragmatism led her to implement immediate workable solutions rather than waiting for perfect ones, allowing the project to move forward.",
+            "example": "Pragmatism showed up when they used the workable option in front of them instead of stalling for an ideal solution.",
             "category": "Mindset",
             "tags": [
                 "apply",
@@ -2239,7 +2239,7 @@
                 "utilize"
             ],
             "inTheWild": [
-                "The manager's pragmatism led her to implement immediate workable solutions rather than waiting for perfect ones, allowing the project to move forward.",
+                "Pragmatism shows up when someone asks what will work under real conditions and then moves.",
                 "Pragmatism becomes visible when someone asks what will work under the real conditions, not the ideal ones.",
                 "It often looks like shortening the path, using the available tool, and choosing progress that can survive contact with reality."
             ]
@@ -2283,15 +2283,15 @@
                 "show"
             ],
             "inTheWild": [
-                "A waiter at a restaurant who greets customers with a smile, takes their order accurately, and handles any concerns or complaints in a respectful and efficient manner, demonstrating their commitment to providing excellent customer service.",
-                "A coworker who consistently meets deadlines, communicates clearly and professionally, and takes ownership of their work, demonstrating their commitment to conducting themselves in a businesslike and responsible manner.",
-                "A teacher who creates a structured and engaging learning environment, fosters open communication and respect among students, and demonstrates a passion for their subject matter, embodying the value of professionalism in the classroom."
+                "Professionalism shows up in the way someone handles pressure, people, and details without becoming careless or chaotic.",
+                "A person follows through, communicates clearly, and leaves others with less mess to sort out.",
+                "It becomes visible when someone stays respectful and steady even when the situation is tense or inconvenient."
             ]
         },
         {
             "name": "Purpose",
             "description": "A reason for doing something that guides actions and decisions.",
-            "example": "After volunteering with homeless youth, she found her purpose in developing affordable housing solutions, which guided her career choices thereafter.",
+            "example": "She found purpose in work that kept pulling her back because it felt both useful and deeply hers.",
             "category": "Aspirations",
             "tags": [
                 "pursue",
@@ -2305,7 +2305,7 @@
                 "embody"
             ],
             "inTheWild": [
-                "After volunteering with homeless youth, she found her purpose in developing affordable housing solutions, which guided her career choices thereafter.",
+                "Purpose shows up when someone's effort stops feeling random and starts organizing around a real why.",
                 "Purpose becomes visible when effort stops feeling random and starts cohering around a why that can withstand friction.",
                 "You can see it in the choices someone keeps making even when the rewards are delayed, unclear, or mostly internal."
             ]
@@ -2401,7 +2401,7 @@
         {
             "name": "Representation",
             "description": "The act of showing or depicting ideas, people, or groups in a way that reflects their true nature and experiences.",
-            "example": "The media company improved representation by ensuring its stories included diverse perspectives and were created by teams with varied backgrounds and experiences.",
+            "example": "Representation became real when the room, story, and decisions finally included people who had previously been treated as peripheral.",
             "category": "Social",
             "tags": [
                 "include",
@@ -2415,7 +2415,7 @@
                 "portray"
             ],
             "inTheWild": [
-                "The media company improved representation by ensuring its stories included diverse perspectives and were created by teams with varied backgrounds and experiences.",
+                "Representation becomes visible when people can recognize themselves in who is present, heard, and shaping the outcome.",
                 "Representation becomes concrete when people can recognize themselves in the story, the room, the leadership, or the product.",
                 "You notice its absence just as quickly: who is cropped out, mistranslated, tokenized, or expected to adapt quietly."
             ]
@@ -2467,7 +2467,7 @@
         {
             "name": "Responsibility",
             "description": "Being accountable for your actions and making sure you do what you promise.",
-            "example": "When the project went over budget, the manager took responsibility by acknowledging his oversight, developing a plan to address it, and communicating transparently.",
+            "example": "When the plan slipped, she took responsibility by naming what she missed and handling the repair instead of passing it off.",
             "category": "Core Values",
             "tags": [
                 "accept",
@@ -2797,7 +2797,7 @@
         {
             "name": "Stability",
             "description": "Staying steady and balanced in difficult situations without being easily shaken or changed.",
-            "example": "During the company merger, the manager provided stability by maintaining regular team meetings, clear communication, and consistent expectations.",
+            "example": "He created stability by keeping the schedule, expectations, and tone steady while everything else around the team was shifting.",
             "category": "Personal",
             "tags": [
                 "maintain",
@@ -2811,9 +2811,9 @@
                 "sustain"
             ],
             "inTheWild": [
-                "A table that doesn't wobble when you place items on it is an example of stability in everyday life.",
-                "A building that remains standing in the face of strong winds or earthquakes is an example of stability.",
-                "A bicycle that remains upright and balanced while in motion is an example of stability."
+                "Stability shows up when people know what to expect from you even during disruption.",
+                "A steady routine, response, or presence can keep a hard season from becoming total chaos.",
+                "You notice stability in the structures and habits that keep life from swinging wildly with every new stress."
             ]
         },
         {
@@ -2995,7 +2995,7 @@
         {
             "name": "Thoughtfulness",
             "description": "Showing care and consideration for others' feelings and needs in every action and decision.",
-            "example": "The manager demonstrated thoughtfulness by remembering team members' professional goals and creating opportunities aligned with their aspirations.",
+            "example": "She showed thoughtfulness by remembering what mattered to the other person and acting on it without being prompted.",
             "category": "Interpersonal",
             "tags": [
                 "consider",
@@ -3009,9 +3009,9 @@
                 "evaluate"
             ],
             "inTheWild": [
-                "Holding the door open for someone behind you, or offering to help someone carry a heavy load up the stairs.",
-                "Taking the time to listen to a friend or family member who is going through a tough time, and offering support and guidance where possible.",
-                "Letting someone go ahead of you in line at the grocery store, or allowing someone to merge into traffic ahead of you while driving."
+                "Thoughtfulness appears in the small act that proves someone paid attention.",
+                "A person anticipates another person's need, timing, or context and adjusts with care.",
+                "It often looks like slowing down long enough to choose the kinder or more fitting move."
             ]
         },
         {
@@ -3229,9 +3229,9 @@
                 "recognize"
             ],
             "inTheWild": [
-                "A teacher who takes the time to understand each student's individual learning style and adapts their teaching approach accordingly, demonstrating sound judgment and insight.",
-                "A friend who listens attentively and offers thoughtful advice when faced with a problem, showing an ability to analyze a situation and provide thoughtful guidance.",
-                "A doctor who takes a holistic approach to treating a patient, considering their physical, emotional, and mental well-being, demonstrating a wise and compassionate approach to healthcare."
+                "Wisdom shows up when someone can read the deeper shape of a situation instead of reacting only to the surface.",
+                "A person offers guidance that accounts for timing, tradeoffs, and the people involved.",
+                "It often becomes visible in restraint: knowing what to say, what to skip, and what matters most now."
             ]
         },
         {
