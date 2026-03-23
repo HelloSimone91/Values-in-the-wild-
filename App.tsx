@@ -722,10 +722,15 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#fff8f3] text-[#1e1b18]">
       <header className="sticky top-0 z-50 border-b border-[#efe6df] bg-[rgba(255,248,243,0.82)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-          <div className="flex min-w-0 flex-col">
+          <button
+            type="button"
+            onClick={() => enterApp('/guide')}
+            className="flex min-w-0 flex-col text-left transition-opacity hover:opacity-80"
+            aria-label="Go to Field Guide homepage"
+          >
             <span className="font-['Plus_Jakarta_Sans'] text-2xl font-black tracking-[-0.05em] text-[#35680e]">Values in the Wild</span>
             <span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#8a7668]">Field guide to lived values</span>
-          </div>
+          </button>
 
           <nav className="hidden items-center gap-8 md:flex">
             {navItems.map((item) => {
