@@ -99,3 +99,5 @@ Current tracked events include:
 - `reflection_updated`
 - `reflection_deleted`
 - `guest_notes_claimed`
+
+Use `/debug/analytics` in the app to inspect recent events and counts. When auth is configured, that route requires a signed-in session.

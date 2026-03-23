@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import fsSync from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { hasDatabase, initDatabase, listReflections, recordEvent, replaceReflections } from './database.mjs';
+import { hasDatabase, initDatabase, listRecentEvents, listReflections, recordEvent, replaceReflections, summarizeRecentEvents } from './database.mjs';
 import { hasSupabaseAuth, requireAuthenticatedUser } from './supabase.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -180,6 +180,28 @@ app.post('/api/v1/events', async (req, res) => {
     return res.status(202).json({ ok: true });
   } catch (error) {
     console.error('Failed to record analytics event:', error);
+    return res.status(503).json({ error: 'Analytics storage is not configured.' });
+  }
+});
+
+app.get('/api/v1/events', async (req, res) => {
+  const limit = Number(req.query.limit || 50);
+  const hours = Number(req.query.hours || 168);
+
+  if (hasSupabaseAuth()) {
+    try {
+      await requireAuthenticatedUser(req);
+    } catch (error) {
+      const status = typeof error?.status === 'number' ? error.status : 401;
+      return res.status(status).json({ error: error.message || 'Invalid or expired session.' });
+    }
+  }
+
+  try {
+    const [events, summary] = await Promise.all([listRecentEvents(limit), summarizeRecentEvents(hours)]);
+    return res.json({ events, summary, windowHours: hours });
+  } catch (error) {
+    console.error('Failed to list analytics events:', error);
     return res.status(503).json({ error: 'Analytics storage is not configured.' });
   }
 });

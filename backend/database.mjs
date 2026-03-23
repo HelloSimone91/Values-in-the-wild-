@@ -150,3 +150,50 @@ export const recordEvent = async ({ anonymousId = null, eventName, metadata = {}
     [eventName, userId, anonymousId, JSON.stringify(metadata || {})]
   );
 };
+
+export const listRecentEvents = async (limit = 50) => {
+  if (!pool) {
+    throw new Error('DATABASE_URL is not configured.');
+  }
+
+  const safeLimit = Math.max(1, Math.min(200, Number(limit) || 50));
+  const result = await pool.query(
+    `
+      SELECT
+        event_id AS id,
+        event_name AS "eventName",
+        user_id AS "userId",
+        anonymous_id AS "anonymousId",
+        metadata,
+        created_at AS "createdAt"
+      FROM analytics_events
+      ORDER BY created_at DESC, event_id DESC
+      LIMIT $1;
+    `,
+    [safeLimit]
+  );
+
+  return result.rows;
+};
+
+export const summarizeRecentEvents = async (hours = 168) => {
+  if (!pool) {
+    throw new Error('DATABASE_URL is not configured.');
+  }
+
+  const safeHours = Math.max(1, Math.min(24 * 30, Number(hours) || 168));
+  const result = await pool.query(
+    `
+      SELECT
+        event_name AS "eventName",
+        COUNT(*)::int AS count
+      FROM analytics_events
+      WHERE created_at >= NOW() - ($1::text || ' hours')::interval
+      GROUP BY event_name
+      ORDER BY count DESC, event_name ASC;
+    `,
+    [safeHours]
+  );
+
+  return result.rows;
+};

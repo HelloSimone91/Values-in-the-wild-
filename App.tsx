@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpenText, CheckCircle2, History, LibraryBig, Loader2, TriangleAlert, UserCircle2, X } from 'lucide-react';
+import { Activity, BookOpenText, CheckCircle2, History, LibraryBig, Loader2, TriangleAlert, UserCircle2, X } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
+import AnalyticsDebugView from './components/AnalyticsDebugView';
 import AuthDialog from './components/AuthDialog';
 import LandingView from './components/LandingView';
 import HistoryView from './components/HistoryView';
@@ -14,6 +15,7 @@ import { clearLocalReflections, loadLocalReflections, loadReflections, saveRefle
 import { getCurrentSession, getSupabaseClient, isSupabaseConfigured, sendMagicLink, signOutUser } from './services/supabaseClient';
 import { EntryMode, getEntryMode, getOrCreateUserId, hasSeenLanding, markLandingSeen, setEntryMode } from './services/userSessionService';
 import { trackEvent } from './services/analyticsService';
+import { AnalyticsDebugPayload, loadAnalyticsDebug } from './services/analyticsDebugService';
 
 type ToastTone = 'success' | 'error';
 
@@ -41,6 +43,9 @@ const App: React.FC = () => {
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
   const [claimableGuestReflections, setClaimableGuestReflections] = useState<ReflectionEntry[]>([]);
   const [isClaimingGuestNotes, setIsClaimingGuestNotes] = useState(false);
+  const [analyticsDebug, setAnalyticsDebug] = useState<AnalyticsDebugPayload>({ events: [], summary: [], windowHours: 168 });
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   const [anonymousUserId] = useState(() => getOrCreateUserId());
   const [entryMode, setEntryModeState] = useState<EntryMode | null>(() => getEntryMode());
   const previousSessionUserId = useRef<string | null>(null);
@@ -55,14 +60,16 @@ const App: React.FC = () => {
   const guideMatch = matchPath('/guide/:valueSlug', location.pathname);
   const practiceMatch = matchPath('/practice/:valueSlug', location.pathname);
   const routeValueSlug = guideMatch?.params.valueSlug || practiceMatch?.params.valueSlug || null;
+  const isAnalyticsDebugRoute = location.pathname === '/debug/analytics';
 
   const currentView = useMemo(() => {
     if (location.pathname === '/') return 'landing';
     if (location.pathname === '/guide' || guideMatch) return guideMatch ? 'value' : 'library';
     if (practiceMatch) return 'practice';
     if (location.pathname === '/notes') return 'history';
+    if (isAnalyticsDebugRoute) return 'debug';
     return 'library';
-  }, [guideMatch, location.pathname, practiceMatch]);
+  }, [guideMatch, isAnalyticsDebugRoute, location.pathname, practiceMatch]);
 
   const selectedValue = useMemo(() => {
     if (routeValueSlug) {
@@ -182,6 +189,26 @@ const App: React.FC = () => {
       emitEvent('screen_view', { screen: 'landing' });
     }
   }, [currentView]);
+
+  const refreshAnalyticsDebug = async () => {
+    setIsLoadingAnalytics(true);
+    setAnalyticsError(null);
+
+    try {
+      const payload = await loadAnalyticsDebug(accessToken);
+      setAnalyticsDebug(payload);
+    } catch (error) {
+      setAnalyticsError(error instanceof Error ? error.message : 'Failed to load analytics debug data.');
+    } finally {
+      setIsLoadingAnalytics(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAnalyticsDebugRoute) return;
+    if (authEnabled && !session) return;
+    void refreshAnalyticsDebug();
+  }, [accessToken, authEnabled, isAnalyticsDebugRoute, session]);
 
   useEffect(() => {
     let cancelled = false;
@@ -571,6 +598,20 @@ const App: React.FC = () => {
       );
     }
 
+    if (currentView === 'debug') {
+      return (
+        <AnalyticsDebugView
+          error={analyticsError}
+          events={analyticsDebug.events}
+          isAuthenticated={!authEnabled || Boolean(session)}
+          isLoading={isLoadingAnalytics}
+          onRefresh={refreshAnalyticsDebug}
+          summary={analyticsDebug.summary}
+          windowHours={analyticsDebug.windowHours}
+        />
+      );
+    }
+
     return (
       <ValuesLibraryView
         values={values}
@@ -610,6 +651,15 @@ const App: React.FC = () => {
 
           {authEnabled ? (
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => enterApp('/debug/analytics')}
+                className={`hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors lg:inline-flex ${
+                  currentView === 'debug' ? 'bg-[#35680e] text-white' : 'bg-[#f1ebe5] text-[#35680e] hover:bg-[#e5ddd6]'
+                }`}
+              >
+                <Activity className="h-4 w-4" />
+                Debug
+              </button>
               {!session && isGuestMode && (
                 <div className="hidden rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e] sm:inline-flex">
                   Guest mode
@@ -624,9 +674,20 @@ const App: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e]">
-              <UserCircle2 className="h-5 w-5" />
-              Local mode
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => enterApp('/debug/analytics')}
+                className={`hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors lg:inline-flex ${
+                  currentView === 'debug' ? 'bg-[#35680e] text-white' : 'bg-[#f1ebe5] text-[#35680e] hover:bg-[#e5ddd6]'
+                }`}
+              >
+                <Activity className="h-4 w-4" />
+                Debug
+              </button>
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e]">
+                <UserCircle2 className="h-5 w-5" />
+                Local mode
+              </div>
             </div>
           )}
         </div>
