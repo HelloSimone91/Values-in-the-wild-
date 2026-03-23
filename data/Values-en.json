@@ -1761,6 +1761,28 @@
             ]
         },
         {
+            "name": "Longevity",
+            "description": "Sustaining life, energy, or usefulness over a long span of time through choices that protect what lasts.",
+            "example": "She treated longevity as a value by building her days around sleep, strength training, preventive care, and a pace she could realistically sustain for decades rather than weeks.",
+            "category": "Aspirations",
+            "tags": [
+                "sustain",
+                "preserve",
+                "protect",
+                "maintain",
+                "pace",
+                "endure",
+                "strengthen",
+                "support",
+                "extend"
+            ],
+            "inTheWild": [
+                "She treated longevity as a value by building her days around sleep, strength training, preventive care, and a pace she could realistically sustain for decades rather than weeks.",
+                "Longevity becomes visible when someone stops optimizing only for immediate output and starts protecting the conditions that let life, work, or health hold up over time.",
+                "You notice it in maintenance, recovery, durable systems, and choices made for the long arc instead of the short spike."
+            ]
+        },
+        {
             "name": "Love",
             "description": "A deep feeling of affection and care for someone or something.",
             "example": "The parents demonstrated love by providing consistent support, setting healthy boundaries, and encouraging their children to pursue their own interests.",

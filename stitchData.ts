@@ -96,6 +96,7 @@ export const valueEmoji = (valueName: string) => {
     Clarity: '🔭',
     Collaboration: '🤝',
     Gratitude: '✨',
+    Longevity: '⏳',
     Mindfulness: '🧠',
     Travel: '✈️',
     Tranquility: '🕊️',
