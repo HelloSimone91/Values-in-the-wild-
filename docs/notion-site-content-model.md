@@ -26,11 +26,21 @@ Site-safe explanation. Usually derived from `Introduction` or `Long Def`, often 
 - `everydayExamples`
 Concrete examples of the value in action. Usually derived from `Everyday Actions` or strong items from `2 - 5 examples`.
 
+- `practiceMoments`
+Short, practice-safe observation lines for the Practice surface. These should be concrete enough to anchor checklists and notes without sounding poetic, therapeutic, or generic.
+
 - `misalignment`
 What it looks like when the value slips. Usually derived from `Opposing Behavior` or `Character Defect`, but only after review because some source rows are incorrect.
 
 - `habitIdeas`
 Actionable practice ideas. Usually derived from `Habits`, rewritten into short bullets.
+
+- `practiceChecklist`
+Explicit checklist prompts for the Practice surface. Each item includes:
+  - `label`
+  - `summary`
+
+This field exists so the site does not have to reverse-engineer prompts from raw source copy.
 
 - `journalPrompts`
 Deep reflection prompts. Usually derived from `Journal Prompts`, trimmed into direct questions.
@@ -56,6 +66,7 @@ Optional SEO metadata from `SEO title`, `Meta description`, and `Slug`.
 - `Opposing Behavior` is high risk and must be checked manually before use.
 - `Pop Culture History` must be condensed into a grounded `summary + takeaway`.
 - `Habits`, `Journal Prompts`, and `Conversation Starters` should be reduced to concise, readable website copy.
+- Practice copy should be written explicitly. Do not derive checklist prompts from raw `inTheWild` lines.
 - If a field is not clearly good, omit it. The UI is built to handle sparse approved content.
 
 ## Current Wiring
@@ -64,7 +75,7 @@ Optional SEO metadata from `SEO title`, `Meta description`, and `Slug`.
 - Static frontend fallback merges the same files in [App.tsx](/Users/simonedeangelis/Downloads/embodied_-values-detective/App.tsx).
 - Search indexes approved overlay content in [stitchData.ts](/Users/simonedeangelis/Downloads/embodied_-values-detective/stitchData.ts) and [ValuesLibraryView.tsx](/Users/simonedeangelis/Downloads/embodied_-values-detective/components/ValuesLibraryView.tsx).
 - Value pages render approved sections only in [ValueDetailView.tsx](/Users/simonedeangelis/Downloads/embodied_-values-detective/components/ValueDetailView.tsx).
-- Practice mode prefers approved `everydayExamples`, `habitIdeas`, and `journalPrompts` in [stitchData.ts](/Users/simonedeangelis/Downloads/embodied_-values-detective/stitchData.ts) and [PracticeView.tsx](/Users/simonedeangelis/Downloads/embodied_-values-detective/components/PracticeView.tsx).
+- Practice mode now prefers approved `practiceMoments` and `practiceChecklist`, then falls back to `everydayExamples`, `habitIdeas`, and `journalPrompts` in [stitchData.ts](/Users/simonedeangelis/Downloads/embodied_-values-detective/stitchData.ts) and [PracticeView.tsx](/Users/simonedeangelis/Downloads/embodied_-values-detective/components/PracticeView.tsx).
 
 ## Workflow
 

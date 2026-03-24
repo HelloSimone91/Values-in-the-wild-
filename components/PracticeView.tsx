@@ -8,12 +8,22 @@ import {
   valueEmoji,
   ReflectionEntry,
 } from '../stitchData';
+import {
+  buildDailyQuickReflectionNote,
+  findDailyQuickReflectionEntries,
+  getLocalDateKey,
+  parseDailyQuickReflectionNote,
+} from '../services/dailyQuickReflectionService';
+import { loadPracticeDraft, savePracticeDraft } from '../services/practiceDraftService';
 
 interface PracticeViewProps {
   authConfigured: boolean;
   isGuestMode: boolean;
   isAuthenticated: boolean;
+  isLoadingReflections: boolean;
+  reflections: ReflectionEntry[];
   selectedValue: ValueDefinition | null;
+  userId: string;
   values: ValueDefinition[];
   onSelectValue: (name: string) => void;
   onAddReflection: (entry: Omit<ReflectionEntry, 'id' | 'date'>) => void;
@@ -26,7 +36,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({
   authConfigured,
   isGuestMode,
   isAuthenticated,
+  isLoadingReflections,
+  reflections,
   selectedValue,
+  userId,
   values,
   onSelectValue,
   onAddReflection,
@@ -37,7 +50,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({
   const [checkedQuickItems, setCheckedQuickItems] = useState<string[]>([]);
   const [quickNote, setQuickNote] = useState('');
   const [deepReflection, setDeepReflection] = useState('');
+  const [loadedDraftKey, setLoadedDraftKey] = useState('');
   const wildMoments = selectedValue ? getValueWildMoments(selectedValue, 3) : [];
+  const todayKey = getLocalDateKey();
 
   const quickChecklist = useMemo(
     () => (selectedValue ? createQuickChecklist(selectedValue) : []),
@@ -47,14 +62,60 @@ const PracticeView: React.FC<PracticeViewProps> = ({
     () => (selectedValue ? createDeepDivePractices(selectedValue) : []),
     [selectedValue]
   );
+  const draftScopeKey = selectedValue ? `${userId}:${todayKey}:${selectedValue.name}` : '';
+  const todaysQuickReflection = useMemo(() => {
+    if (!selectedValue) {
+      return null;
+    }
+
+    return findDailyQuickReflectionEntries(reflections, selectedValue.name, todayKey)[0] || null;
+  }, [reflections, selectedValue, todayKey]);
 
   useEffect(() => {
-    setPracticeMode('micro');
-    setActivePracticeId(deepDivePractices[0]?.id || '');
-    setCheckedQuickItems([]);
-    setQuickNote('');
-    setDeepReflection('');
-  }, [selectedValue?.name]);
+    if (!selectedValue || isLoadingReflections || !draftScopeKey) {
+      return;
+    }
+
+    const savedDraft = loadPracticeDraft(userId, selectedValue.name, todayKey);
+    const validChecklistIds = new Set(quickChecklist.map((item) => item.id));
+    const summaryToItemId = new Map(
+      quickChecklist.map((item) => [item.summary.trim().toLowerCase(), item.id])
+    );
+    const parsedQuickReflection = todaysQuickReflection ? parseDailyQuickReflectionNote(todaysQuickReflection.note) : null;
+    const restoredCheckedItems = savedDraft
+      ? savedDraft.checkedQuickItems.filter((itemId) => validChecklistIds.has(itemId))
+      : (parsedQuickReflection?.summaries || [])
+          .map((summary) => summaryToItemId.get(summary.trim().toLowerCase()) || '')
+          .filter(Boolean);
+    const preferredPracticeMode = savedDraft?.practiceMode === 'deep' ? 'deep' : 'micro';
+    const preferredPracticeId = savedDraft?.activePracticeId || deepDivePractices[0]?.id || '';
+
+    setPracticeMode(preferredPracticeMode);
+    setActivePracticeId(deepDivePractices.some((practice) => practice.id === preferredPracticeId) ? preferredPracticeId : deepDivePractices[0]?.id || '');
+    setCheckedQuickItems(restoredCheckedItems);
+    setQuickNote(savedDraft?.quickNote ?? parsedQuickReflection?.quickNote ?? '');
+    setDeepReflection(savedDraft?.deepReflection ?? '');
+    setLoadedDraftKey(draftScopeKey);
+  }, [deepDivePractices, draftScopeKey, isLoadingReflections, quickChecklist, selectedValue, todayKey, todaysQuickReflection, userId]);
+
+  useEffect(() => {
+    if (!selectedValue || loadedDraftKey !== draftScopeKey) {
+      return;
+    }
+
+    savePracticeDraft(
+      userId,
+      selectedValue.name,
+      {
+        practiceMode,
+        activePracticeId,
+        checkedQuickItems,
+        quickNote,
+        deepReflection,
+      },
+      todayKey
+    );
+  }, [activePracticeId, checkedQuickItems, deepReflection, draftScopeKey, loadedDraftKey, practiceMode, quickNote, selectedValue, todayKey, userId]);
 
   useEffect(() => {
     if (practiceMode === 'deep' && !deepDivePractices.some((practice) => practice.id === activePracticeId)) {
@@ -64,12 +125,14 @@ const PracticeView: React.FC<PracticeViewProps> = ({
 
   const activePractice = deepDivePractices.find((practice) => practice.id === activePracticeId) || deepDivePractices[0] || null;
   const selectedChecklistItems = quickChecklist.filter((item) => checkedQuickItems.includes(item.id));
+  const practiceLead = selectedValue.siteContent?.shortDefinition?.value || selectedValue.description;
   const libraryEyebrow = practiceMode === 'micro' ? 'Daily checklist' : 'Prompt library';
   const libraryTitle = practiceMode === 'micro' ? 'Check what you noticed' : 'Choose one prompt';
-  const noteEyebrow = practiceMode === 'micro' ? 'Values observed' : 'Current prompt';
+  const microNoteTitle = 'What you noticed';
+  const noteEyebrow = practiceMode === 'micro' ? 'Today' : 'Current prompt';
   const noteHint =
     practiceMode === 'micro'
-      ? 'Check what you noticed. Add context only if it helps you remember the moment later.'
+      ? 'Check what happened. Add context only if it helps you remember the moment later.'
       : 'Save a specific moment, not an intention.';
 
   const handleToggleQuickItem = (itemId: string) => {
@@ -94,11 +157,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({
 
       onAddReflection({
         value: selectedValue.name,
-        note: quickEntryNote,
-        practiceTitle: 'Values observed',
+        note: buildDailyQuickReflectionNote(selectedChecklistItems.map((item) => item.summary), trimmedQuickNote) || quickEntryNote,
+        practiceTitle: microNoteTitle,
       });
-      setCheckedQuickItems([]);
-      setQuickNote('');
       return;
     }
 
@@ -133,7 +194,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({
           <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold leading-[0.92] tracking-[-0.05em] text-[#35680e] sm:text-5xl lg:text-6xl">
             Practice <span className="italic text-[#35680e]">{selectedValue.name}</span>
           </h1>
-          <p className="max-w-2xl text-base leading-7 text-[#6f6258] sm:text-lg line-clamp-2">{selectedValue.description}</p>
+          <p className="max-w-2xl text-base leading-7 text-[#6f6258] sm:text-lg line-clamp-2">{practiceLead}</p>
           {selectedValue.siteContent?.summary?.value ? (
             <p className="max-w-2xl text-sm leading-7 text-[#6f6258]">{selectedValue.siteContent.summary.value}</p>
           ) : null}
@@ -232,7 +293,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({
                     </label>
                   );
                 })}
-                <p className="px-1 text-sm leading-6 text-[#6f6258]">Anything you check here saves into Field Notes as a quick “Values observed” entry.</p>
+                <p className="px-1 text-sm leading-6 text-[#6f6258]">Checklist state and note drafts auto-save for the day. Saving again updates today&apos;s note instead of creating a duplicate.</p>
               </div>
             ) : (
               <div className="mt-5 space-y-3">
@@ -285,14 +346,14 @@ const PracticeView: React.FC<PracticeViewProps> = ({
           <div className="mt-6 rounded-[2rem] bg-[#35680e] p-6 text-white">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">{noteEyebrow}</p>
             <h3 className="mt-3 font-['Plus_Jakarta_Sans'] text-3xl font-bold tracking-[-0.04em]">
-              {practiceMode === 'micro' ? 'Values observed' : activePractice?.title || 'Choose a prompt'}
+              {practiceMode === 'micro' ? microNoteTitle : activePractice?.title || 'Choose a prompt'}
             </h3>
             <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d8f4bd]">
               {practiceMode === 'micro' ? '1 min' : activePractice?.duration || 'No duration'}
             </p>
             <p className="mt-4 line-clamp-3 text-sm leading-6 text-[#d4ebb8]">
               {practiceMode === 'micro'
-                ? `Use this as a literal checklist. Save the value when you notice it in yourself or someone else.`
+                ? 'Use this as a simple checklist. Save what you actually noticed today.'
                 : activePractice?.description}
             </p>
             <div className="mt-5 rounded-[1.5rem] bg-white/10 p-4">
@@ -352,14 +413,18 @@ const PracticeView: React.FC<PracticeViewProps> = ({
 
           <div className="mt-5 space-y-4">
             <p className="text-sm leading-6 text-[#6f6258]">
-              {authConfigured && isGuestMode ? 'Guest notes stay on this device. Sign in later if you want sync.' : noteHint}
+              {practiceMode === 'micro'
+                ? 'Your checklist stays checked for the rest of the day on this device. Save again later to update the same daily note.'
+                : authConfigured && isGuestMode
+                  ? 'Guest notes stay on this device. Sign in later if you want sync.'
+                  : noteHint}
             </p>
             <button
               onClick={handleSaveReflection}
               disabled={practiceMode === 'micro' ? !selectedChecklistItems.length && !quickNote.trim() : !deepReflection.trim() || !activePractice}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#35680e] px-6 py-3.5 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)] transition hover:bg-[#2e5a0c] disabled:cursor-not-allowed disabled:bg-[#c9d7bc]"
             >
-              {practiceMode === 'micro' ? 'Save observation' : 'Save field note'}
+              {practiceMode === 'micro' ? 'Save or update today’s note' : 'Save field note'}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>

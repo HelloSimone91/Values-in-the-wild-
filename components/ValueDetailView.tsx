@@ -51,6 +51,8 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
   const journalPrompts = siteContent?.journalPrompts?.value || [];
   const conversationStarters = siteContent?.conversationStarters?.value || [];
   const popCultureSpotlight = siteContent?.popCultureSpotlight?.value;
+  const heroLead = shortDefinition || summary || value.description;
+  const heroSummary = summary && summary !== heroLead ? summary : '';
 
   return (
     <div className="space-y-8">
@@ -95,8 +97,8 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
             </div>
           </div>
 
-          <p className="mt-7 max-w-3xl text-base leading-7 text-[#f2f8ea] sm:text-lg">{value.description}</p>
-          {summary ? <p className="mt-4 max-w-3xl text-sm leading-7 text-[#d4ebb8] sm:text-base">{summary}</p> : null}
+          <p className="mt-7 max-w-3xl text-base leading-7 text-[#f2f8ea] sm:text-lg">{heroLead}</p>
+          {heroSummary ? <p className="mt-4 max-w-3xl text-sm leading-7 text-[#d4ebb8] sm:text-base">{heroSummary}</p> : null}
 
           <div className="mt-7 rounded-[2rem] bg-white/10 p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">In the wild</p>

@@ -4,6 +4,7 @@ import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { findValueBySlug, mergeValueSiteContent, ReflectionEntry, slugifyValueName, ValueDefinition, ValueSiteContent } from './stitchData';
 import { clearLocalReflections, loadLocalReflections, loadReflections, saveReflections } from './services/reflectionPersistenceService';
+import { DAILY_QUICK_REFLECTION_TITLE, findDailyQuickReflectionEntries } from './services/dailyQuickReflectionService';
 import { getCurrentSession, getSupabaseClient, isSupabaseConfigured, sendMagicLink, signOutUser } from './services/supabaseClient';
 import { EntryMode, getEntryMode, getOrCreateUserId, hasSeenLanding, markLandingSeen, setEntryMode } from './services/userSessionService';
 import { trackEvent } from './services/analyticsService';
@@ -34,6 +35,9 @@ const RouteSuspenseFallback: React.FC = () => (
     </div>
   </div>
 );
+
+const configuredBackendBase = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
+const isLocalPreviewHost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
 const App: React.FC = () => {
   const FAVORITES_STORAGE_KEY = 'values-in-the-wild:favorites';
@@ -281,15 +285,19 @@ const App: React.FC = () => {
 
       try {
         let loadedValues: ValueDefinition[] = [];
+        const shouldTryValuesApi = Boolean(configuredBackendBase) || import.meta.env.DEV || !isLocalPreviewHost;
 
-        try {
-          const response = await fetch('/api/v1/values');
-          if (response.ok) {
-            const payload = (await response.json()) as { values?: ValueDefinition[] };
-            loadedValues = payload.values || [];
+        if (shouldTryValuesApi) {
+          try {
+            const valuesEndpoint = configuredBackendBase ? `${configuredBackendBase}/api/v1/values` : '/api/v1/values';
+            const response = await fetch(valuesEndpoint);
+            if (response.ok) {
+              const payload = (await response.json()) as { values?: ValueDefinition[] };
+              loadedValues = payload.values || [];
+            }
+          } catch {
+            // Static hosting and local preview fall back to the bundled values file below.
           }
-        } catch {
-          // Static hosting falls back to the bundled values file below.
         }
 
         if (!loadedValues.length) {
@@ -496,14 +504,43 @@ const App: React.FC = () => {
       return;
     }
 
-    const newReflection: ReflectionEntry = {
-      id: `reflection_${Date.now()}`,
-      date: new Date().toISOString(),
-      ...entry,
-    };
-
     const previous = reflections;
-    const nextReflections = [newReflection, ...previous];
+    const isDailyQuickReflection = entry.practiceTitle === DAILY_QUICK_REFLECTION_TITLE;
+    let nextReflections: ReflectionEntry[] = [];
+
+    if (isDailyQuickReflection) {
+      const dailyEntries = findDailyQuickReflectionEntries(previous, entry.value);
+      const latestDailyEntry = dailyEntries[0];
+      const dailyEntryIds = new Set(dailyEntries.map((reflection) => reflection.id));
+      const nextDailyEntry: ReflectionEntry = {
+        id: latestDailyEntry?.id || `reflection_${Date.now()}`,
+        date: new Date().toISOString(),
+        value: entry.value,
+        practiceTitle: DAILY_QUICK_REFLECTION_TITLE,
+        note: entry.note,
+      };
+
+      const unchanged =
+        dailyEntries.length === 1 &&
+        latestDailyEntry?.note === nextDailyEntry.note &&
+        latestDailyEntry.practiceTitle === nextDailyEntry.practiceTitle;
+
+      if (unchanged) {
+        enterApp('/notes');
+        return;
+      }
+
+      nextReflections = [nextDailyEntry, ...previous.filter((reflection) => !dailyEntryIds.has(reflection.id))];
+    } else {
+      const newReflection: ReflectionEntry = {
+        id: `reflection_${Date.now()}`,
+        date: new Date().toISOString(),
+        ...entry,
+      };
+      nextReflections = [newReflection, ...previous];
+    }
+
+    nextReflections.sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
     setReflections(nextReflections);
     enterApp('/notes');
 
@@ -669,9 +706,12 @@ const App: React.FC = () => {
         <PracticeView
           selectedValue={selectedValue}
           values={values}
+          reflections={reflections}
           authConfigured={authEnabled}
           isGuestMode={isGuestMode}
           isAuthenticated={Boolean(session)}
+          isLoadingReflections={isLoadingReflections}
+          userId={userId}
           onSelectValue={(name) => {
             handleSelectValue(name);
             handleStartPractice(name);

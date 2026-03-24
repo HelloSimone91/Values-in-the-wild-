@@ -25,8 +25,10 @@ export interface ValueSiteContent {
   shortDefinition?: ApprovedSiteField<string>;
   longDefinition?: ApprovedSiteField<string>;
   everydayExamples?: ApprovedSiteField<string[]>;
+  practiceMoments?: ApprovedSiteField<string[]>;
   misalignment?: ApprovedSiteField<string>;
   habitIdeas?: ApprovedSiteField<string[]>;
+  practiceChecklist?: ApprovedSiteField<PracticeChecklistEntry[]>;
   journalPrompts?: ApprovedSiteField<string[]>;
   conversationStarters?: ApprovedSiteField<string[]>;
   popCultureSpotlight?: ApprovedSiteField<PopCultureSpotlight>;
@@ -60,10 +62,12 @@ export interface QuickChecklistItem {
   summary: string;
 }
 
-interface QuickChecklistOverrideItem {
+export interface PracticeChecklistEntry {
   label: string;
   summary: string;
 }
+
+type QuickChecklistFallbackFactory = (value: ValueDefinition) => PracticeChecklistEntry[];
 
 export interface ReflectionEntry {
   id: string;
@@ -106,52 +110,142 @@ const dedupeStrings = (values: string[]) => {
 const siteList = (field?: ApprovedSiteField<string[]>) => field?.value || [];
 const siteText = (field?: ApprovedSiteField<string>) => field?.value || '';
 
-const quickChecklistFallbacks: Record<string, [string, string, string, string]> = {
-  'Core Values': [
-    'someone making the more honest or responsible move even when it cost them something',
-    'someone following through in a way other people could actually feel',
-    'this value holding in a tense, awkward, or high-stakes moment',
-    'a smaller private choice that still reflected what mattered',
-  ],
-  Personal: [
-    'someone treating themselves with steadiness instead of punishment',
-    'someone honoring a limit, need, or reset without making it dramatic',
-    'this value showing up when the day got messy or inconvenient',
-    'a quiet private choice that made life a little more livable',
-  ],
-  Aspirations: [
-    'someone taking a real step toward what they want instead of only talking about it',
-    'someone choosing growth, stretch, or possibility over staying comfortable',
-    'this value showing up before anyone knew how it would turn out',
-    'a small move that pointed life in the right direction',
-  ],
-  Growth: [
-    'someone practicing, revising, or trying again instead of waiting to feel ready',
-    'someone turning intention into a next step you could actually point to',
-    'this value showing up when effort, uncertainty, or repetition was required',
-    'a modest improvement that could have been easy to overlook',
-  ],
-  Interpersonal: [
-    'someone making another person feel more seen, understood, or included',
-    'someone shaping their tone, timing, or attention around another person with care',
-    'this value showing up in a live conversation, repair, or moment of friction',
-    'a subtle relational cue that changed the feel of the interaction',
-  ],
-  Mindset: [
-    'someone naming what was true a little more clearly or honestly',
-    'someone pausing long enough to think instead of reacting on autopilot',
-    'this value holding in uncertainty, complexity, or conflicting signals',
-    'a quieter mental shift that changed the next choice',
-  ],
-  Social: [
-    'someone using their care, voice, or access to support another person',
-    'someone noticing who needed backing, inclusion, or protection',
-    'this value showing up when silence or passivity would have been easier',
-    'a quiet act of solidarity, generosity, or shared responsibility',
-  ],
+const createDefaultQuickChecklist = (value: ValueDefinition): PracticeChecklistEntry[] => {
+  const valueName = value.name.toLowerCase();
+
+  const fallbackFactories: Record<string, QuickChecklistFallbackFactory> = {
+    'Core Values': () => [
+      {
+        label: `Did ${valueName} shape a concrete choice you can point to today?`,
+        summary: `${value.name} shaped a concrete choice`,
+      },
+      {
+        label: 'Did you see someone make the more honest or responsible move today?',
+        summary: `Saw ${valueName} in an honest or responsible move`,
+      },
+      {
+        label: `Did ${valueName} hold when something got tense, costly, or inconvenient today?`,
+        summary: `${value.name} held under tension, cost, or inconvenience`,
+      },
+      {
+        label: `Did you catch a quieter act of ${valueName} that still left a trace today?`,
+        summary: `Caught a quieter act of ${valueName}`,
+      },
+    ],
+    Personal: () => [
+      {
+        label: `Did ${valueName} change how you treated your pace, limits, or energy today?`,
+        summary: `${value.name} changed how you treated your pace, limits, or energy`,
+      },
+      {
+        label: 'Did you notice someone honor a need, boundary, or reset without making it dramatic today?',
+        summary: `Saw ${valueName} in the way someone honored a need, boundary, or reset`,
+      },
+      {
+        label: `Did ${valueName} hold when the day got messy, rushed, or inconvenient today?`,
+        summary: `${value.name} held when the day got messy, rushed, or inconvenient`,
+      },
+      {
+        label: `Did you catch a small private act of ${valueName} in an ordinary moment today?`,
+        summary: `Caught a small private act of ${valueName}`,
+      },
+    ],
+    Aspirations: () => [
+      {
+        label: `Did ${valueName} show up in a real step, not just a wish, today?`,
+        summary: `${value.name} showed up in a real step`,
+      },
+      {
+        label: 'Did you see someone choose stretch, possibility, or visible effort today?',
+        summary: `Saw ${valueName} in a choice toward stretch, possibility, or visible effort`,
+      },
+      {
+        label: `Did ${valueName} hold before the outcome was clear today?`,
+        summary: `${value.name} held before the outcome was clear`,
+      },
+      {
+        label: 'Did you catch a smaller move that pointed life in the right direction today?',
+        summary: `Caught ${valueName} in a smaller move in the right direction`,
+      },
+    ],
+    Growth: () => [
+      {
+        label: `Did ${valueName} show up in practice, revision, or another attempt today?`,
+        summary: `${value.name} showed up in practice, revision, or another attempt`,
+      },
+      {
+        label: 'Did you notice someone turn intention into a next step you could actually name today?',
+        summary: `Saw ${valueName} turn intention into a clear next step`,
+      },
+      {
+        label: `Did ${valueName} hold when effort, uncertainty, or repetition was required today?`,
+        summary: `${value.name} held through effort, uncertainty, or repetition`,
+      },
+      {
+        label: `Did you catch a modest improvement that reflected ${valueName} today?`,
+        summary: `Caught ${valueName} in a modest improvement`,
+      },
+    ],
+    Interpersonal: () => [
+      {
+        label: `Did ${valueName} change the feel of a real interaction today?`,
+        summary: `${value.name} changed the feel of a real interaction`,
+      },
+      {
+        label: 'Did you see someone shape their tone, timing, or attention around another person with care today?',
+        summary: `Saw ${valueName} in someone's tone, timing, or attention`,
+      },
+      {
+        label: `Did ${valueName} hold in a live conversation, repair, or moment of friction today?`,
+        summary: `${value.name} held in conversation, repair, or friction`,
+      },
+      {
+        label: `Did you catch a subtle relational cue that reflected ${valueName} today?`,
+        summary: `Caught ${valueName} in a subtle relational cue`,
+      },
+    ],
+    Mindset: () => [
+      {
+        label: `Did ${valueName} change how you named, framed, or understood something today?`,
+        summary: `${value.name} changed how something was named, framed, or understood`,
+      },
+      {
+        label: 'Did you see someone pause long enough to think instead of reacting on autopilot today?',
+        summary: `Saw ${valueName} in a pause before reacting`,
+      },
+      {
+        label: `Did ${valueName} hold in uncertainty, complexity, or conflicting signals today?`,
+        summary: `${value.name} held in uncertainty, complexity, or conflicting signals`,
+      },
+      {
+        label: `Did you catch a quieter version of ${valueName} in a pause, question, or reframing today?`,
+        summary: `Caught a quieter version of ${valueName}`,
+      },
+    ],
+    Social: () => [
+      {
+        label: `Did ${valueName} affect more than one person today?`,
+        summary: `${value.name} affected more than one person`,
+      },
+      {
+        label: 'Did you notice someone use their care, voice, or access to support another person today?',
+        summary: `Saw ${valueName} in the way someone supported another person`,
+      },
+      {
+        label: `Did ${valueName} show up when silence or passivity would have been easier today?`,
+        summary: `${value.name} showed up when silence or passivity would have been easier`,
+      },
+      {
+        label: `Did you catch a small act of ${valueName} that widened support, inclusion, or shared responsibility today?`,
+        summary: `Caught ${valueName} in a small act that widened support or inclusion`,
+      },
+    ],
+  };
+
+  return (fallbackFactories[value.category] || fallbackFactories.Personal)(value);
 };
 
-const quickChecklistOverrides: Record<string, QuickChecklistOverrideItem[]> = {
+const quickChecklistOverrides: Record<string, PracticeChecklistEntry[]> = {
   Acceptance: [
     {
       label: 'Did you notice yourself or someone else stop fighting reality and work with what was actually true today?',
@@ -498,7 +592,11 @@ export const getValueSearchText = (value: ValueDefinition) =>
     siteText(value.siteContent?.longDefinition),
     siteText(value.siteContent?.misalignment),
     siteList(value.siteContent?.everydayExamples).join(' '),
+    siteList(value.siteContent?.practiceMoments).join(' '),
     siteList(value.siteContent?.habitIdeas).join(' '),
+    (value.siteContent?.practiceChecklist?.value || [])
+      .map((item) => `${item.label} ${item.summary}`)
+      .join(' '),
     siteList(value.siteContent?.journalPrompts).join(' '),
     siteList(value.siteContent?.conversationStarters).join(' '),
     value.siteContent?.popCultureSpotlight?.value.title || '',
@@ -507,68 +605,6 @@ export const getValueSearchText = (value: ValueDefinition) =>
   ]
     .join(' ')
     .toLowerCase();
-
-const toSentenceCase = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
-
-const stripTrailingPunctuation = (value: string) => value.replace(/[.?!:;,\s]+$/g, '').trim();
-
-const observationLeadPattern =
-  /^(you can spot|you see|you notice|it shows up|it often shows up|it shows up in|it often shows up in|it often appears|it often appears in|it becomes visible|it often looks like|clarity often arrives as|appreciation gets specific|you can feel|look for)\b/i;
-
-const lowSignalObservationPatterns: RegExp[] = [
-  /\bpoem\b/i,
-  /\bpoems\b/i,
-  /\bverses\b/i,
-  /\breaders?\b/i,
-  /\bpersonally relevant\b/i,
-  /\ballows readers\b/i,
-];
-
-const observationContextPattern =
-  /\b(moment|choice|conversation|decision|repair|question|pause|boundary|tone|follow through|uncertain|uncertainty|conflict|cost|practice|move|adjustment|signal|response|room)\b/i;
-
-const neutralizeExampleLanguage = (value: string) =>
-  value
-    .replace(/\bwith her\b/gi, 'with them')
-    .replace(/\bwith him\b/gi, 'with them')
-    .replace(/\bto her\b/gi, 'to them')
-    .replace(/\bto him\b/gi, 'to them')
-    .replace(/\bfor her\b/gi, 'for them')
-    .replace(/\bfor him\b/gi, 'for them')
-    .replace(/\bher\b/gi, 'their')
-    .replace(/\bhis\b/gi, 'their')
-    .replace(/\bshe\b/gi, 'someone')
-    .replace(/\bhe\b/gi, 'someone')
-    .replace(/\bhim\b/gi, 'them');
-
-const truncateFragment = (value: string, maxLength = 150) => {
-  if (value.length <= maxLength) return value;
-  const trimmed = value.slice(0, maxLength);
-  const lastSpace = trimmed.lastIndexOf(' ');
-  return `${(lastSpace > 80 ? trimmed.slice(0, lastSpace) : trimmed).trim()}...`;
-};
-
-const cleanFragment = (value: string) => truncateFragment(stripTrailingPunctuation(neutralizeExampleLanguage(collapseSpace(value))));
-
-const toInlineFragment = (value: string) => {
-  if (!value) return value;
-  return /^[A-Z]/.test(value) ? value.charAt(0).toLowerCase() + value.slice(1) : value;
-};
-
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const scoreWildMoment = (line: string, example: string) => {
-  const clean = collapseSpace(line);
-  const normalized = clean.toLowerCase();
-  let score = 0;
-
-  if (observationLeadPattern.test(clean)) score += 4;
-  if (observationContextPattern.test(clean)) score += 2;
-  if (normalized === collapseSpace(example).toLowerCase()) score -= 4;
-  if (lowSignalObservationPatterns.some((pattern) => pattern.test(clean))) score -= 8;
-
-  return score;
-};
 
 const createFallbackWildMoments = (value: ValueDefinition): string[] => {
   const valueName = value.name.toLowerCase();
@@ -626,150 +662,29 @@ const createFallbackWildMoments = (value: ValueDefinition): string[] => {
 };
 
 export const getValueWildMoments = (value: ValueDefinition, max = 3): string[] => {
+  const practiceLines = dedupeStrings(siteList(value.siteContent?.practiceMoments));
+  if (practiceLines.length) {
+    return practiceLines.slice(0, max);
+  }
+
   const editorialLines = dedupeStrings(siteList(value.siteContent?.everydayExamples));
   if (editorialLines.length) {
     return editorialLines.slice(0, max);
   }
-
-  const normalizedExample = collapseSpace(value.example).toLowerCase();
-  const rawLines = dedupeStrings([...(value.inTheWild || []), value.example].filter(Boolean));
-  const filteredLines = rawLines
-    .filter((line) => collapseSpace(line).toLowerCase() !== normalizedExample)
-    .filter((line) => !lowSignalObservationPatterns.some((pattern) => pattern.test(line)))
-    .sort((left, right) => scoreWildMoment(right, value.example) - scoreWildMoment(left, value.example));
-
-  return dedupeStrings([...filteredLines, ...createFallbackWildMoments(value)]).slice(0, max);
-};
-
-const extractObservationFragment = (line: string, valueName: string): string | null => {
-  const clean = collapseSpace(line);
-  if (!clean) return null;
-
-  const byMatch = clean.match(
-    /\b(?:practiced|demonstrated|showed|expressed|embraced|excelled at|brought|modeled|used|took|revealed|displayed)\b.*\bby\s+(.+)$/i
-  );
-  if (byMatch?.[1]) {
-    return cleanFragment(byMatch[1]);
-  }
-
-  const patternGroups: RegExp[] = [
-    /^you can spot .* when (.+)$/i,
-    /^you see .* when (.+)$/i,
-    /^you notice .* when (.+)$/i,
-    /^you notice .* in (.+)$/i,
-    new RegExp(`^${escapeRegex(valueName)} shows up when (.+)$`, 'i'),
-    /^it shows up when (.+)$/i,
-    /^it often shows up when (.+)$/i,
-    /^it shows up in (.+)$/i,
-    /^it often shows up in (.+)$/i,
-    /^it often appears in (.+)$/i,
-    /^it becomes visible in (.+)$/i,
-    /^it often looks like (.+)$/i,
-    /^clarity often arrives as (.+)$/i,
-    /^appreciation gets specific:\s*(.+)$/i,
-    /^you can feel .* in (.+)$/i,
-    /^.+ was evident in (.+)$/i,
-  ];
-
-  for (const pattern of patternGroups) {
-    const match = clean.match(pattern);
-    if (match?.[1]) {
-      return cleanFragment(match[1]);
-    }
-  }
-
-  return cleanFragment(clean);
-};
-
-const pickFragmentContaining = (lines: string[], matcher: RegExp, valueName: string): string | null => {
-  const target = lines.find((line) => matcher.test(line));
-  return target ? extractObservationFragment(target, valueName) : null;
-};
-
-const uniqueFragment = (candidate: string | null, used: Set<string>, fallback: string) => {
-  const normalizedCandidate = collapseSpace(candidate || '').toLowerCase();
-  if (normalizedCandidate && !used.has(normalizedCandidate)) {
-    used.add(normalizedCandidate);
-    return candidate || fallback;
-  }
-
-  const normalizedFallback = collapseSpace(fallback).toLowerCase();
-  used.add(normalizedFallback);
-  return fallback;
+  return createFallbackWildMoments(value).slice(0, max);
 };
 
 export const createQuickChecklist = (value: ValueDefinition): QuickChecklistItem[] => {
+  const siteChecklist = value.siteContent?.practiceChecklist?.value || [];
   const overrideItems = quickChecklistOverrides[value.name];
-  if (overrideItems?.length) {
-    return overrideItems.map((item, index) => ({
-      id: `${value.name}-quick-${index}`,
-      value: value.name,
-      label: item.label,
-      summary: item.summary,
-    }));
-  }
+  const checklistItems =
+    siteChecklist.length ? siteChecklist : overrideItems?.length ? overrideItems : createDefaultQuickChecklist(value);
 
-  const sourceLines = getValueWildMoments(value, 4);
-  const categoryFallback = quickChecklistFallbacks[value.category] || quickChecklistFallbacks.Personal;
-  const slotFallbacks: [string, string, string, string] = [
-    categoryFallback[0],
-    `someone living ${value.name.toLowerCase()} in a way you could actually feel`,
-    `someone still choosing ${value.name.toLowerCase()} when it would have been easier to do something else`,
-    `a small, easy-to-miss moment of ${value.name.toLowerCase()}`,
-  ];
-
-  const rawConcreteFragment =
-    extractObservationFragment(sourceLines[0] || '', value.name) ||
-    extractObservationFragment(sourceLines[1] || '', value.name) ||
-    slotFallbacks[0];
-
-  const rawOtherPersonFragment =
-    extractObservationFragment(sourceLines[2] || sourceLines[1] || '', value.name) ||
-    slotFallbacks[1];
-
-  const rawPressureFragment =
-    pickFragmentContaining(
-      sourceLines,
-      /\b(hard|harder|tense|pressure|pressured|mistake|difficult|objection|conflict|awkward|costly|uncertain|reality|fix|repair|consequence)\b/i,
-      value.name
-    ) ||
-    extractObservationFragment(sourceLines[3] || sourceLines[2] || '', value.name) ||
-    slotFallbacks[2];
-
-  const rawQuietFragment =
-    pickFragmentContaining(
-      sourceLines,
-      /\b(quiet|small|subtle|pause|tone|signals|specific|ordinary|everyday|gentle|private|patience|unhurried)\b/i,
-      value.name
-    ) ||
-    extractObservationFragment(sourceLines[2] || sourceLines[1] || '', value.name) ||
-    slotFallbacks[3];
-
-  const used = new Set<string>();
-  const concreteFragment = toInlineFragment(uniqueFragment(rawConcreteFragment, used, slotFallbacks[0]));
-  const otherPersonFragment = toInlineFragment(uniqueFragment(rawOtherPersonFragment, used, slotFallbacks[1]));
-  const pressureFragment = toInlineFragment(uniqueFragment(rawPressureFragment, used, slotFallbacks[2]));
-  const quietFragment = toInlineFragment(uniqueFragment(rawQuietFragment, used, slotFallbacks[3]));
-
-  const labels = [
-    `Did anything like this happen today: ${concreteFragment}?`,
-    `Did you see someone else living it today: ${otherPersonFragment}?`,
-    `Did it show up in a harder moment today: ${pressureFragment}?`,
-    `Did you catch the quieter version today: ${quietFragment}?`,
-  ];
-
-  const summaries = [
-    `Something like this happened: ${concreteFragment}`,
-    `Saw someone else living it: ${otherPersonFragment}`,
-    `It showed up in a harder moment: ${pressureFragment}`,
-    `Caught the quieter version: ${quietFragment}`,
-  ];
-
-  return labels.map((label, index) => ({
+  return checklistItems.map((item, index) => ({
     id: `${value.name}-quick-${index}`,
     value: value.name,
-    label,
-    summary: toSentenceCase(summaries[index]),
+    label: item.label,
+    summary: item.summary,
   }));
 };
 

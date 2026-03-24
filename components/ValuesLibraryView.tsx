@@ -188,6 +188,10 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
           {visibleValues.map((value) => {
             const accent = categoryAccent[value.category] || 'green';
             const favorite = favoriteValues.includes(value.name);
+            const cardCopy =
+              value.siteContent?.summary?.value ||
+              value.siteContent?.shortDefinition?.value ||
+              value.description;
 
             return (
               <article
@@ -225,7 +229,7 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
                     {value.name}
                   </button>
                 </h2>
-                <p className="mt-2 line-clamp-3 text-sm leading-6 text-[#6f6258]">{value.description}</p>
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-[#6f6258]">{cardCopy}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {value.tags.slice(0, 3).map((tag) => (
                     <button
