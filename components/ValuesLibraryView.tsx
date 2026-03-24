@@ -5,9 +5,7 @@ import { accentClass, categoryAccent, getValueSearchText, ValueDefinition } from
 
 interface ValuesLibraryViewProps {
   values: ValueDefinition[];
-  selectedValueName: string;
   favoriteValues: string[];
-  onSelectValue: (name: string) => void;
   onOpenValue: (valueName: string) => void;
   onStartPractice: (valueName: string) => void;
   onToggleFavorite: (valueName: string) => void;
@@ -15,9 +13,7 @@ interface ValuesLibraryViewProps {
 
 const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
   values,
-  selectedValueName,
   favoriteValues,
-  onSelectValue,
   onOpenValue,
   onStartPractice,
   onToggleFavorite,
@@ -180,7 +176,6 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
       <section className="space-y-5">
         <div className="flex flex-wrap items-center gap-3 text-sm text-[#6f6258]">
           Showing {visibleValues.length} of {filteredValues.length} values in the field guide
-          {selectedValueName ? ` · current focus: ${selectedValueName}` : ''}
           {activeFilterLabel ? ` · filtered by ${activeFilterLabel}` : ''}
           {!!activeFilterLabel && (
             <button onClick={() => setExclusiveFilter({ category: 'All' })} className="font-semibold text-[#35680e]">
@@ -192,17 +187,12 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visibleValues.map((value) => {
             const accent = categoryAccent[value.category] || 'green';
-            const active = selectedValueName === value.name;
             const favorite = favoriteValues.includes(value.name);
 
             return (
               <article
                 key={value.name}
-                className={`rounded-[2rem] border p-6 text-left transition ${
-                  active
-                    ? 'border-[#35680e] bg-white shadow-[0_20px_34px_rgba(53,104,14,0.1)]'
-                    : 'border-transparent bg-[#f9f2ed] hover:border-[#e5d8cd]'
-                }`}
+                className="rounded-[2rem] border border-transparent bg-[#f9f2ed] p-6 text-left transition hover:border-[#e5d8cd]"
               >
                 <div className="flex items-start justify-between gap-4">
                   <button
@@ -252,20 +242,14 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
                 </div>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <button
-                    onClick={() => {
-                      onSelectValue(value.name);
-                      onOpenValue(value.name);
-                    }}
+                    onClick={() => onOpenValue(value.name)}
                     className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-4 py-2 text-sm font-bold text-white"
                   >
                     View value
                     <ArrowRight className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => {
-                      onSelectValue(value.name);
-                      onStartPractice(value.name);
-                    }}
+                    onClick={() => onStartPractice(value.name)}
                     className="rounded-full border border-[#e4d8cf] bg-white px-4 py-2 text-sm font-semibold text-[#35680e]"
                   >
                     Begin practice
