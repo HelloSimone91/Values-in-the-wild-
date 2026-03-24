@@ -9,7 +9,7 @@ import {
 } from '../stitchData';
 
 type TimeFilter = 'all' | '7d' | '30d' | '90d';
-type SortOption = 'newest' | 'oldest' | 'value';
+type NotesSortOption = 'newest' | 'oldest' | 'value' | 'valueNoteCount';
 type AnalyticsView = 'week' | 'month';
 type NextMoveActionKind = 'openValue' | 'practice' | 'reviewRecent';
 
@@ -210,7 +210,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [valueFilter, setValueFilter] = useState('All');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [notesSortBy, setNotesSortBy] = useState<NotesSortOption>('newest');
   const [currentPage, setCurrentPage] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState('');
@@ -247,17 +247,8 @@ const HistoryView: React.FC<HistoryViewProps> = ({
       return [entry.value, entry.note, entry.practiceTitle].join(' ').toLowerCase().includes(query);
     });
 
-    const sorted = [...filtered];
-    if (sortBy === 'oldest') {
-      sorted.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    } else if (sortBy === 'value') {
-      sorted.sort((a, b) => a.value.localeCompare(b.value) || new Date(b.date).getTime() - new Date(a.date).getTime());
-    } else {
-      sorted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }
-
-    return sorted;
-  }, [reflections, searchQuery, sortBy, timeFilter, valueFilter]);
+    return filtered;
+  }, [reflections, searchQuery, timeFilter, valueFilter]);
 
   const streak = useMemo(() => calculateStreak(filteredReflections), [filteredReflections]);
   const trendBars = useMemo(() => buildWeeklyRhythm(filteredReflections), [filteredReflections]);
@@ -269,6 +260,38 @@ const HistoryView: React.FC<HistoryViewProps> = ({
       return acc;
     }, {});
   }, [filteredReflections]);
+  const newestFirstReflections = useMemo(
+    () => [...filteredReflections].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [filteredReflections]
+  );
+  const mostRecentFilteredEntry = newestFirstReflections[0] || null;
+  const recentReflections = newestFirstReflections.slice(0, 4);
+  const reviewSortedReflections = useMemo(() => {
+    const sorted = [...filteredReflections];
+
+    if (notesSortBy === 'oldest') {
+      sorted.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      return sorted;
+    }
+
+    if (notesSortBy === 'value') {
+      sorted.sort((a, b) => a.value.localeCompare(b.value) || new Date(b.date).getTime() - new Date(a.date).getTime());
+      return sorted;
+    }
+
+    if (notesSortBy === 'valueNoteCount') {
+      sorted.sort(
+        (a, b) =>
+          (practicedMap[b.value] || 0) - (practicedMap[a.value] || 0) ||
+          a.value.localeCompare(b.value) ||
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      return sorted;
+    }
+
+    sorted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return sorted;
+  }, [filteredReflections, notesSortBy, practicedMap]);
   const maxHeatmapCount = useMemo(
     () => Math.max(...heatmapMonths.flatMap((month) => month.weeks.flat().filter(Boolean).map((cell) => cell!.count)), 1),
     [heatmapMonths]
@@ -397,11 +420,11 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   const maxTrend = Math.max(...trendBars.map((day) => day.count), 1);
   const totalPages = Math.max(1, Math.ceil(filteredReflections.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedReflections = filteredReflections.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const paginatedReflections = reviewSortedReflections.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, sortBy, timeFilter, valueFilter]);
+  }, [notesSortBy, searchQuery, timeFilter, valueFilter]);
 
   useEffect(() => {
     if (!heatmapMonths.length) {
@@ -439,7 +462,6 @@ const HistoryView: React.FC<HistoryViewProps> = ({
     setSearchQuery('');
     setValueFilter('All');
     setTimeFilter('all');
-    setSortBy('newest');
   };
 
   const handleNextMoveAction = (action: NextMoveAction) => {
@@ -537,7 +559,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
 
         {isControlsOpen && (
           <>
-            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <label className="block">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Search</span>
                 <div className="relative mt-2">
@@ -580,18 +602,6 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                 </select>
               </label>
 
-              <label className="block">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Sort</span>
-                <select
-                  value={sortBy}
-                  onChange={(event) => setSortBy(event.target.value as SortOption)}
-                  className="mt-2 w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] px-4 py-3 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
-                >
-                  <option value="newest">Newest first</option>
-                  <option value="oldest">Oldest first</option>
-                  <option value="value">Value A-Z</option>
-                </select>
-              </label>
             </div>
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
@@ -632,7 +642,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                 <p className="mt-3 font-['Plus_Jakarta_Sans'] text-5xl font-extrabold tracking-[-0.05em] text-[#35680e]">{filteredReflections.length}</p>
                 <div className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#006a45]">
                   <CalendarDays className="h-4 w-4" />
-                  Last entry {formatReflectionDate(filteredReflections[0].date)}
+                  Last entry {mostRecentFilteredEntry ? formatReflectionDate(mostRecentFilteredEntry.date) : 'No notes yet'}
                 </div>
               </section>
             </div>
@@ -873,7 +883,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
               </div>
 
               <div className="mt-6 space-y-4">
-                {filteredReflections.slice(0, 4).map((item) => (
+                {recentReflections.map((item) => (
                   <article key={item.id} className="rounded-[1.75rem] bg-[#faf5f1] px-5 py-4">
                     <div className="flex items-center justify-between gap-4">
                       <button
@@ -955,11 +965,24 @@ const HistoryView: React.FC<HistoryViewProps> = ({
           </div>
 
           <section ref={recentFieldNotesRef} className="rounded-[2.5rem] bg-white p-7 shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">All matching notes</p>
                 <h2 className="mt-3 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">Revise or remove notes</h2>
               </div>
+              <label className="block lg:min-w-[15rem]">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Sort notes</span>
+                <select
+                  value={notesSortBy}
+                  onChange={(event) => setNotesSortBy(event.target.value as NotesSortOption)}
+                  className="mt-2 w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] px-4 py-3 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
+                >
+                  <option value="newest">Date: newest first</option>
+                  <option value="oldest">Date: oldest first</option>
+                  <option value="value">Value: A-Z</option>
+                  <option value="valueNoteCount">Value: most notes logged</option>
+                </select>
+              </label>
             </div>
 
             <div className="mt-6 space-y-4">
