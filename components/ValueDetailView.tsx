@@ -27,6 +27,31 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
 }) => {
   const siteContent = value.siteContent;
   const wildMoments = getValueWildMoments(value, 3);
+  const alphabetizedValues = useMemo(
+    () => [...values].sort((left, right) => left.name.localeCompare(right.name, undefined, { sensitivity: 'base' })),
+    [values]
+  );
+  const currentValueIndex = useMemo(
+    () => alphabetizedValues.findIndex((candidate) => candidate.name === value.name),
+    [alphabetizedValues, value.name]
+  );
+  const previousValue = currentValueIndex > 0 ? alphabetizedValues[currentValueIndex - 1] : null;
+  const nextValue = currentValueIndex >= 0 && currentValueIndex < alphabetizedValues.length - 1 ? alphabetizedValues[currentValueIndex + 1] : null;
+  const alphabetNav = useMemo(() => {
+    const entries = new Map<string, ValueDefinition>();
+
+    alphabetizedValues.forEach((candidate) => {
+      const firstLetter = candidate.name.trim().charAt(0).toUpperCase();
+      if (/^[A-Z]$/.test(firstLetter) && !entries.has(firstLetter)) {
+        entries.set(firstLetter, candidate);
+      }
+    });
+
+    return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((letter) => ({
+      letter,
+      target: entries.get(letter) || null,
+    }));
+  }, [alphabetizedValues]);
   const relatedValues = useMemo(() => {
     return values
       .filter((candidate) => candidate.name !== value.name)
@@ -269,6 +294,95 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
         ) : (
           <p className="mt-5 text-sm leading-6 text-[#6f6258]">No nearby values found yet.</p>
         )}
+      </section>
+
+      <section className="rounded-[2.6rem] bg-[#f9f2ed] p-7 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-8">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Keep browsing</p>
+            <h2 className="mt-2 font-['Plus_Jakarta_Sans'] text-3xl font-bold tracking-[-0.04em] text-[#1e1b18]">
+              Move through the field guide
+            </h2>
+          </div>
+          <p className="text-sm leading-6 text-[#6f6258]">
+            Jump alphabetically or step through the full guide one entry at a time.
+          </p>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {previousValue ? (
+            <button
+              type="button"
+              onClick={() => onOpenValue(previousValue.name)}
+              className="rounded-[2rem] bg-white p-5 text-left transition hover:bg-[#f6f1ec]"
+            >
+              <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Previous
+              </p>
+              <p className="mt-4 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">
+                {previousValue.name}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[#6f6258]">{previousValue.category}</p>
+            </button>
+          ) : (
+            <div className="rounded-[2rem] border border-dashed border-[#ddcfc4] p-5 text-left text-[#8a7668]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em]">Previous</p>
+              <p className="mt-4 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#b5a79b]">Start of guide</p>
+              <p className="mt-2 text-sm leading-6">This value is the first entry in the alphabetical index.</p>
+            </div>
+          )}
+
+          {nextValue ? (
+            <button
+              type="button"
+              onClick={() => onOpenValue(nextValue.name)}
+              className="rounded-[2rem] bg-white p-5 text-left transition hover:bg-[#f6f1ec]"
+            >
+              <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">
+                Next
+                <ArrowRight className="h-3.5 w-3.5" />
+              </p>
+              <p className="mt-4 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">
+                {nextValue.name}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[#6f6258]">{nextValue.category}</p>
+            </button>
+          ) : (
+            <div className="rounded-[2rem] border border-dashed border-[#ddcfc4] p-5 text-left text-[#8a7668]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em]">Next</p>
+              <p className="mt-4 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#b5a79b]">End of guide</p>
+              <p className="mt-2 text-sm leading-6">This value is the last entry in the alphabetical index.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 rounded-[2rem] bg-white p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Jump to letter</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {alphabetNav.map(({ letter, target }) => {
+              const active = value.name.trim().charAt(0).toUpperCase() === letter;
+              return (
+                <button
+                  key={letter}
+                  type="button"
+                  disabled={!target}
+                  onClick={() => target && onOpenValue(target.name)}
+                  className={`rounded-full px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
+                    active
+                      ? 'bg-[#35680e] text-white'
+                      : target
+                        ? 'bg-[#f1ebe5] text-[#6f6258] hover:bg-[#e7ddd5] hover:text-[#35680e]'
+                        : 'cursor-not-allowed bg-[#f6f1ec] text-[#c6b8ad]'
+                  }`}
+                  aria-label={target ? `Jump to ${target.name}` : `No values under ${letter}`}
+                >
+                  {letter}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </section>
     </div>
   );
