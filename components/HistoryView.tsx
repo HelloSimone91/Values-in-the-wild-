@@ -50,6 +50,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState('');
   const [editingPracticeTitle, setEditingPracticeTitle] = useState('');
+  const [isControlsOpen, setIsControlsOpen] = useState(false);
 
   const valueOptions = useMemo(
     () => ['All', ...Array.from(new Set(reflections.map((entry) => entry.value))).sort()],
@@ -215,78 +216,92 @@ const HistoryView: React.FC<HistoryViewProps> = ({
       )}
 
       <section className="rounded-[2.5rem] bg-white p-5 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-6">
-        <div className="flex items-center gap-3">
-          <div className="rounded-full bg-[#f1ebe5] p-2 text-[#35680e]">
-            <SlidersHorizontal className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Controls</p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Search</span>
-            <div className="relative mt-2">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9f948a]" />
-              <input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search by value, note, or prompt"
-                className="w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] py-3 pl-11 pr-4 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
-              />
+        <button
+          type="button"
+          onClick={() => setIsControlsOpen((current) => !current)}
+          aria-expanded={isControlsOpen}
+          className="flex w-full items-center justify-between gap-3 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-[#f1ebe5] p-2 text-[#35680e]">
+              <SlidersHorizontal className="h-5 w-5" />
             </div>
-          </label>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Controls</p>
+            </div>
+          </div>
+          <div className="rounded-full bg-[#f7f1eb] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">
+            {isControlsOpen ? 'Hide' : 'Show'}
+          </div>
+        </button>
 
-          <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Value</span>
-            <select
-              value={valueFilter}
-              onChange={(event) => setValueFilter(event.target.value)}
-              className="mt-2 w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] px-4 py-3 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
-            >
-              {valueOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
+        {isControlsOpen && (
+          <>
+            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <label className="block">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Search</span>
+                <div className="relative mt-2">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9f948a]" />
+                  <input
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Search by value, note, or prompt"
+                    className="w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] py-3 pl-11 pr-4 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
+                  />
+                </div>
+              </label>
 
-          <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Window</span>
-            <select
-              value={timeFilter}
-              onChange={(event) => setTimeFilter(event.target.value as TimeFilter)}
-              className="mt-2 w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] px-4 py-3 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
-            >
-              <option value="all">All time</option>
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="90d">Last 90 days</option>
-            </select>
-          </label>
+              <label className="block">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Value</span>
+                <select
+                  value={valueFilter}
+                  onChange={(event) => setValueFilter(event.target.value)}
+                  className="mt-2 w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] px-4 py-3 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
+                >
+                  {valueOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-          <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Sort</span>
-            <select
-              value={sortBy}
-              onChange={(event) => setSortBy(event.target.value as SortOption)}
-              className="mt-2 w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] px-4 py-3 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="value">Value A-Z</option>
-            </select>
-          </label>
-        </div>
+              <label className="block">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Window</span>
+                <select
+                  value={timeFilter}
+                  onChange={(event) => setTimeFilter(event.target.value as TimeFilter)}
+                  className="mt-2 w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] px-4 py-3 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
+                >
+                  <option value="all">All time</option>
+                  <option value="7d">Last 7 days</option>
+                  <option value="30d">Last 30 days</option>
+                  <option value="90d">Last 90 days</option>
+                </select>
+              </label>
 
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-[#6f6258]">{filteredReflections.length} notes</p>
-          <button onClick={clearFilters} className="rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e]">
-            Reset filters
-          </button>
-        </div>
+              <label className="block">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">Sort</span>
+                <select
+                  value={sortBy}
+                  onChange={(event) => setSortBy(event.target.value as SortOption)}
+                  className="mt-2 w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] px-4 py-3 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
+                >
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="value">Value A-Z</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-[#6f6258]">{filteredReflections.length} notes</p>
+              <button onClick={clearFilters} className="rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e]">
+                Reset filters
+              </button>
+            </div>
+          </>
+        )}
       </section>
 
       {!filteredReflections.length ? (
