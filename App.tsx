@@ -725,9 +725,7 @@ const App: React.FC = () => {
     return (
       <ValuesLibraryView
         values={values}
-        selectedValueName={selectedValue?.name || ''}
         favoriteValues={favoriteValues}
-        onSelectValue={handleSelectValue}
         onOpenValue={handleOpenValue}
         onStartPractice={handleStartPractice}
         onToggleFavorite={handleToggleFavorite}

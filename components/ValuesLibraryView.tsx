@@ -226,7 +226,15 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
                     <Star className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />
                   </button>
                 </div>
-                <h2 className="mt-4 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">{value.name}</h2>
+                <h2 className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => onOpenValue(value.name)}
+                    className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18] transition hover:text-[#35680e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35680e] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f9f2ed]"
+                  >
+                    {value.name}
+                  </button>
+                </h2>
                 <p className="mt-2 line-clamp-3 text-sm leading-6 text-[#6f6258]">{value.description}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {value.tags.slice(0, 3).map((tag) => (
