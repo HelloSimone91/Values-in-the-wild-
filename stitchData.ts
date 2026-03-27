@@ -606,6 +606,40 @@ export const getValueSearchText = (value: ValueDefinition) =>
     .join(' ')
     .toLowerCase();
 
+const hasWordBoundaryMatch = (text: string, query: string) => {
+  const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\b${escapedQuery}`).test(text);
+};
+
+const getTagSearchScore = (tags: string[], query: string) => {
+  if (tags.some((tag) => tag === query)) return 850;
+  if (tags.some((tag) => tag.startsWith(query))) return 750;
+  if (tags.some((tag) => hasWordBoundaryMatch(tag, query))) return 650;
+  if (tags.some((tag) => tag.includes(query))) return 550;
+  return null;
+};
+
+export const getValueSearchScore = (value: ValueDefinition, rawQuery: string) => {
+  const normalizedQuery = collapseSpace(rawQuery).toLowerCase();
+  if (!normalizedQuery) return null;
+
+  const normalizedName = collapseSpace(value.name).toLowerCase();
+  const normalizedCategory = collapseSpace(value.category).toLowerCase();
+  const normalizedTags = value.tags.map((tag) => collapseSpace(tag).toLowerCase());
+  const searchText = getValueSearchText(value);
+  const tagScore = getTagSearchScore(normalizedTags, normalizedQuery);
+
+  if (!searchText.includes(normalizedQuery)) return null;
+  if (normalizedName === normalizedQuery) return 1000;
+  if (tagScore !== null) return tagScore;
+  if (normalizedName.startsWith(normalizedQuery)) return 700;
+  if (hasWordBoundaryMatch(normalizedName, normalizedQuery)) return 600;
+  if (normalizedCategory === normalizedQuery) return 500;
+  if (normalizedName.includes(normalizedQuery)) return 300;
+  if (hasWordBoundaryMatch(searchText, normalizedQuery)) return 200;
+  return 100;
+};
+
 const createFallbackWildMoments = (value: ValueDefinition): string[] => {
   const valueName = value.name.toLowerCase();
 

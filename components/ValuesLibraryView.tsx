@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Compass, Search, Star } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
-import { accentClass, categoryAccent, getValueSearchText, ValueDefinition } from '../stitchData';
+import { accentClass, categoryAccent, getValueSearchScore, ValueDefinition } from '../stitchData';
 
 interface ValuesLibraryViewProps {
   values: ValueDefinition[];
@@ -58,15 +58,26 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
 
   const filteredValues = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return values.filter((value) => {
+    const matchingValues = values.filter((value) => {
       const matchesCategory = activeCategory === 'All' || value.category === activeCategory;
       if (!matchesCategory) return false;
       if (activeTag && !value.tags.some((tag) => tag.toLowerCase() === activeTag.toLowerCase())) return false;
       if (favoritesOnly && !favoriteValues.includes(value.name)) return false;
       if (!normalizedQuery) return true;
 
-      return getValueSearchText(value).includes(normalizedQuery);
+      return getValueSearchScore(value, normalizedQuery) !== null;
     });
+
+    if (!normalizedQuery) return matchingValues;
+
+    return matchingValues
+      .map((value, index) => ({
+        index,
+        score: getValueSearchScore(value, normalizedQuery) ?? Number.NEGATIVE_INFINITY,
+        value,
+      }))
+      .sort((left, right) => right.score - left.score || left.index - right.index)
+      .map(({ value }) => value);
   }, [activeCategory, activeTag, favoriteValues, favoritesOnly, query, values]);
 
   const activeFilterLabel = favoritesOnly
@@ -132,7 +143,7 @@ const ValuesLibraryView: React.FC<ValuesLibraryViewProps> = ({
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search courage, belonging, or boundaries"
+              placeholder="Search values or verbs like courage or explore"
               className="w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] py-3 pl-11 pr-4 text-sm text-[#1e1b18] outline-none transition focus:border-[#35680e]"
             />
           </div>
