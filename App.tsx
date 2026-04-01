@@ -98,6 +98,8 @@ const App: React.FC = () => {
     if (isAnalyticsDebugRoute) return 'debug';
     return 'library';
   }, [guideMatch, isAnalyticsDebugRoute, location.pathname, practiceMatch]);
+  const shouldLoadValues = currentView !== 'landing';
+  const shouldLoadReflections = currentView === 'practice' || currentView === 'history';
 
   const selectedValue = useMemo(() => {
     if (routeValueSlug) {
@@ -277,6 +279,16 @@ const App: React.FC = () => {
   }, [accessToken, authEnabled, session]);
 
   useEffect(() => {
+    if (!shouldLoadValues) {
+      setIsLoadingValues(false);
+      return;
+    }
+
+    if (values.length) {
+      setIsLoadingValues(false);
+      return;
+    }
+
     let cancelled = false;
 
     const loadValues = async () => {
@@ -330,9 +342,14 @@ const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedValueName, shouldLoadValues, values.length]);
 
   useEffect(() => {
+    if (!shouldLoadReflections) {
+      setIsLoadingReflections(false);
+      return;
+    }
+
     let cancelled = false;
 
     const loadSavedReflections = async () => {
@@ -372,7 +389,7 @@ const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, isGuestMode, useAccountPersistence, userId]);
+  }, [accessToken, isGuestMode, shouldLoadReflections, useAccountPersistence, userId]);
 
   useEffect(() => {
     if (location.pathname === '/' && hasSeenLanding()) {
@@ -643,6 +660,25 @@ const App: React.FC = () => {
   };
 
   const renderRoute = () => {
+    if (currentView === 'landing') {
+      return (
+        <LandingView
+          authConfigured={authEnabled}
+          valueCount={values.length}
+          onContinueAsGuest={handleContinueAsGuest}
+          onEnterFieldGuide={() => enterApp('/guide')}
+          onSignIn={requestSignIn}
+          onStartPractice={() => {
+            if (selectedValue) {
+              handleStartPractice(selectedValue.name);
+            } else {
+              enterApp('/guide');
+            }
+          }}
+        />
+      );
+    }
+
     if (isLoadingValues || isLoadingReflections || isLoadingAuth) {
       return (
         <div className="flex min-h-[50vh] items-center justify-center">
@@ -663,25 +699,6 @@ const App: React.FC = () => {
             Check that the Values in the Wild library file is available and that the backend is running.
           </p>
         </div>
-      );
-    }
-
-    if (currentView === 'landing') {
-      return (
-        <LandingView
-          authConfigured={authEnabled}
-          valueCount={values.length}
-          onContinueAsGuest={handleContinueAsGuest}
-          onEnterFieldGuide={() => enterApp('/guide')}
-          onSignIn={requestSignIn}
-          onStartPractice={() => {
-            if (selectedValue) {
-              handleStartPractice(selectedValue.name);
-            } else {
-              enterApp('/guide');
-            }
-          }}
-        />
       );
     }
 
