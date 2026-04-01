@@ -1,5 +1,4 @@
-const configuredBase = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
-const API_BASE = configuredBase || (import.meta.env.DEV ? 'http://localhost:8787' : '');
+import { buildApiUrl } from './apiBase';
 
 export interface AnalyticsEvent {
   id: number;
@@ -22,11 +21,7 @@ export interface AnalyticsDebugPayload {
 }
 
 export const loadAnalyticsDebug = async (accessToken: string | null, limit = 50, hours = 168): Promise<AnalyticsDebugPayload> => {
-  if (!API_BASE) {
-    throw new Error('Backend API is not configured.');
-  }
-
-  const response = await fetch(`${API_BASE}/api/v1/events?limit=${limit}&hours=${hours}`, {
+  const response = await fetch(buildApiUrl(`/api/v1/events?limit=${limit}&hours=${hours}`), {
     headers: accessToken
       ? {
           Authorization: `Bearer ${accessToken}`,

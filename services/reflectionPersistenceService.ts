@@ -1,8 +1,7 @@
 import { ReflectionEntry } from '../stitchData';
+import { buildApiUrl } from './apiBase';
 
 const REFLECTIONS_KEY = 'values_in_the_wild_reflections';
-const configuredBase = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
-const API_BASE = configuredBase || (import.meta.env.DEV ? 'http://localhost:8787' : '');
 
 interface ReflectionPersistenceOptions {
   accessToken?: string | null;
@@ -48,13 +47,9 @@ export const loadReflections = async ({
     return [];
   }
 
-  if (!API_BASE) {
-    return readLocalReflections(cacheKey);
-  }
-
   try {
     const response = await fetch(
-      authEnabled ? `${API_BASE}/api/v1/me/reflections` : `${API_BASE}/api/v1/users/${userId}/reflections`,
+      authEnabled ? buildApiUrl('/api/v1/me/reflections') : buildApiUrl(`/api/v1/users/${userId}/reflections`),
       {
         headers: accessToken
           ? {
@@ -93,21 +88,22 @@ export const saveReflections = async (
 
   writeLocalReflections(cacheKey, reflections);
 
-  if (!API_BASE) return;
-
   try {
-    const response = await fetch(authEnabled ? `${API_BASE}/api/v1/me/reflections` : `${API_BASE}/api/v1/users/${userId}/reflections`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(accessToken
-          ? {
-              Authorization: `Bearer ${accessToken}`,
-            }
-          : {}),
-      },
-      body: JSON.stringify({ reflections }),
-    });
+    const response = await fetch(
+      authEnabled ? buildApiUrl('/api/v1/me/reflections') : buildApiUrl(`/api/v1/users/${userId}/reflections`),
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken
+            ? {
+                Authorization: `Bearer ${accessToken}`,
+              }
+            : {}),
+        },
+        body: JSON.stringify({ reflections }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error('Failed to save field notes.');

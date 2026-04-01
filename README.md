@@ -27,6 +27,8 @@ This starts:
 
 For backend persistence, set `DATABASE_URL` to a Postgres instance. If `DATABASE_URL` is missing, the API still starts, but reflection endpoints return a storage error and the frontend falls back to local browser storage.
 
+`VITE_BACKEND_URL` is optional when the frontend and backend are served from the same origin. Set it only when the API lives on a different host.
+
 To enable real-user auth locally, also set:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
