@@ -10,6 +10,7 @@ import { hasSupabaseAuth, isAdminUser, requireAdminUser, requireAuthenticatedUse
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DIST_DIR = path.join(__dirname, '..', 'dist');
+const DIST_ASSETS_DIR = path.join(DIST_DIR, 'assets');
 const DIST_INDEX = path.join(DIST_DIR, 'index.html');
 const VALUES_FILE = process.env.VALUES_FILE || path.join(__dirname, '..', 'data', 'Values-en.json');
 const SITE_CONTENT_FILE = path.join(__dirname, '..', 'data', 'ValueSiteContent.json');
@@ -26,6 +27,7 @@ const parseCorsOrigins = () => {
 };
 
 const CORS_ORIGINS = parseCorsOrigins();
+const VALUES_CACHE_CONTROL = 'public, max-age=300, s-maxage=86400, stale-while-revalidate=86400';
 
 const mergeValuesWithSiteContent = (values = [], siteContentByValue = {}) =>
   values.map((value) => ({
@@ -98,6 +100,7 @@ app.get('/api/v1/health', (_req, res) => {
 app.get('/api/v1/values', async (_req, res) => {
   try {
     const values = await loadMergedValues();
+    res.set('Cache-Control', VALUES_CACHE_CONTROL);
     res.json({ values: values.map(summarizeValue) });
   } catch (error) {
     console.error('Failed to load values file:', error);
@@ -114,6 +117,7 @@ app.get('/api/v1/values/:valueSlug', async (req, res) => {
       return res.status(404).json({ error: 'Value not found.' });
     }
 
+    res.set('Cache-Control', VALUES_CACHE_CONTROL);
     return res.json({ value });
   } catch (error) {
     console.error('Failed to load values file:', error);
@@ -295,10 +299,26 @@ app.get('/api/v1/events', async (req, res) => {
 });
 
 if (fsSync.existsSync(DIST_DIR)) {
-  app.use(express.static(DIST_DIR));
+  if (fsSync.existsSync(DIST_ASSETS_DIR)) {
+    app.use(
+      '/assets',
+      express.static(DIST_ASSETS_DIR, {
+        immutable: true,
+        maxAge: '1y',
+      })
+    );
+  }
+
+  app.use(
+    express.static(DIST_DIR, {
+      index: false,
+      maxAge: 0,
+    })
+  );
 
   // In production, serve the built SPA from the same service.
   app.get(/^(?!\/api).*/, (_req, res) => {
+    res.set('Cache-Control', 'public, max-age=0, must-revalidate');
     res.sendFile(DIST_INDEX);
   });
 }

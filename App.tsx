@@ -382,6 +382,11 @@ const App: React.FC = () => {
       return;
     }
 
+    if (authEnabled && isLoadingAuth) {
+      setIsLoadingReflections(true);
+      return;
+    }
+
     let cancelled = false;
 
     const loadSavedReflections = async () => {
@@ -421,7 +426,7 @@ const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, isGuestMode, shouldLoadReflections, useAccountPersistence, userId]);
+  }, [accessToken, authEnabled, isGuestMode, isLoadingAuth, shouldLoadReflections, useAccountPersistence, userId]);
 
   useEffect(() => {
     if (location.pathname === '/' && hasSeenLanding()) {
@@ -712,7 +717,6 @@ const App: React.FC = () => {
     }
 
     const isCurrentViewLoading =
-      isLoadingAuth ||
       (shouldLoadValues && isLoadingValues) ||
       (shouldLoadReflections && isLoadingReflections) ||
       (shouldLoadSelectedValue && isLoadingSelectedValue);
@@ -839,7 +843,7 @@ const App: React.FC = () => {
             aria-label="Go to Field Guide homepage"
           >
             <span className="font-['Plus_Jakarta_Sans'] text-2xl font-black tracking-[-0.05em] text-[#35680e]">Values in the Wild</span>
-            <span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#8a7668]">Field guide to lived values</span>
+            <span className="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold uppercase tracking-[0.28em] text-[#8a7668]">Field guide to lived values</span>
           </button>
 
           <nav className="hidden items-center gap-8 md:flex">
@@ -879,10 +883,11 @@ const App: React.FC = () => {
               )}
               <button
                 onClick={session ? handleSignOut : requestSignIn}
-                className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e] transition-colors hover:bg-[#e5ddd6]"
+                disabled={isLoadingAuth}
+                className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e] transition-colors hover:bg-[#e5ddd6] disabled:cursor-wait disabled:opacity-70"
               >
-                <UserCircle2 className="h-5 w-5" />
-                {session ? 'Sign out' : 'Sign in'}
+                {isLoadingAuth ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserCircle2 className="h-5 w-5" />}
+                {isLoadingAuth ? 'Checking…' : session ? 'Sign out' : 'Sign in'}
               </button>
             </div>
           ) : (
@@ -944,7 +949,7 @@ const App: React.FC = () => {
                 }`}
               >
                 <Icon className="h-5 w-5" />
-                <span className="mt-1 font-['Inter'] text-[10px] font-bold uppercase tracking-[0.18em]">{item.label}</span>
+                <span className="mt-1 font-['Plus_Jakarta_Sans'] text-[10px] font-bold uppercase tracking-[0.18em]">{item.label}</span>
               </button>
             );
           })}

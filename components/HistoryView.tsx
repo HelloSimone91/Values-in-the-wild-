@@ -891,7 +891,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                           onSelectValue(item.value);
                           onOpenValue(item.value);
                         }}
-                        className="font-['Inter'] text-[11px] font-bold uppercase tracking-[0.18em] text-[#35680e]"
+                        className="font-['Plus_Jakarta_Sans'] text-[11px] font-bold uppercase tracking-[0.18em] text-[#35680e]"
                       >
                         {item.value}
                       </button>
@@ -998,7 +998,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                               onSelectValue(item.value);
                               onOpenValue(item.value);
                             }}
-                            className="font-['Inter'] text-[11px] font-bold uppercase tracking-[0.18em] text-[#35680e]"
+                            className="font-['Plus_Jakarta_Sans'] text-[11px] font-bold uppercase tracking-[0.18em] text-[#35680e]"
                           >
                             {item.value}
                           </button>
