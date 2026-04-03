@@ -33,6 +33,51 @@ const mergeValuesWithSiteContent = (values = [], siteContentByValue = {}) =>
     siteContent: siteContentByValue[value.name] || value.siteContent,
   }));
 
+const summarizeValue = (value) => ({
+  name: value.name,
+  description: value.description,
+  example: value.example,
+  inTheWild: value.inTheWild,
+  category: value.category,
+  tags: value.tags,
+  siteContent:
+    value.siteContent?.summary || value.siteContent?.shortDefinition
+      ? {
+          summary: value.siteContent?.summary,
+          shortDefinition: value.siteContent?.shortDefinition,
+        }
+      : undefined,
+});
+
+const slugifyValueName = (valueName = '') =>
+  valueName
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+let mergedValuesPromise = null;
+
+const loadMergedValues = async () => {
+  if (!mergedValuesPromise) {
+    mergedValuesPromise = Promise.all([
+      fs.readFile(VALUES_FILE, 'utf-8'),
+      fs.readFile(SITE_CONTENT_FILE, 'utf-8').catch(() => '{}'),
+    ])
+      .then(([rawValues, rawSiteContent]) => {
+        const parsedValues = JSON.parse(rawValues);
+        const parsedSiteContent = JSON.parse(rawSiteContent);
+        return mergeValuesWithSiteContent(parsedValues.values || [], parsedSiteContent || {});
+      })
+      .catch((error) => {
+        mergedValuesPromise = null;
+        throw error;
+      });
+  }
+
+  return mergedValuesPromise;
+};
+
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use(
@@ -52,16 +97,27 @@ app.get('/api/v1/health', (_req, res) => {
 
 app.get('/api/v1/values', async (_req, res) => {
   try {
-    const [rawValues, rawSiteContent] = await Promise.all([
-      fs.readFile(VALUES_FILE, 'utf-8'),
-      fs.readFile(SITE_CONTENT_FILE, 'utf-8').catch(() => '{}'),
-    ]);
-    const parsedValues = JSON.parse(rawValues);
-    const parsedSiteContent = JSON.parse(rawSiteContent);
-    res.json({ values: mergeValuesWithSiteContent(parsedValues.values || [], parsedSiteContent || {}) });
+    const values = await loadMergedValues();
+    res.json({ values: values.map(summarizeValue) });
   } catch (error) {
     console.error('Failed to load values file:', error);
     res.status(500).json({ error: 'Failed to load values definitions.' });
+  }
+});
+
+app.get('/api/v1/values/:valueSlug', async (req, res) => {
+  try {
+    const values = await loadMergedValues();
+    const value = values.find((candidate) => slugifyValueName(candidate.name) === req.params.valueSlug) || null;
+
+    if (!value) {
+      return res.status(404).json({ error: 'Value not found.' });
+    }
+
+    return res.json({ value });
+  } catch (error) {
+    console.error('Failed to load values file:', error);
+    return res.status(500).json({ error: 'Failed to load values definitions.' });
   }
 });
 

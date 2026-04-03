@@ -9,8 +9,9 @@ import { EntryMode, getEntryMode, getOrCreateUserId, hasSeenLanding, markLanding
 import { trackEvent } from './services/analyticsService';
 import { loadAdminAccess } from './services/adminAccessService';
 import { AnalyticsDebugPayload, loadAnalyticsDebug } from './services/analyticsDebugService';
-import { findValueBySlug, mergeValueSiteContent, slugifyValueName } from './valueCore';
-import type { ReflectionEntry, ValueDefinition, ValueSiteContent } from './valueTypes';
+import { loadValueBySlug, loadValueSummaries } from './services/valueCatalogService';
+import { findValueBySlug, slugifyValueName } from './valueCore';
+import type { ReflectionEntry, ValueDefinition } from './valueTypes';
 
 type ToastTone = 'success' | 'error';
 
@@ -37,9 +38,6 @@ const RouteSuspenseFallback: React.FC = () => (
   </div>
 );
 
-const configuredBackendBase = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
-const isLocalPreviewHost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
-
 const App: React.FC = () => {
   const FAVORITES_STORAGE_KEY = 'values-in-the-wild:favorites';
   const location = useLocation();
@@ -60,9 +58,11 @@ const App: React.FC = () => {
   });
   const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
   const [isLoadingValues, setIsLoadingValues] = useState(true);
+  const [isLoadingSelectedValue, setIsLoadingSelectedValue] = useState(false);
   const [isLoadingReflections, setIsLoadingReflections] = useState(true);
   const [isLoadingAuth, setIsLoadingAuth] = useState(isSupabaseConfigured());
   const [valuesError, setValuesError] = useState<string | null>(null);
+  const [selectedValueError, setSelectedValueError] = useState<string | null>(null);
   const [reflectionsError, setReflectionsError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [session, setSession] = useState<Session | null>(null);
@@ -70,6 +70,7 @@ const App: React.FC = () => {
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
   const [claimableGuestReflections, setClaimableGuestReflections] = useState<ReflectionEntry[]>([]);
   const [isClaimingGuestNotes, setIsClaimingGuestNotes] = useState(false);
+  const [valueDetailsBySlug, setValueDetailsBySlug] = useState<Record<string, ValueDefinition>>({});
   const [analyticsDebug, setAnalyticsDebug] = useState<AnalyticsDebugPayload>({ events: [], summary: [], windowHours: 168 });
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
@@ -101,20 +102,25 @@ const App: React.FC = () => {
   }, [guideMatch, isAnalyticsDebugRoute, location.pathname, practiceMatch]);
   const shouldLoadValues = currentView !== 'landing';
   const shouldLoadReflections = currentView === 'practice' || currentView === 'history';
+  const selectedValueSlug = routeValueSlug || (selectedValueName ? slugifyValueName(selectedValueName) : null);
+  const shouldLoadSelectedValue = (currentView === 'value' || currentView === 'practice') && Boolean(selectedValueSlug);
 
-  const selectedValue = useMemo(() => {
+  const selectedValueSummary = useMemo(() => {
     if (routeValueSlug) {
       return findValueBySlug(values, routeValueSlug) || null;
     }
     return values.find((value) => value.name === selectedValueName) || values[0] || null;
   }, [routeValueSlug, selectedValueName, values]);
+  const selectedValueDetail = selectedValueSlug ? valueDetailsBySlug[selectedValueSlug] || null : null;
+  const routeSelectedValue = selectedValueDetail || selectedValueSummary;
+  const selectedValue = currentView === 'value' || currentView === 'practice' ? selectedValueDetail : selectedValueSummary;
 
   const navItems: { label: string; icon: React.ComponentType<{ className?: string }>; href: string; active: boolean }[] = [
     { label: 'Field Guide', icon: LibraryBig, href: '/guide', active: currentView === 'library' || currentView === 'value' },
     {
       label: 'Practice',
       icon: BookOpenText,
-      href: selectedValue ? `/practice/${slugifyValueName(selectedValue.name)}` : '/guide',
+      href: routeSelectedValue ? `/practice/${slugifyValueName(routeSelectedValue.name)}` : '/guide',
       active: currentView === 'practice',
     },
     { label: 'Field Notes', icon: History, href: '/notes', active: currentView === 'history' },
@@ -297,30 +303,7 @@ const App: React.FC = () => {
       setValuesError(null);
 
       try {
-        let loadedValues: ValueDefinition[] = [];
-        const shouldTryValuesApi = Boolean(configuredBackendBase) || import.meta.env.DEV || !isLocalPreviewHost;
-
-        if (shouldTryValuesApi) {
-          try {
-            const valuesEndpoint = configuredBackendBase ? `${configuredBackendBase}/api/v1/values` : '/api/v1/values';
-            const response = await fetch(valuesEndpoint);
-            if (response.ok) {
-              const payload = (await response.json()) as { values?: ValueDefinition[] };
-              loadedValues = payload.values || [];
-            }
-          } catch {
-            // Static hosting and local preview fall back to the bundled values file below.
-          }
-        }
-
-        if (!loadedValues.length) {
-          const localValuesModule = await import('./data/Values-en.json');
-          const localSiteContentModule = await import('./data/ValueSiteContent.json');
-          loadedValues = mergeValueSiteContent(
-            (localValuesModule.default.values || []) as ValueDefinition[],
-            (localSiteContentModule.default || {}) as Record<string, ValueSiteContent>
-          );
-        }
+        const loadedValues = await loadValueSummaries();
 
         if (cancelled) return;
         setValues(loadedValues);
@@ -344,6 +327,54 @@ const App: React.FC = () => {
       cancelled = true;
     };
   }, [selectedValueName, shouldLoadValues, values.length]);
+
+  useEffect(() => {
+    if (!shouldLoadSelectedValue || !selectedValueSlug) {
+      setIsLoadingSelectedValue(false);
+      setSelectedValueError(null);
+      return;
+    }
+
+    if (valueDetailsBySlug[selectedValueSlug]) {
+      setIsLoadingSelectedValue(false);
+      setSelectedValueError(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadSelectedValue = async () => {
+      setIsLoadingSelectedValue(true);
+      setSelectedValueError(null);
+
+      try {
+        const loadedValue = await loadValueBySlug(selectedValueSlug);
+
+        if (cancelled) return;
+
+        if (loadedValue) {
+          setValueDetailsBySlug((current) => ({
+            ...current,
+            [selectedValueSlug]: loadedValue,
+          }));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setSelectedValueError(error instanceof Error ? error.message : 'Failed to load value details.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingSelectedValue(false);
+        }
+      }
+    };
+
+    void loadSelectedValue();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedValueSlug, shouldLoadSelectedValue, valueDetailsBySlug]);
 
   useEffect(() => {
     if (!shouldLoadReflections) {
@@ -399,16 +430,16 @@ const App: React.FC = () => {
   }, [location.pathname, navigate]);
 
   useEffect(() => {
-    if (!isLoadingValues && routeValueSlug && !selectedValue) {
+    if (!isLoadingValues && !isLoadingSelectedValue && routeValueSlug && !routeSelectedValue) {
       navigate('/guide', { replace: true });
     }
-  }, [isLoadingValues, navigate, routeValueSlug, selectedValue]);
+  }, [isLoadingSelectedValue, isLoadingValues, navigate, routeSelectedValue, routeValueSlug]);
 
   useEffect(() => {
-    if (selectedValue) {
-      setSelectedValueName(selectedValue.name);
+    if (routeSelectedValue) {
+      setSelectedValueName(routeSelectedValue.name);
     }
-  }, [selectedValue]);
+  }, [routeSelectedValue]);
 
   useLayoutEffect(() => {
     if (currentView !== 'value') return;
@@ -670,8 +701,8 @@ const App: React.FC = () => {
           onEnterFieldGuide={() => enterApp('/guide')}
           onSignIn={requestSignIn}
           onStartPractice={() => {
-            if (selectedValue) {
-              handleStartPractice(selectedValue.name);
+            if (routeSelectedValue) {
+              handleStartPractice(routeSelectedValue.name);
             } else {
               enterApp('/guide');
             }
@@ -680,7 +711,13 @@ const App: React.FC = () => {
       );
     }
 
-    if (isLoadingValues || isLoadingReflections || isLoadingAuth) {
+    const isCurrentViewLoading =
+      isLoadingAuth ||
+      (shouldLoadValues && isLoadingValues) ||
+      (shouldLoadReflections && isLoadingReflections) ||
+      (shouldLoadSelectedValue && isLoadingSelectedValue);
+
+    if (isCurrentViewLoading) {
       return (
         <div className="flex min-h-[50vh] items-center justify-center">
           <div className="inline-flex items-center gap-3 rounded-full bg-[#f1ebe5] px-5 py-3 text-sm font-semibold text-[#6f6258]">
@@ -691,11 +728,11 @@ const App: React.FC = () => {
       );
     }
 
-    if (valuesError || reflectionsError) {
+    if (valuesError || selectedValueError || reflectionsError) {
       return (
         <div className="rounded-[2rem] bg-[#fff1ef] p-8 text-[#93000a] shadow-[0_14px_30px_rgba(186,26,26,0.08)]">
           <h1 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em]">Unable to load app data</h1>
-          <p className="mt-3 text-sm leading-7">{valuesError || reflectionsError}</p>
+          <p className="mt-3 text-sm leading-7">{valuesError || selectedValueError || reflectionsError}</p>
           <p className="mt-3 text-sm leading-7">
             Check that the Values in the Wild library file is available and that the backend is running.
           </p>
