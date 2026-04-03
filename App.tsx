@@ -2,7 +2,6 @@ import React, { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, use
 import { Activity, BookOpenText, CheckCircle2, History, LibraryBig, Loader2, TriangleAlert, UserCircle2, X } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
-import { findValueBySlug, mergeValueSiteContent, ReflectionEntry, slugifyValueName, ValueDefinition, ValueSiteContent } from './stitchData';
 import { clearLocalReflections, loadLocalReflections, loadReflections, saveReflections } from './services/reflectionPersistenceService';
 import { DAILY_QUICK_REFLECTION_TITLE, findDailyQuickReflectionEntries } from './services/dailyQuickReflectionService';
 import { getCurrentSession, getSupabaseClient, isSupabaseConfigured, sendMagicLink, signOutUser } from './services/supabaseClient';
@@ -10,6 +9,8 @@ import { EntryMode, getEntryMode, getOrCreateUserId, hasSeenLanding, markLanding
 import { trackEvent } from './services/analyticsService';
 import { loadAdminAccess } from './services/adminAccessService';
 import { AnalyticsDebugPayload, loadAnalyticsDebug } from './services/analyticsDebugService';
+import { findValueBySlug, mergeValueSiteContent, slugifyValueName } from './valueCore';
+import type { ReflectionEntry, ValueDefinition, ValueSiteContent } from './valueTypes';
 
 type ToastTone = 'success' | 'error';
 

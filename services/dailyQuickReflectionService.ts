@@ -1,4 +1,4 @@
-import { ReflectionEntry } from '../stitchData';
+import type { ReflectionEntry } from '../valueTypes';
 
 export const DAILY_QUICK_REFLECTION_TITLE = 'Values observed';
 

@@ -1,4 +1,4 @@
-import { ReflectionEntry } from '../stitchData';
+import type { ReflectionEntry } from '../valueTypes';
 import { buildApiUrl } from './apiBase';
 
 const REFLECTIONS_KEY = 'values_in_the_wild_reflections';
