@@ -35,7 +35,7 @@ To enable real-user auth locally, also set:
 - `SUPABASE_URL`
 - `SUPABASE_PUBLISHABLE_KEY`
 
-The frontend uses Supabase magic links. The backend verifies bearer tokens and stores reflections against the authenticated user id.
+The frontend uses Supabase magic links and Google OAuth. The backend verifies bearer tokens and stores reflections against the authenticated user id.
 
 The repo includes a bundled copy at `data/Values-en.json`. `VALUES_FILE` is optional and only needed if you want to override that source.
 Approved editorial overlays live in `data/ValueSiteContent.json`. This file is merged onto the base values dataset at runtime so stronger reviewed copy can ship without exposing raw source text.
@@ -61,14 +61,17 @@ Production uses the Node backend to serve the built Vite frontend and the existi
 
 1. Create a Supabase project.
 2. In Supabase Auth settings, enable email magic links.
-3. Add your redirect URLs:
+3. In `Authentication -> Providers`, enable Google and configure the Google client credentials for your Supabase project.
+4. Add your redirect URLs:
 - local: `http://localhost:3000/guide`
 - production: `https://valuesinthewild.com/guide`
 - production: `https://www.valuesinthewild.com/guide`
-4. Add the Supabase URL + publishable key to both the frontend (`VITE_*`) and backend env vars on Render.
-5. Add at least one analytics admin allowlist env var on Render:
+5. Add the Supabase URL + publishable key to both the frontend (`VITE_*`) and backend env vars on Render.
+6. Add at least one analytics admin allowlist env var on Render:
 - `ADMIN_EMAILS=you@example.com`
 - or `ADMIN_USER_IDS=<supabase-user-id>`
+
+For Google sign-in, make sure your Google OAuth app is configured with the callback URL Supabase expects for your project. The frontend redirects users back to `/guide` after Google completes.
 
 ### Branded magic-link email
 

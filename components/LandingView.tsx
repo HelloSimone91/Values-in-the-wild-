@@ -3,6 +3,7 @@ import { ArrowRight, BookOpenText, Compass, Sparkles } from 'lucide-react';
 
 interface LandingViewProps {
   authConfigured: boolean;
+  rememberedEmail?: string | null;
   valueCount: number;
   onContinueAsGuest: () => void;
   onEnterFieldGuide: () => void;
@@ -12,6 +13,7 @@ interface LandingViewProps {
 
 const LandingView: React.FC<LandingViewProps> = ({
   authConfigured,
+  rememberedEmail,
   valueCount,
   onContinueAsGuest,
   onEnterFieldGuide,
@@ -47,8 +49,15 @@ const LandingView: React.FC<LandingViewProps> = ({
                   onClick={onSignIn}
                   className="rounded-[1.5rem] bg-[#35680e] p-4 text-left text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
                 >
-                  <p className="font-['Plus_Jakarta_Sans'] text-lg font-bold tracking-[-0.03em]">Sign in</p>
-                  <p className="mt-2 text-sm leading-6 text-[#d4ebb8]">Save notes to your account and sync them across devices.</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d4ebb8]">
+                    {rememberedEmail ? 'Welcome back' : 'Account mode'}
+                  </p>
+                  <p className="mt-2 font-['Plus_Jakarta_Sans'] text-lg font-bold tracking-[-0.03em]">
+                    {rememberedEmail ? 'Use your saved email' : 'Sign in'}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[#d4ebb8]">
+                    {rememberedEmail ? rememberedEmail : 'Save notes to your account and sync them across devices.'}
+                  </p>
                 </button>
               </div>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">

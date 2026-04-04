@@ -5,6 +5,8 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY |
 
 let client: SupabaseClient | null = null;
 
+export type SignOutScope = 'global' | 'local' | 'others';
+
 export const isSupabaseConfigured = (): boolean => Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
 
 export const getSupabaseClient = (): SupabaseClient | null => {
@@ -53,11 +55,29 @@ export const sendMagicLink = async (email: string, redirectTo: string): Promise<
   }
 };
 
-export const signOutUser = async (): Promise<void> => {
+export const startGoogleSignIn = async (redirectTo: string): Promise<void> => {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    throw new Error('Authentication is not configured.');
+  }
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo,
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+};
+
+export const signOutUser = async (scope: SignOutScope = 'local'): Promise<void> => {
   const supabase = getSupabaseClient();
   if (!supabase) return;
 
-  const { error } = await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut({ scope });
   if (error) {
     throw error;
   }

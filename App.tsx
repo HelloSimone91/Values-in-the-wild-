@@ -4,8 +4,18 @@ import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { clearLocalReflections, loadLocalReflections, loadReflections, saveReflections } from './services/reflectionPersistenceService';
 import { DAILY_QUICK_REFLECTION_TITLE, findDailyQuickReflectionEntries } from './services/dailyQuickReflectionService';
-import { getCurrentSession, getSupabaseClient, isSupabaseConfigured, sendMagicLink, signOutUser } from './services/supabaseClient';
-import { EntryMode, getEntryMode, getOrCreateUserId, hasSeenLanding, markLandingSeen, setEntryMode } from './services/userSessionService';
+import { getCurrentSession, getSupabaseClient, isSupabaseConfigured, sendMagicLink, signOutUser, startGoogleSignIn } from './services/supabaseClient';
+import {
+  clearRememberedAuthEmail,
+  EntryMode,
+  getEntryMode,
+  getOrCreateUserId,
+  getRememberedAuthEmail,
+  hasSeenLanding,
+  markLandingSeen,
+  rememberAuthEmail,
+  setEntryMode,
+} from './services/userSessionService';
 import { trackEvent } from './services/analyticsService';
 import { loadAdminAccess } from './services/adminAccessService';
 import { AnalyticsDebugPayload, loadAnalyticsDebug } from './services/analyticsDebugService';
@@ -68,6 +78,7 @@ const App: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
+  const [isStartingGoogleSignIn, setIsStartingGoogleSignIn] = useState(false);
   const [claimableGuestReflections, setClaimableGuestReflections] = useState<ReflectionEntry[]>([]);
   const [isClaimingGuestNotes, setIsClaimingGuestNotes] = useState(false);
   const [valueDetailsBySlug, setValueDetailsBySlug] = useState<Record<string, ValueDefinition>>({});
@@ -78,6 +89,7 @@ const App: React.FC = () => {
   const [isCheckingAdminAccess, setIsCheckingAdminAccess] = useState(false);
   const [anonymousUserId] = useState(() => getOrCreateUserId());
   const [entryMode, setEntryModeState] = useState<EntryMode | null>(() => getEntryMode());
+  const [rememberedEmail, setRememberedEmailState] = useState<string | null>(() => getRememberedAuthEmail());
   const previousSessionUserId = useRef<string | null>(null);
 
   const authEnabled = isSupabaseConfigured();
@@ -200,12 +212,31 @@ const App: React.FC = () => {
   }, [authEnabled]);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !window.location.hash) return;
+
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const authError = hashParams.get('error_description') || hashParams.get('error');
+    if (!authError) return;
+
+    pushToast(authError, 'error');
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+  }, []);
+
+  useEffect(() => {
     const currentUserId = session?.user.id || null;
     if (currentUserId && previousSessionUserId.current !== currentUserId) {
       emitEvent('auth_signed_in');
     }
     previousSessionUserId.current = currentUserId;
   }, [session]);
+
+  useEffect(() => {
+    const email = session?.user.email?.trim();
+    if (!email) return;
+
+    rememberAuthEmail(email);
+    setRememberedEmailState(email);
+  }, [session?.user.email]);
 
   useEffect(() => {
     if (!authEnabled) return;
@@ -535,13 +566,30 @@ const App: React.FC = () => {
     try {
       await sendMagicLink(email, `${window.location.origin}/guide`);
       setIsAuthDialogOpen(false);
-      emitEvent('magic_link_requested');
-      pushToast(`Check ${email} for your Values in the Wild sign-in email.`, 'success');
+      emitEvent('magic_link_requested', { method: 'email' });
+      pushToast(`Check ${email} for your sign-in email. If it takes a minute, check spam too.`, 'success');
     } catch (error) {
       pushToast(error instanceof Error ? error.message : 'Unable to send magic link.', 'error');
     } finally {
       setIsSendingMagicLink(false);
     }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsStartingGoogleSignIn(true);
+    try {
+      emitEvent('sign_in_requested', { from: currentView, method: 'google' });
+      await startGoogleSignIn(`${window.location.origin}/guide`);
+    } catch (error) {
+      setIsStartingGoogleSignIn(false);
+      pushToast(error instanceof Error ? error.message : 'Unable to start Google sign-in.', 'error');
+    }
+  };
+
+  const handleForgetRememberedEmail = () => {
+    clearRememberedAuthEmail();
+    setRememberedEmailState(null);
+    pushToast('Saved sign-in email cleared for this browser.', 'success');
   };
 
   const handleSignOut = async () => {
@@ -550,7 +598,7 @@ const App: React.FC = () => {
       chooseEntryMode('guest');
       navigate('/guide');
       emitEvent('signed_out');
-      pushToast('Signed out.', 'success');
+      pushToast('Signed out on this browser.', 'success');
     } catch (error) {
       pushToast(error instanceof Error ? error.message : 'Unable to sign out.', 'error');
     }
@@ -706,6 +754,7 @@ const App: React.FC = () => {
       return (
         <LandingView
           authConfigured={authEnabled}
+          rememberedEmail={rememberedEmail}
           valueCount={values.length}
           onContinueAsGuest={handleContinueAsGuest}
           onEnterFieldGuide={() => enterApp('/guide')}
@@ -883,7 +932,13 @@ const App: React.FC = () => {
                   Debug
                 </button>
               )}
-              {!session && isGuestMode && (
+              {!session && rememberedEmail && (
+                <div className="hidden max-w-[16rem] rounded-full bg-[#eef5e8] px-4 py-2 text-right sm:block">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#35680e]">Welcome back</p>
+                  <p className="truncate text-sm font-semibold text-[#35680e]">{rememberedEmail}</p>
+                </div>
+              )}
+              {!session && isGuestMode && !rememberedEmail && (
                 <div className="hidden rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e] sm:inline-flex">
                   Guest mode
                 </div>
@@ -894,7 +949,7 @@ const App: React.FC = () => {
                 className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e] transition-colors hover:bg-[#e5ddd6] disabled:cursor-wait disabled:opacity-70"
               >
                 {isLoadingAuth ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserCircle2 className="h-5 w-5" />}
-                {isLoadingAuth ? 'Checking…' : session ? 'Sign out' : 'Sign in'}
+                {isLoadingAuth ? 'Checking…' : session ? 'Sign out' : rememberedEmail ? 'Use saved email' : 'Sign in'}
               </button>
             </div>
           ) : (
@@ -989,9 +1044,14 @@ const App: React.FC = () => {
 
       <Suspense fallback={null}>
         <AuthDialog
+          initialEmail={rememberedEmail || ''}
           isOpen={isAuthDialogOpen}
+          isOAuthSubmitting={isStartingGoogleSignIn}
           isSubmitting={isSendingMagicLink}
+          rememberedEmail={rememberedEmail}
           onClose={() => setIsAuthDialogOpen(false)}
+          onForgetRememberedEmail={handleForgetRememberedEmail}
+          onGoogleSignIn={handleGoogleSignIn}
           onSubmit={handleSendMagicLink}
         />
       </Suspense>
