@@ -113,7 +113,12 @@ const App: React.FC = () => {
   }, [routeValueSlug, selectedValueName, values]);
   const selectedValueDetail = selectedValueSlug ? valueDetailsBySlug[selectedValueSlug] || null : null;
   const routeSelectedValue = selectedValueDetail || selectedValueSummary;
-  const selectedValue = currentView === 'value' || currentView === 'practice' ? selectedValueDetail : selectedValueSummary;
+  const selectedValue =
+    currentView === 'value'
+      ? selectedValueDetail
+      : currentView === 'practice'
+        ? routeSelectedValue
+        : selectedValueSummary;
 
   const navItems: { label: string; icon: React.ComponentType<{ className?: string }>; href: string; active: boolean }[] = [
     { label: 'Field Guide', icon: LibraryBig, href: '/guide', active: currentView === 'library' || currentView === 'value' },
@@ -531,7 +536,7 @@ const App: React.FC = () => {
       await sendMagicLink(email, `${window.location.origin}/guide`);
       setIsAuthDialogOpen(false);
       emitEvent('magic_link_requested');
-      pushToast(`Magic link sent to ${email}.`, 'success');
+      pushToast(`Check ${email} for your Values in the Wild sign-in email.`, 'success');
     } catch (error) {
       pushToast(error instanceof Error ? error.message : 'Unable to send magic link.', 'error');
     } finally {
@@ -716,10 +721,12 @@ const App: React.FC = () => {
       );
     }
 
+    const isWaitingForSelectedValue = shouldLoadSelectedValue && !selectedValue && !selectedValueError;
     const isCurrentViewLoading =
       (shouldLoadValues && isLoadingValues) ||
       (shouldLoadReflections && isLoadingReflections) ||
-      (shouldLoadSelectedValue && isLoadingSelectedValue);
+      (shouldLoadSelectedValue && isLoadingSelectedValue) ||
+      isWaitingForSelectedValue;
 
     if (isCurrentViewLoading) {
       return (

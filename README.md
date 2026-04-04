@@ -70,6 +70,17 @@ Production uses the Node backend to serve the built Vite frontend and the existi
 - `ADMIN_EMAILS=you@example.com`
 - or `ADMIN_USER_IDS=<supabase-user-id>`
 
+### Branded magic-link email
+
+Supabase sends the login email. The repo now includes a branded Magic Link template at [docs/supabase-magic-link-email.html](/Users/simonedeangelis/Downloads/embodied_-values-detective/docs/supabase-magic-link-email.html) that matches the site palette and makes it explicit that the email is for signing in to `Values in the Wild`.
+
+Recommended dashboard settings:
+- `Auth -> Email Templates -> Magic Link`
+- subject: `Log in to Values in the Wild`
+- HTML body: paste the contents of `docs/supabase-magic-link-email.html`
+
+The template uses Supabase's supported template variables, including `{{ .ConfirmationURL }}`, `{{ .SiteURL }}`, and `{{ .Email }}`.
+
 When auth is configured:
 - `GET /api/v1/me/reflections` requires `Authorization: Bearer <access_token>`
 - `PUT /api/v1/me/reflections` requires `Authorization: Bearer <access_token>`

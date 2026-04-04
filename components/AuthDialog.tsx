@@ -30,9 +30,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ isOpen, isSubmitting, onClose, 
       <div className="w-full max-w-md rounded-[2rem] bg-[#fff8f3] p-6 shadow-[0_24px_60px_rgba(41,33,27,0.22)] sm:p-7">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Sign in</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Values in the Wild sign-in</p>
             <h2 className="mt-2 font-['Plus_Jakarta_Sans'] text-3xl font-bold tracking-[-0.04em] text-[#1e1b18]">
-              Save your field notes
+              Email me a sign-in link
             </h2>
           </div>
           <button
@@ -45,7 +45,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ isOpen, isSubmitting, onClose, 
         </div>
 
         <p className="mt-4 text-sm leading-6 text-[#6f6258]">
-          Use a magic link so notes, streaks, and history belong to your account across devices.
+          We’ll send a one-time Values in the Wild login email so your field notes, streaks, and history stay with your account across devices.
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
@@ -70,7 +70,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ isOpen, isSubmitting, onClose, 
             disabled={isSubmitting || !email.trim()}
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#35680e] px-6 py-3.5 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)] transition hover:bg-[#2e5a0c] disabled:cursor-not-allowed disabled:bg-[#c9d7bc]"
           >
-            {isSubmitting ? 'Sending link…' : 'Send magic link'}
+            {isSubmitting ? 'Sending sign-in email…' : 'Email me a sign-in link'}
             <ArrowRight className="h-4 w-4" />
           </button>
         </form>

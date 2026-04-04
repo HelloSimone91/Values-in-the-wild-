@@ -125,6 +125,17 @@ const PracticeView: React.FC<PracticeViewProps> = ({
 
   const activePractice = deepDivePractices.find((practice) => practice.id === activePracticeId) || deepDivePractices[0] || null;
   const selectedChecklistItems = quickChecklist.filter((item) => checkedQuickItems.includes(item.id));
+
+  if (!selectedValue) {
+    return (
+      <section className="rounded-[2.5rem] bg-[#f9f2ed] p-8 text-center shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
+        <p className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">
+          Choose a value to begin practice.
+        </p>
+      </section>
+    );
+  }
+
   const practiceLead = selectedValue.siteContent?.shortDefinition?.value || selectedValue.description;
   const libraryEyebrow = practiceMode === 'micro' ? 'Daily checklist' : 'Prompt library';
   const libraryTitle = practiceMode === 'micro' ? 'Check what you noticed' : 'Choose one prompt';
@@ -172,16 +183,6 @@ const PracticeView: React.FC<PracticeViewProps> = ({
     });
     setDeepReflection('');
   };
-
-  if (!selectedValue) {
-    return (
-      <section className="rounded-[2.5rem] bg-[#f9f2ed] p-8 text-center shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
-        <p className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">
-          Choose a value to begin practice.
-        </p>
-      </section>
-    );
-  }
 
   return (
     <div className="space-y-8">
