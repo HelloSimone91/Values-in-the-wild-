@@ -74,6 +74,7 @@ interface HistoryViewProps {
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const startOfLocalDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
 
 const toDayKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -112,13 +113,31 @@ const buildWeeklyRhythm = (reflections: ReflectionEntry[]): WeekBar[] => {
   });
 };
 
-const buildMonthlyHeatmap = (reflections: ReflectionEntry[], monthCount = 6): HeatmapMonth[] => {
+const getMonthSpan = (start: Date, end: Date) =>
+  (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+
+const buildMonthlyHeatmap = (reflections: ReflectionEntry[]): HeatmapMonth[] => {
+  if (!reflections.length) return [];
+
   const counts = getCountByDay(reflections);
   const today = startOfLocalDay(new Date());
+  const firstReflectionMonth = startOfMonth(
+    reflections.reduce((earliest, entry) => {
+      const entryDate = new Date(entry.date);
+      return entryDate.getTime() < earliest.getTime() ? entryDate : earliest;
+    }, new Date(reflections[0].date))
+  );
+  const finalVisibleMonth = startOfMonth(
+    reflections.reduce((latest, entry) => {
+      const entryDate = new Date(entry.date);
+      return entryDate.getTime() > latest.getTime() ? entryDate : latest;
+    }, today)
+  );
+  const monthCount = getMonthSpan(firstReflectionMonth, finalVisibleMonth);
   const months: HeatmapMonth[] = [];
 
-  for (let offset = monthCount - 1; offset >= 0; offset -= 1) {
-    const monthDate = new Date(today.getFullYear(), today.getMonth() - offset, 1);
+  for (let offset = 0; offset < monthCount; offset += 1) {
+    const monthDate = new Date(firstReflectionMonth.getFullYear(), firstReflectionMonth.getMonth() + offset, 1);
     const year = monthDate.getFullYear();
     const month = monthDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -306,6 +325,11 @@ const HistoryView: React.FC<HistoryViewProps> = ({
     if (!heatmapMonths.length) return null;
     return heatmapMonths.find((month) => month.key === selectedHeatmapMonth) || heatmapMonths[heatmapMonths.length - 1];
   }, [heatmapMonths, selectedHeatmapMonth]);
+  const heatmapRangeLabel = useMemo(() => {
+    if (!heatmapMonths.length) return 'No months yet';
+    if (heatmapMonths.length === 1) return heatmapMonths[0].label;
+    return `${heatmapMonths[0].label} - ${heatmapMonths[heatmapMonths.length - 1].label}`;
+  }, [heatmapMonths]);
 
   const busiestMonth = useMemo(() => {
     return [...heatmapMonths].sort((a, b) => b.totalNotes - a.totalNotes || b.activeDays - a.activeDays)[0] || null;
@@ -657,7 +681,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                   <p className="mt-2 text-sm leading-6 text-[#6f6258]">
                     {analyticsView === 'week'
                       ? 'Sunday-first, with each column locked to the correct calendar date.'
-                      : 'A six-month heatmap for field notes, with monthly stats revealed on selection.'}
+                      : 'A month-by-month heatmap that starts with your first visible note and keeps skipped months in sequence.'}
                   </p>
                 </div>
 
@@ -685,7 +709,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7668]">
                     {analyticsView === 'week'
                       ? `${trendBars[0]?.dateLabel} - ${trendBars[6]?.dateLabel}`
-                      : 'Last 6 months'}
+                      : heatmapRangeLabel}
                   </div>
                 </div>
               </div>
@@ -800,7 +824,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                       {selectedMonthStats?.label || 'No month selected'}
                     </h3>
                     <p className="mt-3 text-sm leading-6 text-[#d4ebb8]">
-                      Pick any month on the left. The heatmap uses the same Sunday-first cadence as the weekly view.
+                      Pick any month on the left. The heatmap starts with your first visible note and keeps the same Sunday-first cadence as the weekly view.
                     </p>
 
                     <div className="mt-6 space-y-3">
