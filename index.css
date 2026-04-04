@@ -58,6 +58,65 @@
 
 :root {
   color-scheme: light;
+  --app-canvas: #fff8f3;
+  --app-text: #1e1b18;
+  --app-text-muted: #6f6258;
+  --app-text-subtle: #8a7668;
+  --app-text-placeholder: #9f948a;
+  --app-text-quiet: #85786e;
+  --app-text-accent: #35680e;
+  --app-text-success: #255b31;
+  --app-text-success-strong: #006a45;
+  --app-text-danger: #93000a;
+  --app-text-on-accent: #ffffff;
+  --app-text-on-dark: #f2f8ea;
+  --app-text-on-dark-muted: #d4ebb8;
+  --app-surface: #ffffff;
+  --app-surface-elevated: #fffaf7;
+  --app-surface-muted: #f9f2ed;
+  --app-surface-muted-hover: #f1ebe5;
+  --app-surface-accent-soft: #eef5e8;
+  --app-surface-accent-muted: #f6fbf2;
+  --app-surface-success: #f6fbf2;
+  --app-surface-warm: #fff7ee;
+  --app-surface-purple: #f7f5ff;
+  --app-surface-danger: #fff1ef;
+  --app-surface-glass: rgba(255, 248, 243, 0.84);
+  --app-border: #ece3dc;
+  --app-border-muted: #efe6df;
+  --app-border-strong: #d8cdc4;
+  --app-border-hover: #cdbeb2;
+  --app-border-accent: #35680e;
+  --app-border-success: #dce7d2;
+  --app-border-danger: #f2c8c5;
+  --app-accent: #35680e;
+  --app-accent-dark: #234e00;
+  --app-accent-hover: #2e5a0c;
+  --app-accent-disabled: #c9d7bc;
+  --app-pop-warm: #ff8000;
+  --app-pop-purple: #4f457f;
+  --app-chart-mid: #5f8f34;
+  --app-chart-soft: #dfead5;
+  --app-chart-ring: #a7cc7e;
+  --app-selection: rgba(183, 244, 139, 0.55);
+  --app-selection-text: #1c1247;
+  --app-scrollbar-track: #fff8f3;
+  --app-scrollbar-thumb: #d9cdc2;
+  --app-shadow-soft: rgba(41, 33, 27, 0.04);
+  --app-shadow-soft-strong: rgba(41, 33, 27, 0.08);
+  --app-shadow-accent: rgba(53, 104, 14, 0.18);
+  --app-shadow-accent-strong: rgba(53, 104, 14, 0.2);
+  --app-shadow-accent-soft: rgba(53, 104, 14, 0.08);
+  --app-shadow-dark-strong: rgba(35, 78, 0, 0.18);
+  --app-shadow-danger: rgba(186, 26, 26, 0.08);
+  --app-shell-glow-1: rgba(53, 104, 14, 0.06);
+  --app-shell-glow-2: rgba(255, 128, 0, 0.09);
+  --app-shell-sheen-1: rgba(53, 104, 14, 0.02);
+  --app-shell-sheen-2: rgba(255, 128, 0, 0.03);
+}
+
+:root[data-color-palette='cyber-acid'] {
+  color-scheme: light;
   --app-canvas: #f5f8f1;
   --app-text: #051f20;
   --app-text-muted: #506160;

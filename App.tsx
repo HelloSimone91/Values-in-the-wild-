@@ -31,7 +31,7 @@ interface Toast {
   tone: ToastTone;
 }
 
-type ColorPaletteId = 'cyber-acid' | 'mocha-mousse' | 'electric-lavender' | 'rosewood-earth';
+type ColorPaletteId = 'field-guide-original' | 'cyber-acid' | 'mocha-mousse' | 'electric-lavender' | 'rosewood-earth';
 
 interface ColorPaletteOption {
   id: ColorPaletteId;
@@ -49,8 +49,14 @@ const AnalyticsDebugView = lazy(() => import('./components/AnalyticsDebugView'))
 const AuthDialog = lazy(() => import('./components/AuthDialog'));
 
 const COLOR_PALETTE_STORAGE_KEY = 'values-in-the-wild:color-palette';
-const DEFAULT_COLOR_PALETTE: ColorPaletteId = 'cyber-acid';
+const DEFAULT_COLOR_PALETTE: ColorPaletteId = 'field-guide-original';
 const COLOR_PALETTES: ColorPaletteOption[] = [
+  {
+    id: 'field-guide-original',
+    label: 'Field Guide Original',
+    shortLabel: 'Original',
+    swatches: ['#35680e', '#ff8000', '#4f457f'],
+  },
   {
     id: 'cyber-acid',
     label: 'Cyber Acid',
