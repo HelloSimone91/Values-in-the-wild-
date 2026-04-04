@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Activity, BookOpenText, CheckCircle2, History, LibraryBig, Loader2, TriangleAlert, UserCircle2, X } from 'lucide-react';
+import { Activity, BookOpenText, CheckCircle2, History, LibraryBig, Loader2, Palette, TriangleAlert, UserCircle2, X } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { clearLocalReflections, loadLocalReflections, loadReflections, saveReflections } from './services/reflectionPersistenceService';
@@ -31,6 +31,15 @@ interface Toast {
   tone: ToastTone;
 }
 
+type ColorPaletteId = 'cyber-acid' | 'mocha-mousse' | 'electric-lavender' | 'rosewood-earth';
+
+interface ColorPaletteOption {
+  id: ColorPaletteId;
+  label: string;
+  shortLabel: string;
+  swatches: [string, string, string];
+}
+
 const LandingView = lazy(() => import('./components/LandingView'));
 const ValueDetailView = lazy(() => import('./components/ValueDetailView'));
 const PracticeView = lazy(() => import('./components/PracticeView'));
@@ -38,6 +47,75 @@ const HistoryView = lazy(() => import('./components/HistoryView'));
 const ValuesLibraryView = lazy(() => import('./components/ValuesLibraryView'));
 const AnalyticsDebugView = lazy(() => import('./components/AnalyticsDebugView'));
 const AuthDialog = lazy(() => import('./components/AuthDialog'));
+
+const COLOR_PALETTE_STORAGE_KEY = 'values-in-the-wild:color-palette';
+const DEFAULT_COLOR_PALETTE: ColorPaletteId = 'cyber-acid';
+const COLOR_PALETTES: ColorPaletteOption[] = [
+  {
+    id: 'cyber-acid',
+    label: 'Cyber Acid',
+    shortLabel: 'Acid',
+    swatches: ['#b8bf1a', '#c5f143', '#811672'],
+  },
+  {
+    id: 'mocha-mousse',
+    label: 'Mocha Mousse',
+    shortLabel: 'Mocha',
+    swatches: ['#a47b64', '#9e7a4d', '#d6beeb'],
+  },
+  {
+    id: 'electric-lavender',
+    label: 'Electric Lavender',
+    shortLabel: 'Lavender',
+    swatches: ['#a78bfa', '#4f46e5', '#80ff2a'],
+  },
+  {
+    id: 'rosewood-earth',
+    label: 'Rosewood Earth',
+    shortLabel: 'Rosewood',
+    swatches: ['#8a5071', '#934823', '#636b5f'],
+  },
+];
+
+const isColorPaletteId = (value: string | null): value is ColorPaletteId =>
+  COLOR_PALETTES.some((palette) => palette.id === value);
+
+interface PaletteToggleProps {
+  activePalette: ColorPaletteId;
+  onChange: (paletteId: ColorPaletteId) => void;
+}
+
+const PaletteToggle: React.FC<PaletteToggleProps> = ({ activePalette, onChange }) => (
+  <div className="palette-toggle" role="group" aria-label="Choose a color palette">
+    <div className="palette-toggle-label hidden sm:flex">
+      <Palette className="h-4 w-4" />
+      <span>Palette</span>
+    </div>
+    <div className="palette-toggle-options">
+      {COLOR_PALETTES.map((palette) => {
+        const isActive = palette.id === activePalette;
+        return (
+          <button
+            key={palette.id}
+            type="button"
+            onClick={() => onChange(palette.id)}
+            className={`palette-chip ${isActive ? 'palette-chip-active' : ''}`}
+            aria-pressed={isActive}
+            aria-label={`Switch to the ${palette.label} palette`}
+            title={palette.label}
+          >
+            <span className="palette-chip-preview" aria-hidden="true">
+              {palette.swatches.map((swatch) => (
+                <span key={swatch} className="palette-chip-swatch" style={{ backgroundColor: swatch }} />
+              ))}
+            </span>
+            <span className="hidden md:inline">{palette.shortLabel}</span>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+);
 
 const RouteSuspenseFallback: React.FC = () => (
   <div className="flex min-h-[50vh] items-center justify-center">
@@ -52,6 +130,16 @@ const App: React.FC = () => {
   const FAVORITES_STORAGE_KEY = 'values-in-the-wild:favorites';
   const location = useLocation();
   const navigate = useNavigate();
+  const [activePalette, setActivePalette] = useState<ColorPaletteId>(() => {
+    if (typeof window === 'undefined') return DEFAULT_COLOR_PALETTE;
+
+    try {
+      const storedPalette = window.localStorage.getItem(COLOR_PALETTE_STORAGE_KEY);
+      return isColorPaletteId(storedPalette) ? storedPalette : DEFAULT_COLOR_PALETTE;
+    } catch {
+      return DEFAULT_COLOR_PALETTE;
+    }
+  });
 
   const [values, setValues] = useState<ValueDefinition[]>([]);
   const [selectedValueName, setSelectedValueName] = useState<string>('');
@@ -161,6 +249,11 @@ const App: React.FC = () => {
     });
   };
 
+  const handlePaletteChange = (nextPalette: ColorPaletteId) => {
+    setActivePalette(nextPalette);
+    emitEvent('palette_changed', { palette: nextPalette });
+  };
+
   useEffect(() => {
     try {
       window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favoriteValues));
@@ -168,6 +261,18 @@ const App: React.FC = () => {
       // Ignore storage failures so the guide still works in restricted browsers.
     }
   }, [favoriteValues]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(COLOR_PALETTE_STORAGE_KEY, activePalette);
+    } catch {
+      // Ignore storage failures so the theme still works in restricted browsers.
+    }
+  }, [activePalette]);
+
+  useLayoutEffect(() => {
+    document.documentElement.dataset.colorPalette = activePalette;
+  }, [activePalette]);
 
   useEffect(() => {
     if (!authEnabled) {
@@ -919,47 +1024,51 @@ const App: React.FC = () => {
             })}
           </nav>
 
-          {authEnabled ? (
-            <div className="flex items-center gap-2">
-              {session && hasAdminAccess && (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <PaletteToggle activePalette={activePalette} onChange={handlePaletteChange} />
+
+            {authEnabled ? (
+              <div className="flex items-center gap-2">
+                {session && hasAdminAccess && (
+                  <button
+                    onClick={() => enterApp('/debug/analytics')}
+                    className={`hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors lg:inline-flex ${
+                      currentView === 'debug' ? 'bg-[#35680e] text-white' : 'bg-[#f1ebe5] text-[#35680e] hover:bg-[#e5ddd6]'
+                    }`}
+                  >
+                    <Activity className="h-4 w-4" />
+                    Debug
+                  </button>
+                )}
+                {!session && rememberedEmail && (
+                  <div className="hidden max-w-[16rem] rounded-full bg-[#eef5e8] px-4 py-2 text-right sm:block">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#35680e]">Welcome back</p>
+                    <p className="truncate text-sm font-semibold text-[#35680e]">{rememberedEmail}</p>
+                  </div>
+                )}
+                {!session && isGuestMode && !rememberedEmail && (
+                  <div className="hidden rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e] sm:inline-flex">
+                    Guest mode
+                  </div>
+                )}
                 <button
-                  onClick={() => enterApp('/debug/analytics')}
-                  className={`hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors lg:inline-flex ${
-                    currentView === 'debug' ? 'bg-[#35680e] text-white' : 'bg-[#f1ebe5] text-[#35680e] hover:bg-[#e5ddd6]'
-                  }`}
+                  onClick={session ? handleSignOut : requestSignIn}
+                  disabled={isLoadingAuth}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e] transition-colors hover:bg-[#e5ddd6] disabled:cursor-wait disabled:opacity-70"
                 >
-                  <Activity className="h-4 w-4" />
-                  Debug
+                  {isLoadingAuth ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserCircle2 className="h-5 w-5" />}
+                  {isLoadingAuth ? 'Checking…' : session ? 'Sign out' : rememberedEmail ? 'Use saved email' : 'Sign in'}
                 </button>
-              )}
-              {!session && rememberedEmail && (
-                <div className="hidden max-w-[16rem] rounded-full bg-[#eef5e8] px-4 py-2 text-right sm:block">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#35680e]">Welcome back</p>
-                  <p className="truncate text-sm font-semibold text-[#35680e]">{rememberedEmail}</p>
-                </div>
-              )}
-              {!session && isGuestMode && !rememberedEmail && (
-                <div className="hidden rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e] sm:inline-flex">
-                  Guest mode
-                </div>
-              )}
-              <button
-                onClick={session ? handleSignOut : requestSignIn}
-                disabled={isLoadingAuth}
-                className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e] transition-colors hover:bg-[#e5ddd6] disabled:cursor-wait disabled:opacity-70"
-              >
-                {isLoadingAuth ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserCircle2 className="h-5 w-5" />}
-                {isLoadingAuth ? 'Checking…' : session ? 'Sign out' : rememberedEmail ? 'Use saved email' : 'Sign in'}
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e]">
-                <UserCircle2 className="h-5 w-5" />
-                Local mode
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e]">
+                  <UserCircle2 className="h-5 w-5" />
+                  Local mode
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
