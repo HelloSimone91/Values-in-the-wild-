@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import fsSync from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { hasDatabase, initDatabase, listRecentEvents, listReflections, recordEvent, replaceReflections, summarizeRecentEvents } from './database.mjs';
+import { hasDatabase, initDatabase, listRecentEvents, listReflections, recordEvent, recordFeedback, replaceReflections, summarizeRecentEvents } from './database.mjs';
 import { hasSupabaseAuth, isAdminUser, requireAdminUser, requireAuthenticatedUser } from './supabase.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,6 +14,7 @@ const DIST_ASSETS_DIR = path.join(DIST_DIR, 'assets');
 const DIST_INDEX = path.join(DIST_DIR, 'index.html');
 const VALUES_FILE = process.env.VALUES_FILE || path.join(__dirname, '..', 'data', 'Values-en.json');
 const SITE_CONTENT_FILE = path.join(__dirname, '..', 'data', 'ValueSiteContent.json');
+const FEEDBACK_WEBHOOK_URL = process.env.FEEDBACK_WEBHOOK_URL || '';
 
 const PORT = Number(process.env.PORT || 8787);
 
@@ -134,6 +135,8 @@ const isValidReflection = (entry) => {
 };
 
 const isValidEventName = (value) => typeof value === 'string' && /^[a-z0-9_.-]{3,64}$/i.test(value);
+const normalizeOptionalString = (value, maxLength = 255) =>
+  typeof value === 'string' && value.trim() ? value.trim().slice(0, maxLength) : null;
 
 app.get('/api/v1/users/:userId/reflections', async (req, res) => {
   if (hasSupabaseAuth()) {
@@ -272,6 +275,87 @@ app.post('/api/v1/events', async (req, res) => {
     console.error('Failed to record analytics event:', error);
     return res.status(503).json({ error: 'Analytics storage is not configured.' });
   }
+});
+
+app.post('/api/v1/feedback', async (req, res) => {
+  const message = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+
+  if (!message) {
+    return res.status(400).json({ error: 'Feedback message is required.' });
+  }
+
+  if (message.length > 4000) {
+    return res.status(400).json({ error: 'Feedback must be 4000 characters or fewer.' });
+  }
+
+  let userId = null;
+  let userEmail = normalizeOptionalString(req.body?.userEmail, 320);
+
+  if (req.headers.authorization) {
+    try {
+      const user = await requireAuthenticatedUser(req);
+      userId = user.id;
+      userEmail = normalizeOptionalString(user.email, 320) || userEmail;
+    } catch (error) {
+      const status = typeof error?.status === 'number' ? error.status : 401;
+      return res.status(status).json({ error: error.message || 'Invalid or expired session.' });
+    }
+  }
+
+  const feedbackPayload = {
+    anonymousId: userId ? null : normalizeOptionalString(req.body?.anonymousId, 160),
+    currentView: normalizeOptionalString(req.body?.currentView, 64),
+    message,
+    paletteId: normalizeOptionalString(req.body?.paletteId, 64),
+    pathname: normalizeOptionalString(req.body?.pathname, 255),
+    userEmail,
+    userId,
+  };
+
+  let savedToDatabase = false;
+  let forwardedToWebhook = false;
+
+  if (hasDatabase()) {
+    try {
+      await recordFeedback(feedbackPayload);
+      savedToDatabase = true;
+    } catch (error) {
+      console.error('Failed to save feedback:', error);
+    }
+  }
+
+  if (FEEDBACK_WEBHOOK_URL) {
+    try {
+      const webhookResponse = await fetch(FEEDBACK_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...feedbackPayload,
+          createdAt: new Date().toISOString(),
+        }),
+      });
+
+      if (!webhookResponse.ok) {
+        throw new Error(`Webhook responded with ${webhookResponse.status}.`);
+      }
+
+      forwardedToWebhook = true;
+    } catch (error) {
+      console.error('Failed to forward feedback to webhook:', error);
+    }
+  }
+
+  if (!savedToDatabase && !forwardedToWebhook) {
+    return res.status(503).json({ error: 'Feedback storage is not configured yet.' });
+  }
+
+  return res.status(202).json({
+    ok: true,
+    forwardedToWebhook,
+    savedToDatabase,
+  });
 });
 
 app.get('/api/v1/events', async (req, res) => {

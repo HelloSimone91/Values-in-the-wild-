@@ -37,6 +37,18 @@ To enable real-user auth locally, also set:
 
 The frontend uses Supabase magic links and Google OAuth. The backend verifies bearer tokens and stores reflections against the authenticated user id.
 
+## Feedback inbox
+
+The app now accepts in-product feedback at `POST /api/v1/feedback`.
+
+Behavior:
+- saves each submission into Postgres when `DATABASE_URL` is configured
+- optionally forwards each submission to `FEEDBACK_WEBHOOK_URL`
+- accepts guest submissions and authenticated submissions
+
+The simplest Google Sheets setup is to publish a Google Apps Script web app that appends the JSON payload to a sheet, then set:
+- `FEEDBACK_WEBHOOK_URL=https://script.google.com/macros/s/.../exec`
+
 The repo includes a bundled copy at `data/Values-en.json`. `VALUES_FILE` is optional and only needed if you want to override that source.
 Approved editorial overlays live in `data/ValueSiteContent.json`. This file is merged onto the base values dataset at runtime so stronger reviewed copy can ship without exposing raw source text.
 
@@ -115,10 +127,12 @@ Current tracked events include:
 - `magic_link_requested`
 - `auth_signed_in`
 - `signed_out`
+- `palette_changed`
 - `reflection_saved`
 - `reflection_updated`
 - `reflection_deleted`
 - `guest_notes_claimed`
+- `feedback_submitted`
 
 Use `/debug/analytics` in the app to inspect recent events and counts. When auth is configured, that route requires a signed-in session.
 To lock that route down properly, configure `ADMIN_EMAILS` and/or `ADMIN_USER_IDS`. Only allowlisted users can access the analytics endpoint or see the debug button.

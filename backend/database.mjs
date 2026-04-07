@@ -51,6 +51,25 @@ const ensureTable = async () => {
     CREATE INDEX IF NOT EXISTS analytics_events_event_created_idx
     ON analytics_events (event_name, created_at DESC);
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS feedback_submissions (
+      feedback_id BIGSERIAL PRIMARY KEY,
+      user_id TEXT,
+      anonymous_id TEXT,
+      user_email TEXT,
+      message TEXT NOT NULL,
+      pathname TEXT,
+      current_view TEXT,
+      palette_id TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS feedback_submissions_created_idx
+    ON feedback_submissions (created_at DESC);
+  `);
 };
 
 export const hasDatabase = () => Boolean(pool);
@@ -196,4 +215,26 @@ export const summarizeRecentEvents = async (hours = 168) => {
   );
 
   return result.rows;
+};
+
+export const recordFeedback = async ({ anonymousId = null, currentView = null, message, paletteId = null, pathname = null, userEmail = null, userId = null }) => {
+  if (!pool) {
+    throw new Error('DATABASE_URL is not configured.');
+  }
+
+  await pool.query(
+    `
+      INSERT INTO feedback_submissions (
+        user_id,
+        anonymous_id,
+        user_email,
+        message,
+        pathname,
+        current_view,
+        palette_id
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7);
+    `,
+    [userId, anonymousId, userEmail, message, pathname, currentView, paletteId]
+  );
 };

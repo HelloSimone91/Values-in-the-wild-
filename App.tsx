@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Activity, BookOpenText, Check, CheckCircle2, ChevronDown, History, LibraryBig, Loader2, Palette, TriangleAlert, UserCircle2, X } from 'lucide-react';
+import { BookOpenText, CheckCircle2, History, LibraryBig, Loader2, TriangleAlert, X } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { clearLocalReflections, loadLocalReflections, loadReflections, saveReflections } from './services/reflectionPersistenceService';
@@ -19,6 +19,8 @@ import {
 import { trackEvent } from './services/analyticsService';
 import { loadAdminAccess } from './services/adminAccessService';
 import { AnalyticsDebugPayload, loadAnalyticsDebug } from './services/analyticsDebugService';
+import SettingsPanel from './components/SettingsPanel';
+import { submitFeedback } from './services/feedbackService';
 import { loadValueBySlug, loadValueSummaries } from './services/valueCatalogService';
 import { findValueBySlug, slugifyValueName } from './valueCore';
 import type { ReflectionEntry, ValueDefinition } from './valueTypes';
@@ -47,6 +49,8 @@ const HistoryView = lazy(() => import('./components/HistoryView'));
 const ValuesLibraryView = lazy(() => import('./components/ValuesLibraryView'));
 const AnalyticsDebugView = lazy(() => import('./components/AnalyticsDebugView'));
 const AuthDialog = lazy(() => import('./components/AuthDialog'));
+const WhyValuesView = lazy(() => import('./components/WhyValuesView'));
+const FeedbackView = lazy(() => import('./components/FeedbackView'));
 
 const COLOR_PALETTE_STORAGE_KEY = 'values-in-the-wild:color-palette';
 const DEFAULT_COLOR_PALETTE: ColorPaletteId = 'field-guide-original';
@@ -85,92 +89,6 @@ const COLOR_PALETTES: ColorPaletteOption[] = [
 
 const isColorPaletteId = (value: string | null): value is ColorPaletteId =>
   COLOR_PALETTES.some((palette) => palette.id === value);
-
-interface PaletteToggleProps {
-  activePalette: ColorPaletteId;
-  onChange: (paletteId: ColorPaletteId) => void;
-}
-
-const PaletteToggle: React.FC<PaletteToggleProps> = ({ activePalette, onChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const toggleRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (toggleRef.current && !toggleRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen]);
-
-  return (
-    <div ref={toggleRef} className="palette-toggle">
-      <button
-        type="button"
-        className={`palette-toggle-trigger ${isOpen ? 'palette-toggle-trigger-open' : ''}`}
-        onClick={() => setIsOpen((current) => !current)}
-        aria-expanded={isOpen}
-        aria-haspopup="menu"
-        aria-label="Choose a color palette"
-      >
-        <span className="palette-toggle-label">
-          <Palette className="h-4 w-4" />
-          <span>Palette</span>
-        </span>
-        <ChevronDown className={`palette-toggle-caret ${isOpen ? 'palette-toggle-caret-open' : ''}`} />
-      </button>
-
-      {isOpen && (
-        <div className="palette-toggle-menu" role="menu" aria-label="Color palette options">
-          {COLOR_PALETTES.map((palette) => {
-            const isActive = palette.id === activePalette;
-            return (
-              <button
-                key={palette.id}
-                type="button"
-                role="menuitemradio"
-                aria-checked={isActive}
-                onClick={() => {
-                  onChange(palette.id);
-                  setIsOpen(false);
-                }}
-                className={`palette-chip ${isActive ? 'palette-chip-active' : ''}`}
-                title={palette.label}
-              >
-                <span className="palette-chip-preview" aria-hidden="true">
-                  {palette.swatches.map((swatch) => (
-                    <span key={swatch} className="palette-chip-swatch" style={{ backgroundColor: swatch }} />
-                  ))}
-                </span>
-                <span className="palette-chip-copy">
-                  <span className="palette-chip-name">{palette.shortLabel}</span>
-                  <span className="palette-chip-description">{palette.label}</span>
-                </span>
-                <Check className={`palette-chip-check ${isActive ? 'palette-chip-check-visible' : ''}`} />
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
 
 const RouteSuspenseFallback: React.FC = () => (
   <div className="flex min-h-[50vh] items-center justify-center">
@@ -228,6 +146,7 @@ const App: React.FC = () => {
   const [analyticsDebug, setAnalyticsDebug] = useState<AnalyticsDebugPayload>({ events: [], summary: [], windowHours: 168 });
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const [isCheckingAdminAccess, setIsCheckingAdminAccess] = useState(false);
   const [anonymousUserId] = useState(() => getOrCreateUserId());
@@ -244,18 +163,21 @@ const App: React.FC = () => {
 
   const guideMatch = matchPath('/guide/:valueSlug', location.pathname);
   const practiceMatch = matchPath('/practice/:valueSlug', location.pathname);
+  const isBlankPracticeRoute = location.pathname === '/practice';
   const routeValueSlug = guideMatch?.params.valueSlug || practiceMatch?.params.valueSlug || null;
   const isAnalyticsDebugRoute = location.pathname === '/debug/analytics';
 
   const currentView = useMemo(() => {
     if (location.pathname === '/') return 'landing';
+    if (location.pathname === '/about') return 'about';
+    if (location.pathname === '/feedback') return 'feedback';
     if (location.pathname === '/guide' || guideMatch) return guideMatch ? 'value' : 'library';
-    if (practiceMatch) return 'practice';
+    if (practiceMatch || isBlankPracticeRoute) return 'practice';
     if (location.pathname === '/notes') return 'history';
     if (isAnalyticsDebugRoute) return 'debug';
     return 'library';
-  }, [guideMatch, isAnalyticsDebugRoute, location.pathname, practiceMatch]);
-  const shouldLoadValues = currentView !== 'landing';
+  }, [guideMatch, isAnalyticsDebugRoute, isBlankPracticeRoute, location.pathname, practiceMatch]);
+  const shouldLoadValues = currentView === 'library' || currentView === 'value' || currentView === 'practice' || currentView === 'history';
   const shouldLoadReflections = currentView === 'practice' || currentView === 'history';
   const selectedValueSlug = routeValueSlug || (selectedValueName ? slugifyValueName(selectedValueName) : null);
   const shouldLoadSelectedValue = (currentView === 'value' || currentView === 'practice') && Boolean(selectedValueSlug);
@@ -264,8 +186,14 @@ const App: React.FC = () => {
     if (routeValueSlug) {
       return findValueBySlug(values, routeValueSlug) || null;
     }
-    return values.find((value) => value.name === selectedValueName) || values[0] || null;
-  }, [routeValueSlug, selectedValueName, values]);
+    if (selectedValueName) {
+      return values.find((value) => value.name === selectedValueName) || null;
+    }
+    if (currentView === 'practice' && isBlankPracticeRoute) {
+      return null;
+    }
+    return values[0] || null;
+  }, [currentView, isBlankPracticeRoute, routeValueSlug, selectedValueName, values]);
   const selectedValueDetail = selectedValueSlug ? valueDetailsBySlug[selectedValueSlug] || null : null;
   const routeSelectedValue = selectedValueDetail || selectedValueSummary;
   const selectedValue =
@@ -280,7 +208,7 @@ const App: React.FC = () => {
     {
       label: 'Practice',
       icon: BookOpenText,
-      href: routeSelectedValue ? `/practice/${slugifyValueName(routeSelectedValue.name)}` : '/guide',
+      href: routeSelectedValue ? `/practice/${slugifyValueName(routeSelectedValue.name)}` : '/practice',
       active: currentView === 'practice',
     },
     { label: 'Field Notes', icon: History, href: '/notes', active: currentView === 'history' },
@@ -504,7 +432,7 @@ const App: React.FC = () => {
         if (cancelled) return;
         setValues(loadedValues);
 
-        if (loadedValues.length && !selectedValueName) {
+        if (loadedValues.length && !selectedValueName && !isBlankPracticeRoute) {
           setSelectedValueName(loadedValues[0].name);
         }
       } catch (error) {
@@ -522,7 +450,7 @@ const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [selectedValueName, shouldLoadValues, values.length]);
+  }, [isBlankPracticeRoute, selectedValueName, shouldLoadValues, values.length]);
 
   useEffect(() => {
     if (!shouldLoadSelectedValue || !selectedValueSlug) {
@@ -699,6 +627,11 @@ const App: React.FC = () => {
     enterApp(`/practice/${slugifyValueName(valueName)}`);
   };
 
+  const handleOpenBlankPractice = () => {
+    setSelectedValueName('');
+    enterApp('/practice');
+  };
+
   const handleOpenValue = (valueName: string) => {
     setSelectedValueName(valueName);
     enterApp(`/guide/${slugifyValueName(valueName)}`);
@@ -761,6 +694,28 @@ const App: React.FC = () => {
       pushToast('Signed out on this browser.', 'success');
     } catch (error) {
       pushToast(error instanceof Error ? error.message : 'Unable to sign out.', 'error');
+    }
+  };
+
+  const handleSubmitFeedback = async (message: string) => {
+    setIsSubmittingFeedback(true);
+    try {
+      await submitFeedback({
+        accessToken,
+        anonymousId: session ? null : anonymousUserId,
+        currentView,
+        message,
+        paletteId: activePalette,
+        pathname: location.pathname,
+        userEmail: session?.user.email || rememberedEmail,
+      });
+      emitEvent('feedback_submitted', { currentView, palette: activePalette });
+      pushToast('Feedback received. Thank you.', 'success');
+    } catch (error) {
+      pushToast(error instanceof Error ? error.message : 'Unable to send feedback right now.', 'error');
+      throw error;
+    } finally {
+      setIsSubmittingFeedback(false);
     }
   };
 
@@ -930,6 +885,20 @@ const App: React.FC = () => {
       );
     }
 
+    if (currentView === 'about') {
+      return <WhyValuesView />;
+    }
+
+    if (currentView === 'feedback') {
+      return (
+        <FeedbackView
+          isSubmitting={isSubmittingFeedback}
+          onSubmit={handleSubmitFeedback}
+          sessionEmail={session?.user.email || null}
+        />
+      );
+    }
+
     const isWaitingForSelectedValue = shouldLoadSelectedValue && !selectedValue && !selectedValueError;
     const isCurrentViewLoading =
       (shouldLoadValues && isLoadingValues) ||
@@ -1008,12 +977,13 @@ const App: React.FC = () => {
           values={values}
           onSelectValue={handleSelectValue}
           onOpenValue={handleOpenValue}
-          onOpenPractice={() => {
-            if (selectedValue) {
-              handleStartPractice(selectedValue.name);
-            } else {
-              enterApp('/guide');
+          onOpenPractice={(valueName?: string) => {
+            if (valueName) {
+              handleStartPractice(valueName);
+              return;
             }
+
+            handleOpenBlankPractice();
           }}
           onUpdateReflection={handleUpdateReflection}
           onDeleteReflection={handleDeleteReflection}
@@ -1080,49 +1050,24 @@ const App: React.FC = () => {
           </nav>
 
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <PaletteToggle activePalette={activePalette} onChange={handlePaletteChange} />
-
-            {authEnabled ? (
-              <div className="flex items-center gap-2">
-                {session && hasAdminAccess && (
-                  <button
-                    onClick={() => enterApp('/debug/analytics')}
-                    className={`hidden items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors lg:inline-flex ${
-                      currentView === 'debug' ? 'bg-[#35680e] text-white' : 'bg-[#f1ebe5] text-[#35680e] hover:bg-[#e5ddd6]'
-                    }`}
-                  >
-                    <Activity className="h-4 w-4" />
-                    Debug
-                  </button>
-                )}
-                {!session && rememberedEmail && (
-                  <div className="hidden max-w-[16rem] rounded-full bg-[#eef5e8] px-4 py-2 text-right sm:block">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#35680e]">Welcome back</p>
-                    <p className="truncate text-sm font-semibold text-[#35680e]">{rememberedEmail}</p>
-                  </div>
-                )}
-                {!session && isGuestMode && !rememberedEmail && (
-                  <div className="hidden rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e] sm:inline-flex">
-                    Guest mode
-                  </div>
-                )}
-                <button
-                  onClick={session ? handleSignOut : requestSignIn}
-                  disabled={isLoadingAuth}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#35680e] transition-colors hover:bg-[#e5ddd6] disabled:cursor-wait disabled:opacity-70"
-                >
-                  {isLoadingAuth ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserCircle2 className="h-5 w-5" />}
-                  {isLoadingAuth ? 'Checking…' : session ? 'Sign out' : rememberedEmail ? 'Use saved email' : 'Sign in'}
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#f1ebe5] px-4 py-2 text-sm font-semibold text-[#85786e]">
-                  <UserCircle2 className="h-5 w-5" />
-                  Local mode
-                </div>
-              </div>
-            )}
+            <SettingsPanel
+              activePalette={activePalette}
+              authEnabled={authEnabled}
+              currentPath={location.pathname}
+              hasAdminAccess={Boolean(session) && hasAdminAccess}
+              isAuthenticated={Boolean(session)}
+              isGuestMode={isGuestMode}
+              isLoadingAuth={isLoadingAuth}
+              onNavigateFeedback={() => enterApp('/feedback')}
+              onNavigateWhyValues={() => enterApp('/about')}
+              onOpenDebug={() => enterApp('/debug/analytics')}
+              onPaletteChange={(paletteId) => handlePaletteChange(paletteId as ColorPaletteId)}
+              onRequestSignIn={requestSignIn}
+              onSignOut={handleSignOut}
+              paletteOptions={COLOR_PALETTES}
+              rememberedEmail={rememberedEmail}
+              sessionEmail={session?.user.email || null}
+            />
           </div>
         </div>
       </header>
