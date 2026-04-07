@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Activity, BookOpenText, CheckCircle2, History, LibraryBig, Loader2, Palette, TriangleAlert, UserCircle2, X } from 'lucide-react';
+import { Activity, BookOpenText, Check, CheckCircle2, ChevronDown, History, LibraryBig, Loader2, Palette, TriangleAlert, UserCircle2, X } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { clearLocalReflections, loadLocalReflections, loadReflections, saveReflections } from './services/reflectionPersistenceService';
@@ -91,37 +91,95 @@ interface PaletteToggleProps {
   onChange: (paletteId: ColorPaletteId) => void;
 }
 
-const PaletteToggle: React.FC<PaletteToggleProps> = ({ activePalette, onChange }) => (
-  <div className="palette-toggle" role="group" aria-label="Choose a color palette">
-    <div className="palette-toggle-label hidden sm:flex">
-      <Palette className="h-4 w-4" />
-      <span>Palette</span>
+const PaletteToggle: React.FC<PaletteToggleProps> = ({ activePalette, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const toggleRef = useRef<HTMLDivElement | null>(null);
+  const activeOption = COLOR_PALETTES.find((palette) => palette.id === activePalette) ?? COLOR_PALETTES[0];
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (toggleRef.current && !toggleRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  return (
+    <div ref={toggleRef} className="palette-toggle">
+      <button
+        type="button"
+        className={`palette-toggle-trigger ${isOpen ? 'palette-toggle-trigger-open' : ''}`}
+        onClick={() => setIsOpen((current) => !current)}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        aria-label="Choose a color palette"
+      >
+        <span className="palette-toggle-label">
+          <Palette className="h-4 w-4" />
+          <span className="hidden sm:inline">Palette</span>
+        </span>
+        <span className="palette-toggle-current">
+          <span className="palette-chip-preview" aria-hidden="true">
+            {activeOption.swatches.map((swatch) => (
+              <span key={swatch} className="palette-chip-swatch" style={{ backgroundColor: swatch }} />
+            ))}
+          </span>
+          <span>{activeOption.shortLabel}</span>
+        </span>
+        <ChevronDown className={`palette-toggle-caret ${isOpen ? 'palette-toggle-caret-open' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="palette-toggle-menu" role="menu" aria-label="Color palette options">
+          {COLOR_PALETTES.map((palette) => {
+            const isActive = palette.id === activePalette;
+            return (
+              <button
+                key={palette.id}
+                type="button"
+                role="menuitemradio"
+                aria-checked={isActive}
+                onClick={() => {
+                  onChange(palette.id);
+                  setIsOpen(false);
+                }}
+                className={`palette-chip ${isActive ? 'palette-chip-active' : ''}`}
+                title={palette.label}
+              >
+                <span className="palette-chip-preview" aria-hidden="true">
+                  {palette.swatches.map((swatch) => (
+                    <span key={swatch} className="palette-chip-swatch" style={{ backgroundColor: swatch }} />
+                  ))}
+                </span>
+                <span className="palette-chip-copy">
+                  <span className="palette-chip-name">{palette.shortLabel}</span>
+                  <span className="palette-chip-description">{palette.label}</span>
+                </span>
+                <Check className={`palette-chip-check ${isActive ? 'palette-chip-check-visible' : ''}`} />
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
-    <div className="palette-toggle-options">
-      {COLOR_PALETTES.map((palette) => {
-        const isActive = palette.id === activePalette;
-        return (
-          <button
-            key={palette.id}
-            type="button"
-            onClick={() => onChange(palette.id)}
-            className={`palette-chip ${isActive ? 'palette-chip-active' : ''}`}
-            aria-pressed={isActive}
-            aria-label={`Switch to the ${palette.label} palette`}
-            title={palette.label}
-          >
-            <span className="palette-chip-preview" aria-hidden="true">
-              {palette.swatches.map((swatch) => (
-                <span key={swatch} className="palette-chip-swatch" style={{ backgroundColor: swatch }} />
-              ))}
-            </span>
-            <span className="hidden md:inline">{palette.shortLabel}</span>
-          </button>
-        );
-      })}
-    </div>
-  </div>
-);
+  );
+};
 
 const RouteSuspenseFallback: React.FC = () => (
   <div className="flex min-h-[50vh] items-center justify-center">
