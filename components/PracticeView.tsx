@@ -125,26 +125,23 @@ const PracticeView: React.FC<PracticeViewProps> = ({
 
   const activePractice = deepDivePractices.find((practice) => practice.id === activePracticeId) || deepDivePractices[0] || null;
   const selectedChecklistItems = quickChecklist.filter((item) => checkedQuickItems.includes(item.id));
-
-  if (!selectedValue) {
-    return (
-      <section className="rounded-[2.5rem] bg-[#f9f2ed] p-8 text-center shadow-[0_14px_30px_rgba(41,33,27,0.04)]">
-        <p className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">
-          Choose a value to begin practice.
-        </p>
-      </section>
-    );
-  }
-
-  const practiceLead = selectedValue.siteContent?.shortDefinition?.value || selectedValue.description;
+  const hasSelectedValue = Boolean(selectedValue);
+  const practiceLead = selectedValue?.siteContent?.shortDefinition?.value || selectedValue?.description || 'Choose a value, then log one grounded moment from the wild.';
   const libraryEyebrow = practiceMode === 'micro' ? 'Daily checklist' : 'Prompt library';
-  const libraryTitle = practiceMode === 'micro' ? 'Check what you noticed' : 'Choose one prompt';
+  const libraryTitle = hasSelectedValue
+    ? practiceMode === 'micro'
+      ? 'Check what you noticed'
+      : 'Choose one prompt'
+    : practiceMode === 'micro'
+      ? 'Choose a value to unlock the checklist'
+      : 'Choose a value to unlock the prompt library';
   const microNoteTitle = 'What you noticed';
   const noteEyebrow = practiceMode === 'micro' ? 'Today' : 'Current prompt';
   const noteHint =
     practiceMode === 'micro'
       ? 'Check what happened. Add context only if it helps you remember the moment later.'
       : 'Save a specific moment, not an intention.';
+  const canSaveReflection = hasSelectedValue && (practiceMode === 'micro' ? selectedChecklistItems.length > 0 || Boolean(quickNote.trim()) : Boolean(deepReflection.trim() && activePractice));
 
   const handleToggleQuickItem = (itemId: string) => {
     setCheckedQuickItems((current) =>
@@ -193,21 +190,37 @@ const PracticeView: React.FC<PracticeViewProps> = ({
             Values in the Wild
           </div>
           <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold leading-[0.92] tracking-[-0.05em] text-[#35680e] sm:text-5xl lg:text-6xl">
-            Practice <span className="italic text-[#35680e]">{selectedValue.name}</span>
+            {hasSelectedValue ? (
+              <>
+                Practice <span className="italic text-[#35680e]">{selectedValue.name}</span>
+              </>
+            ) : (
+              'Add a field note'
+            )}
           </h1>
           <p className="max-w-2xl text-base leading-7 text-[#6f6258] sm:text-lg line-clamp-2">{practiceLead}</p>
-          {selectedValue.siteContent?.summary?.value ? (
+          {selectedValue?.siteContent?.summary?.value ? (
             <p className="max-w-2xl text-sm leading-7 text-[#6f6258]">{selectedValue.siteContent.summary.value}</p>
           ) : null}
         </div>
 
         <div className="rounded-[2rem] bg-white p-4 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-5">
-          <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Switch value</label>
+          <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">
+            {hasSelectedValue ? 'Switch value' : 'Choose a value'}
+          </label>
           <select
-            value={selectedValue.name}
-            onChange={(event) => onSelectValue(event.target.value)}
+            value={selectedValue?.name || ''}
+            onChange={(event) => {
+              const nextValueName = event.target.value;
+              if (nextValueName) {
+                onSelectValue(nextValueName);
+              }
+            }}
             className="mt-3 w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] px-4 py-3 text-sm font-semibold text-[#1e1b18] outline-none transition focus:border-[#35680e]"
           >
+            <option value="" disabled>
+              Choose a value to write about
+            </option>
             {values.map((value) => (
               <option key={value.name} value={value.name}>
                 {value.name}
@@ -222,24 +235,36 @@ const PracticeView: React.FC<PracticeViewProps> = ({
           <div className="rounded-[2.5rem] bg-[#35680e] p-7 text-white shadow-[0_24px_48px_rgba(53,104,14,0.18)] sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">Current value</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">
+                  {hasSelectedValue ? 'Current value' : 'Blank field note'}
+                </p>
                 <h2 className="mt-4 font-['Plus_Jakarta_Sans'] text-3xl font-extrabold tracking-[-0.05em] sm:text-4xl">
-                  {valueEmoji(selectedValue.name)} {selectedValue.name}
+                  {hasSelectedValue ? `${valueEmoji(selectedValue.name)} ${selectedValue.name}` : 'Pick a value to begin'}
                 </h2>
               </div>
               <span className="rounded-full bg-[#234e00] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#d8f4bd]">
-                {selectedValue.category}
+                {hasSelectedValue ? selectedValue.category : 'Step 1'}
               </span>
             </div>
-            <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d8f4bd]">Ways it shows up</p>
-            <ul className="mt-3 space-y-3">
-              {wildMoments.slice(0, 3).map((moment) => (
-                <li key={moment} className="flex gap-3 text-sm leading-6 text-[#f2f8ea]">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#d8f4bd]" />
-                  <span>{moment}</span>
-                </li>
-              ))}
-            </ul>
+            <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d8f4bd]">
+              {hasSelectedValue ? 'Ways it shows up' : 'What happens next'}
+            </p>
+            {hasSelectedValue ? (
+              <ul className="mt-3 space-y-3">
+                {wildMoments.slice(0, 3).map((moment) => (
+                  <li key={moment} className="flex gap-3 text-sm leading-6 text-[#f2f8ea]">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#d8f4bd]" />
+                    <span>{moment}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="mt-3 space-y-3 text-sm leading-6 text-[#f2f8ea]">
+                <p>Choose the value you saw in action.</p>
+                <p>Use the quick checklist for a fast daily note, or switch to Longer for a fuller reflection.</p>
+                <p>Save one specific moment instead of a general intention.</p>
+              </div>
+            )}
           </div>
 
           <section className="rounded-[2.5rem] bg-white p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-7">
@@ -268,7 +293,11 @@ const PracticeView: React.FC<PracticeViewProps> = ({
               </div>
             </div>
 
-            {practiceMode === 'micro' ? (
+            {!hasSelectedValue ? (
+              <div className="mt-5 rounded-[1.6rem] border border-dashed border-[#d9cfc7] bg-[#fff8f3] px-5 py-6 text-sm leading-6 text-[#6f6258]">
+                Pick a value from the dropdown above and this area will turn into a checklist of lived signals you can save as a field note.
+              </div>
+            ) : practiceMode === 'micro' ? (
               <div className="mt-5 space-y-3">
                 {quickChecklist.map((item) => {
                   const checked = checkedQuickItems.includes(item.id);
@@ -330,16 +359,18 @@ const PracticeView: React.FC<PracticeViewProps> = ({
 
         <section className="rounded-[2.6rem] bg-white p-6 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-7 lg:sticky lg:top-24">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-[#eef5e8] p-2 text-[#35680e]">
-                <NotebookPen className="h-5 w-5" />
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-[#eef5e8] p-2 text-[#35680e]">
+                  <NotebookPen className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Field note</p>
+                  <h2 className="mt-2 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">
+                    {hasSelectedValue ? 'Add today’s note' : 'Blank note form'}
+                  </h2>
+                </div>
               </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Field note</p>
-                <h2 className="mt-2 font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.03em] text-[#1e1b18]">Add today’s note</h2>
-              </div>
-            </div>
-            <span className="rounded-full bg-[#f1ebe5] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6258]">
+              <span className="rounded-full bg-[#f1ebe5] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6258]">
               {practiceMode === 'micro' ? 'Quick' : 'Longer'}
             </span>
           </div>
@@ -347,18 +378,22 @@ const PracticeView: React.FC<PracticeViewProps> = ({
           <div className="mt-6 rounded-[2rem] bg-[#35680e] p-6 text-white">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d8f4bd]">{noteEyebrow}</p>
             <h3 className="mt-3 font-['Plus_Jakarta_Sans'] text-3xl font-bold tracking-[-0.04em]">
-              {practiceMode === 'micro' ? microNoteTitle : activePractice?.title || 'Choose a prompt'}
+              {!hasSelectedValue ? 'Choose a value first' : practiceMode === 'micro' ? microNoteTitle : activePractice?.title || 'Choose a prompt'}
             </h3>
             <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d8f4bd]">
-              {practiceMode === 'micro' ? '1 min' : activePractice?.duration || 'No duration'}
+              {!hasSelectedValue ? 'Step 2' : practiceMode === 'micro' ? '1 min' : activePractice?.duration || 'No duration'}
             </p>
             <p className="mt-4 line-clamp-3 text-sm leading-6 text-[#d4ebb8]">
-              {practiceMode === 'micro'
+              {!hasSelectedValue
+                ? 'After you choose a value, this panel will show the exact prompt or checklist you are saving against.'
+                : practiceMode === 'micro'
                 ? 'Use this as a simple checklist. Save what you actually noticed today.'
                 : activePractice?.description}
             </p>
             <div className="mt-5 rounded-[1.5rem] bg-white/10 p-4">
-              {practiceMode === 'micro' ? (
+              {!hasSelectedValue ? (
+                <p className="text-sm leading-6 text-white">Start with the value selector above, then capture the moment in your own words.</p>
+              ) : practiceMode === 'micro' ? (
                 selectedChecklistItems.length ? (
                   <ul className="space-y-2 text-sm leading-6 text-white">
                     {selectedChecklistItems.map((item) => (
@@ -384,14 +419,17 @@ const PracticeView: React.FC<PracticeViewProps> = ({
               <textarea
                 value={practiceMode === 'micro' ? quickNote : deepReflection}
                 onChange={(event) => (practiceMode === 'micro' ? setQuickNote(event.target.value) : setDeepReflection(event.target.value))}
+                disabled={!hasSelectedValue}
                 placeholder={
-                  practiceMode === 'micro'
+                  !hasSelectedValue
+                    ? 'Choose a value first, then describe the moment you want to remember.'
+                    : practiceMode === 'micro'
                     ? `Optional: add a brief note about where you saw ${selectedValue.name.toLowerCase()} today.`
                     : `Write one real moment where ${selectedValue.name.toLowerCase()} showed up in the wild today.`
                 }
                 className={`mt-3 w-full rounded-[1.8rem] border border-[#ece3dc] bg-[#fff8f3] px-5 py-4 text-sm leading-7 text-[#1e1b18] outline-none transition focus:border-[#35680e] ${
                   practiceMode === 'micro' ? 'min-h-[130px]' : 'min-h-[190px]'
-                }`}
+                } ${!hasSelectedValue ? 'cursor-not-allowed opacity-70' : ''}`}
               />
             </label>
           </div>
@@ -414,7 +452,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({
 
           <div className="mt-5 space-y-4">
             <p className="text-sm leading-6 text-[#6f6258]">
-              {practiceMode === 'micro'
+              {!hasSelectedValue
+                ? 'Pick a value first so this note can be saved against the right part of your field guide.'
+                : practiceMode === 'micro'
                 ? 'Your checklist stays checked for the rest of the day on this device. Save again later to update the same daily note.'
                 : authConfigured && isGuestMode
                   ? 'Guest notes stay on this device. Sign in later if you want sync.'
@@ -422,10 +462,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({
             </p>
             <button
               onClick={handleSaveReflection}
-              disabled={practiceMode === 'micro' ? !selectedChecklistItems.length && !quickNote.trim() : !deepReflection.trim() || !activePractice}
+              disabled={!canSaveReflection}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#35680e] px-6 py-3.5 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)] transition hover:bg-[#2e5a0c] disabled:cursor-not-allowed disabled:bg-[#c9d7bc]"
             >
-              {practiceMode === 'micro' ? 'Save or update today’s note' : 'Save field note'}
+              {!hasSelectedValue ? 'Choose a value to begin' : practiceMode === 'micro' ? 'Save or update today’s note' : 'Save field note'}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>

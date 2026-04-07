@@ -65,7 +65,7 @@ interface HistoryViewProps {
   values: ValueDefinition[];
   onSelectValue: (name: string) => void;
   onOpenValue: (name: string) => void;
-  onOpenPractice: () => void;
+  onOpenPractice: (valueName?: string) => void;
   onUpdateReflection: (reflectionId: string, updates: Pick<ReflectionEntry, 'note' | 'practiceTitle'>) => void;
   onDeleteReflection: (reflectionId: string) => void;
   onRequestSignIn: () => void;
@@ -499,7 +499,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
     onSelectValue(action.valueName);
 
     if (action.kind === 'practice') {
-      onOpenPractice();
+      onOpenPractice(action.valueName);
       return;
     }
 
