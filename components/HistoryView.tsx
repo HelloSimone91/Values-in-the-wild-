@@ -521,7 +521,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
             Open practice, pick a value, and save one grounded note from the wild. This screen turns those notes into streaks, trends, and signal.
           </p>
           <button
-            onClick={onOpenPractice}
+            onClick={() => onOpenPractice()}
             className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-6 py-3 text-sm font-bold text-white shadow-[0_16px_28px_rgba(53,104,14,0.18)]"
           >
             Begin practice
@@ -900,7 +900,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
             <section className="rounded-[2.4rem] bg-white p-7 shadow-[0_14px_30px_rgba(41,33,27,0.04)] md:col-span-6">
               <div className="flex items-center justify-between gap-4">
                 <h2 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold tracking-[-0.04em] text-[#1e1b18]">Recent field notes</h2>
-                <button onClick={onOpenPractice} className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-4 py-2 text-sm font-bold text-white">
+                <button onClick={() => onOpenPractice()} className="inline-flex items-center gap-2 rounded-full bg-[#35680e] px-4 py-2 text-sm font-bold text-white">
                   Add field note
                   <ArrowRight className="h-4 w-4" />
                 </button>
