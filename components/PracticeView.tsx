@@ -142,6 +142,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({
       ? 'Check what happened. Add context only if it helps you remember the moment later.'
       : 'Save a specific moment, not an intention.';
   const canSaveReflection = hasSelectedValue && (practiceMode === 'micro' ? selectedChecklistItems.length > 0 || Boolean(quickNote.trim()) : Boolean(deepReflection.trim() && activePractice));
+  const mutedUntilValueClasses = hasSelectedValue
+    ? 'opacity-100 blur-0 saturate-100 scale-100 pointer-events-auto'
+    : 'opacity-30 blur-[1.5px] saturate-[0.8] scale-[0.985] pointer-events-none';
 
   const handleToggleQuickItem = (itemId: string) => {
     setCheckedQuickItems((current) =>
@@ -183,54 +186,90 @@ const PracticeView: React.FC<PracticeViewProps> = ({
 
   return (
     <div className="space-y-8">
-      <header className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)] lg:items-end">
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#eef5e8] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">
-            <Sparkles className="h-3.5 w-3.5" />
-            Values in the Wild
+      {hasSelectedValue ? (
+        <header className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)] lg:items-end">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#eef5e8] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e]">
+              <Sparkles className="h-3.5 w-3.5" />
+              Values in the Wild
+            </div>
+            <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold leading-[0.92] tracking-[-0.05em] text-[#35680e] sm:text-5xl lg:text-6xl">
+              Practice <span className="italic text-[#35680e]">{selectedValue.name}</span>
+            </h1>
+            <p className="max-w-2xl text-base leading-7 text-[#6f6258] sm:text-lg line-clamp-2">{practiceLead}</p>
+            {selectedValue?.siteContent?.summary?.value ? (
+              <p className="max-w-2xl text-sm leading-7 text-[#6f6258]">{selectedValue.siteContent.summary.value}</p>
+            ) : null}
           </div>
-          <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold leading-[0.92] tracking-[-0.05em] text-[#35680e] sm:text-5xl lg:text-6xl">
-            {hasSelectedValue ? (
-              <>
-                Practice <span className="italic text-[#35680e]">{selectedValue.name}</span>
-              </>
-            ) : (
-              'Add a field note'
-            )}
-          </h1>
-          <p className="max-w-2xl text-base leading-7 text-[#6f6258] sm:text-lg line-clamp-2">{practiceLead}</p>
-          {selectedValue?.siteContent?.summary?.value ? (
-            <p className="max-w-2xl text-sm leading-7 text-[#6f6258]">{selectedValue.siteContent.summary.value}</p>
-          ) : null}
-        </div>
 
-        <div className="rounded-[2rem] bg-white p-4 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-5">
-          <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">
-            {hasSelectedValue ? 'Switch value' : 'Choose a value'}
-          </label>
-          <select
-            value={selectedValue?.name || ''}
-            onChange={(event) => {
-              const nextValueName = event.target.value;
-              if (nextValueName) {
-                onSelectValue(nextValueName);
-              }
-            }}
-            className="mt-3 w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] px-4 py-3 text-sm font-semibold text-[#1e1b18] outline-none transition focus:border-[#35680e]"
-          >
-            <option value="" disabled>
-              Choose a value to write about
-            </option>
-            {values.map((value) => (
-              <option key={value.name} value={value.name}>
-                {value.name}
+          <div className="rounded-[2rem] bg-white p-4 shadow-[0_14px_30px_rgba(41,33,27,0.04)] sm:p-5">
+            <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a7668]">Switch value</label>
+            <select
+              value={selectedValue?.name || ''}
+              onChange={(event) => {
+                const nextValueName = event.target.value;
+                if (nextValueName) {
+                  onSelectValue(nextValueName);
+                }
+              }}
+              className="mt-3 w-full rounded-[1.2rem] border border-[#ece3dc] bg-[#fff8f3] px-4 py-3 text-sm font-semibold text-[#1e1b18] outline-none transition focus:border-[#35680e]"
+            >
+              <option value="" disabled>
+                Choose a value to write about
               </option>
-            ))}
-          </select>
-        </div>
-      </header>
+              {values.map((value) => (
+                <option key={value.name} value={value.name}>
+                  {value.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </header>
+      ) : (
+        <header className="relative overflow-hidden rounded-[2.8rem] border border-[#efe6df] bg-[radial-gradient(circle_at_top_left,_rgba(216,244,189,0.72),_rgba(255,248,243,0.98)_42%,_rgba(255,255,255,0.96)_100%)] px-6 py-8 shadow-[0_28px_60px_rgba(41,33,27,0.08)] sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+          <div className="absolute inset-y-0 right-0 hidden w-[34%] bg-[radial-gradient(circle_at_center,_rgba(191,214,166,0.28),_transparent_68%)] lg:block" aria-hidden="true" />
+          <div className="relative mx-auto flex max-w-4xl flex-col items-center text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#35680e] shadow-[0_12px_24px_rgba(41,33,27,0.06)]">
+              <Sparkles className="h-3.5 w-3.5" />
+              Values in the Wild
+            </div>
+            <h1 className="mt-6 font-['Plus_Jakarta_Sans'] text-5xl font-extrabold leading-[0.9] tracking-[-0.06em] text-[#b8bf1a] sm:text-6xl lg:text-7xl">
+              Choose the value first.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-[#5f6555] sm:text-lg">
+              Start by naming the value you noticed. Once you pick it, the checklist, prompt library, and note form will come into focus.
+            </p>
 
-      <section className="grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(22rem,1.1fr)] lg:items-start">
+            <div className="mt-8 w-full max-w-3xl rounded-[2.2rem] border border-white/80 bg-white/88 p-5 shadow-[0_24px_48px_rgba(41,33,27,0.08)] backdrop-blur-xl sm:p-6 lg:p-7">
+              <label className="block text-left text-[12px] font-semibold uppercase tracking-[0.3em] text-[#7f8a7f]">Choose a value</label>
+              <select
+                value={selectedValue?.name || ''}
+                onChange={(event) => {
+                  const nextValueName = event.target.value;
+                  if (nextValueName) {
+                    onSelectValue(nextValueName);
+                  }
+                }}
+                className="mt-4 w-full rounded-[1.5rem] border-2 border-[#d5ddcf] bg-[#fffefb] px-5 py-4 text-lg font-semibold text-[#1e1b18] outline-none transition focus:border-[#b8bf1a] focus:ring-4 focus:ring-[#e9efc8]"
+              >
+                <option value="" disabled>
+                  Choose a value to write about
+                </option>
+                {values.map((value) => (
+                  <option key={value.name} value={value.name}>
+                    {value.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-4 text-left text-sm leading-6 text-[#7a726b]">
+                Pick the value you saw in the wild, then capture one specific moment instead of a general intention.
+              </p>
+            </div>
+          </div>
+        </header>
+      )}
+
+      <section className={`grid gap-5 transition-all duration-500 lg:grid-cols-[minmax(0,0.9fr)_minmax(22rem,1.1fr)] lg:items-start ${mutedUntilValueClasses}`}>
         <div className="space-y-5">
           <div className="rounded-[2.5rem] bg-[#35680e] p-7 text-white shadow-[0_24px_48px_rgba(53,104,14,0.18)] sm:p-8">
             <div className="flex items-start justify-between gap-4">
