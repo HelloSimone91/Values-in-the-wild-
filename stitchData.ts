@@ -553,6 +553,7 @@ export const valueEmoji = (valueName: string) => {
     Gratitude: '✨',
     Longevity: '⏳',
     Mindfulness: '🧠',
+    Serenity: '🪷',
     Travel: '✈️',
     Tranquility: '🕊️',
   };

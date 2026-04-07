@@ -2707,6 +2707,28 @@
             ]
         },
         {
+            "name": "Serenity",
+            "description": "A gentle inner composure that stays available even when life is noisy, uncertain, or emotionally charged.",
+            "example": "When the plan unraveled and everyone else sped up, she kept serenity by slowing her breathing, naming what mattered, and refusing to let the tension decide her tone.",
+            "category": "Personal",
+            "tags": [
+                "settle",
+                "soothe",
+                "calm",
+                "breathe",
+                "center",
+                "release",
+                "maintain",
+                "practice",
+                "cultivate"
+            ],
+            "inTheWild": [
+                "When the plan unraveled and everyone else sped up, she kept serenity by slowing her breathing, naming what mattered, and refusing to let the tension decide her tone.",
+                "Serenity shows up when someone stays gentle and composed without becoming distant from what is happening.",
+                "You notice it in the person who lowers the inner temperature of a moment instead of passing agitation along."
+            ]
+        },
+        {
             "name": "Sovereignty",
             "description": "The ability of a group or country to govern itself and make its own decisions without outside interference.",
             "example": "The indigenous community fought to maintain sovereignty over their ancestral lands, ensuring they could make decisions about resource use and development.",
