@@ -430,11 +430,12 @@ textarea {
 .palette-toggle-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 0.7rem;
+  justify-content: space-between;
+  gap: 0.8rem;
   border: 1px solid var(--app-border-muted);
   background: var(--app-surface-glass);
   border-radius: 999px;
-  padding: 0.42rem 0.55rem 0.42rem 0.72rem;
+  padding: 0.42rem 0.68rem 0.42rem 0.72rem;
   box-shadow: 0 14px 30px var(--app-shadow-soft);
   color: var(--app-text);
   backdrop-filter: blur(18px);
@@ -460,15 +461,6 @@ textarea {
   border-color: var(--app-border);
 }
 
-.palette-toggle-current {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
 .palette-toggle-caret {
   width: 0.9rem;
   height: 0.9rem;
@@ -483,7 +475,7 @@ textarea {
 .palette-toggle-menu {
   position: absolute;
   top: calc(100% + 0.65rem);
-  right: 0;
+  left: 0;
   z-index: 20;
   display: grid;
   gap: 0.35rem;
@@ -583,11 +575,11 @@ textarea {
 
 @media (max-width: 639px) {
   .palette-toggle-menu {
-    right: -0.25rem;
+    left: 0;
   }
 
   .palette-toggle-trigger {
-    padding-left: 0.58rem;
+    padding-left: 0.62rem;
   }
 }
 

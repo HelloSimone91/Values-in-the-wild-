@@ -94,7 +94,6 @@ interface PaletteToggleProps {
 const PaletteToggle: React.FC<PaletteToggleProps> = ({ activePalette, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleRef = useRef<HTMLDivElement | null>(null);
-  const activeOption = COLOR_PALETTES.find((palette) => palette.id === activePalette) ?? COLOR_PALETTES[0];
 
   useEffect(() => {
     if (!isOpen) return;
@@ -132,15 +131,7 @@ const PaletteToggle: React.FC<PaletteToggleProps> = ({ activePalette, onChange }
       >
         <span className="palette-toggle-label">
           <Palette className="h-4 w-4" />
-          <span className="hidden sm:inline">Palette</span>
-        </span>
-        <span className="palette-toggle-current">
-          <span className="palette-chip-preview" aria-hidden="true">
-            {activeOption.swatches.map((swatch) => (
-              <span key={swatch} className="palette-chip-swatch" style={{ backgroundColor: swatch }} />
-            ))}
-          </span>
-          <span>{activeOption.shortLabel}</span>
+          <span>Palette</span>
         </span>
         <ChevronDown className={`palette-toggle-caret ${isOpen ? 'palette-toggle-caret-open' : ''}`} />
       </button>
