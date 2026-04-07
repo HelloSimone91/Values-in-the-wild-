@@ -1,0 +1,31 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button "Go to Field Guide homepage" [ref=e6] [cursor=pointer]:
+        - generic [ref=e7]: Values in the Wild
+        - generic [ref=e8]: Field guide to lived values
+      - navigation [ref=e9]:
+        - button "Field Guide" [ref=e10] [cursor=pointer]
+        - button "Practice" [ref=e11] [cursor=pointer]
+        - button "Field Notes" [ref=e12] [cursor=pointer]
+      - generic [ref=e14]:
+        - generic:
+          - button:
+            - text: Palette
+            - img
+          - button:
+            - text: About
+            - img
+          - button:
+            - text: Profile
+            - img
+          - button [disabled]:
+            - img
+            - generic: Local mode
+        - button "Settings" [ref=e15] [cursor=pointer]:
+          - generic [ref=e16]: ⚙
+          - generic [ref=e17]: Settings
+  - main [ref=e18]:
+    - generic [ref=e20]:
+      - img [ref=e21]
+      - text: Loading the Values in the Wild field guide
