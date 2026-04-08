@@ -571,7 +571,7 @@ const App: React.FC = () => {
   }, [routeSelectedValue]);
 
   useLayoutEffect(() => {
-    if (currentView !== 'value') return;
+    if (currentView !== 'value' && currentView !== 'practice') return;
 
     const scrollToTop = () => {
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
