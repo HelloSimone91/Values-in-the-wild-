@@ -14,6 +14,8 @@ services:
         value: 22.14.0
       - key: PORT
         value: 10000
+      - key: CORS_ORIGIN
+        value: https://valuesinthewild.com,https://www.valuesinthewild.com,https://values-in-the-wild.vercel.app
       - key: DATABASE_URL
         fromDatabase:
           name: values-in-the-wild-db

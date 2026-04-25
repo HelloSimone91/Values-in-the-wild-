@@ -412,11 +412,19 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-await initDatabase();
-
 app.listen(PORT, () => {
   console.log(`Values API listening on http://localhost:${PORT}`);
   console.log(`CORS origin: ${Array.isArray(CORS_ORIGINS) ? CORS_ORIGINS.join(', ') : '*'}`);
   console.log(`Database: ${hasDatabase() ? 'configured' : 'missing DATABASE_URL'}`);
   console.log(`Auth: ${hasSupabaseAuth() ? 'configured' : 'missing Supabase env'}`);
 });
+
+if (hasDatabase()) {
+  void initDatabase()
+    .then(() => {
+      console.log('Database initialization complete.');
+    })
+    .catch((error) => {
+      console.error('Database initialization failed:', error);
+    });
+}

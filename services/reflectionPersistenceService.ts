@@ -1,7 +1,10 @@
 import type { ReflectionEntry } from '../valueTypes';
 import { buildApiUrl } from './apiBase';
+import { fetchWithTimeout } from './fetchWithTimeout';
 
 const REFLECTIONS_KEY = 'values_in_the_wild_reflections';
+const LOAD_REFLECTIONS_TIMEOUT_MS = 3500;
+const SAVE_REFLECTIONS_TIMEOUT_MS = 8000;
 
 interface ReflectionPersistenceOptions {
   accessToken?: string | null;
@@ -48,7 +51,7 @@ export const loadReflections = async ({
   }
 
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       authEnabled ? buildApiUrl('/api/v1/me/reflections') : buildApiUrl(`/api/v1/users/${userId}/reflections`),
       {
         headers: accessToken
@@ -56,7 +59,8 @@ export const loadReflections = async ({
               Authorization: `Bearer ${accessToken}`,
             }
           : undefined,
-      }
+      },
+      LOAD_REFLECTIONS_TIMEOUT_MS
     );
     if (response.ok) {
       const payload = (await response.json()) as { reflections?: ReflectionEntry[] };
@@ -89,7 +93,7 @@ export const saveReflections = async (
   writeLocalReflections(cacheKey, reflections);
 
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       authEnabled ? buildApiUrl('/api/v1/me/reflections') : buildApiUrl(`/api/v1/users/${userId}/reflections`),
       {
         method: 'PUT',
@@ -102,10 +106,13 @@ export const saveReflections = async (
             : {}),
         },
         body: JSON.stringify({ reflections }),
-      }
+      },
+      SAVE_REFLECTIONS_TIMEOUT_MS
     );
 
-    if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { ok?: boolean } | null;
+
+    if (!response.ok || payload?.ok !== true) {
       throw new Error('Failed to save field notes.');
     }
   } catch (error) {

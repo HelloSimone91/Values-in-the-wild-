@@ -66,8 +66,31 @@ Open `http://localhost:8787`.
 The repo includes:
 - [render.yaml](/Users/simonedeangelis/Downloads/embodied_-values-detective/render.yaml) for a single Render web service
 - [Dockerfile](/Users/simonedeangelis/Downloads/embodied_-values-detective/Dockerfile) for container deployment
+- [vercel.json](/Users/simonedeangelis/Documents/Code/GitHub/Values-in-the-wild-/vercel.json) for a Vercel-hosted static frontend
 
 Production uses the Node backend to serve the built Vite frontend and the existing API routes.
+
+### Recommended production shape
+
+The field guide content now loads from the bundled frontend data instead of waiting on `/api/v1/values`, so the best production setup is:
+- frontend on a static host with a CDN (`Vercel`, `Cloudflare Pages`, `Netlify`, or `Render Static Site`)
+- backend API on a separate service only for reflections, auth verification, analytics, and feedback
+
+That keeps first-load visits fast even if the API service is cold or temporarily unavailable.
+
+For Vercel, use these project settings:
+- Framework preset: `Vite`
+- Build command: `npm run build`
+- Output directory: `dist`
+- Production frontend env vars: `VITE_BACKEND_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+For the split deployment, set:
+- `VITE_BACKEND_URL=https://values-in-the-wild.onrender.com` on Vercel, or use your own API subdomain such as `https://api.valuesinthewild.com`
+- `CORS_ORIGIN=https://valuesinthewild.com,https://www.valuesinthewild.com,https://values-in-the-wild.vercel.app` on the backend
+
+The Vercel config serves the Vite build as a static SPA and rewrites non-API routes to `index.html`. It intentionally does not rewrite `/api/*`, so missing backend configuration fails visibly instead of pretending feedback or account saves succeeded.
+
+The current single-service Render setup is the simplest option, but it ties the site's first paint to a sleeping Node process on the free plan.
 
 ## Supabase auth setup
 

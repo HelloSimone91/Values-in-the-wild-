@@ -1,4 +1,5 @@
 import { buildApiUrl } from './apiBase';
+import { fetchWithTimeout } from './fetchWithTimeout';
 
 export interface AnalyticsEvent {
   id: number;
@@ -21,13 +22,17 @@ export interface AnalyticsDebugPayload {
 }
 
 export const loadAnalyticsDebug = async (accessToken: string | null, limit = 50, hours = 168): Promise<AnalyticsDebugPayload> => {
-  const response = await fetch(buildApiUrl(`/api/v1/events?limit=${limit}&hours=${hours}`), {
-    headers: accessToken
-      ? {
-          Authorization: `Bearer ${accessToken}`,
-        }
-      : undefined,
-  });
+  const response = await fetchWithTimeout(
+    buildApiUrl(`/api/v1/events?limit=${limit}&hours=${hours}`),
+    {
+      headers: accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : undefined,
+    },
+    5000
+  );
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as { error?: string } | null;
