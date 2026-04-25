@@ -5,6 +5,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/:match*",
+      "destination": "https://www.valuesinthewild.com/api/:match*"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
