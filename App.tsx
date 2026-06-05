@@ -91,7 +91,7 @@ const isColorPaletteId = (value: string | null): value is ColorPaletteId =>
   COLOR_PALETTES.some((palette) => palette.id === value);
 
 const RouteSuspenseFallback: React.FC = () => (
-  <div className="flex min-h-[50vh] items-center justify-center">
+  <div className="flex min-h-[50vh] items-center justify-center animate-in fade-in duration-500">
     <div className="inline-flex items-center gap-3 rounded-full bg-[#f1ebe5] px-5 py-3 text-sm font-semibold text-[#6f6258]">
       <Loader2 className="h-4 w-4 animate-spin" />
       Loading the Values in the Wild field guide
@@ -672,7 +672,11 @@ const App: React.FC = () => {
     setIsStartingGoogleSignIn(true);
     try {
       emitEvent('sign_in_requested', { from: currentView, method: 'google' });
-      await startGoogleSignIn(`${window.location.origin}/guide`);
+      // Use a robust fallback for the redirect URL. Vercel sometimes has issues with window.location.origin on initial paints
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const redirectOrigin = isLocalhost ? window.location.origin : 'https://www.valuesinthewild.com';
+      console.log('Starting Google Sign In with redirect to:', `${redirectOrigin}/guide`);
+      await startGoogleSignIn(`${redirectOrigin}/guide`);
     } catch (error) {
       setIsStartingGoogleSignIn(false);
       pushToast(error instanceof Error ? error.message : 'Unable to start Google sign-in.', 'error');
