@@ -1,44 +1,12 @@
 import React from 'react';
 import { Flame, Medal, Trophy, Star } from 'lucide-react';
 import type { ReflectionEntry } from '../valueTypes';
-
-export const calculateStreak = (reflections: ReflectionEntry[]): number => {
-  if (!reflections || reflections.length === 0) return 0;
-
-  const dates = [...new Set(reflections.map(r => new Date(r.date).toISOString().split('T')[0]))].sort().reverse();
-
-  let streak = 0;
-  let currentDate = new Date();
-  // Reset time to start of day for comparison
-  currentDate.setHours(0,0,0,0);
-
-  const todayStr = currentDate.toISOString().split('T')[0];
-  const yesterdayDate = new Date(currentDate);
-  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-  const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
-
-  // If they didn't post today or yesterday, streak is broken
-  if (dates[0] !== todayStr && dates[0] !== yesterdayStr) {
-    return 0;
-  }
-
-  let expectedDate = new Date(dates[0]);
-  for (const dateStr of dates) {
-    if (dateStr === expectedDate.toISOString().split('T')[0]) {
-      streak++;
-      expectedDate.setDate(expectedDate.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-
-  return streak;
-};
+import { calculateStreak } from "../stitchData";
 
 export const getBadges = (reflections: ReflectionEntry[]) => {
   const badges = [];
   const streak = calculateStreak(reflections);
-  const uniqueValues = new Set(reflections.map(r => r.valueName)).size;
+  const uniqueValues = new Set(reflections.map(r => r.value)).size;
 
   if (reflections.length >= 1) {
     badges.push({ id: 'first-step', name: 'First Step', icon: Star, description: 'Wrote your first field note', color: 'text-yellow-500', bg: 'bg-yellow-50' });
