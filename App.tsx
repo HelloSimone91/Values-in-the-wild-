@@ -672,11 +672,7 @@ const App: React.FC = () => {
     setIsStartingGoogleSignIn(true);
     try {
       emitEvent('sign_in_requested', { from: currentView, method: 'google' });
-      // Use a robust fallback for the redirect URL. Vercel sometimes has issues with window.location.origin on initial paints
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const redirectOrigin = isLocalhost ? window.location.origin : 'https://www.valuesinthewild.com';
-      console.log('Starting Google Sign In with redirect to:', `${redirectOrigin}/guide`);
-      await startGoogleSignIn(`${redirectOrigin}/guide`);
+      await startGoogleSignIn(`${window.location.origin}/guide`);
     } catch (error) {
       setIsStartingGoogleSignIn(false);
       pushToast(error instanceof Error ? error.message : 'Unable to start Google sign-in.', 'error');
