@@ -91,7 +91,7 @@ const isColorPaletteId = (value: string | null): value is ColorPaletteId =>
   COLOR_PALETTES.some((palette) => palette.id === value);
 
 const RouteSuspenseFallback: React.FC = () => (
-  <div className="flex min-h-[50vh] items-center justify-center">
+  <div className="flex min-h-[50vh] items-center justify-center animate-in fade-in duration-500">
     <div className="inline-flex items-center gap-3 rounded-full bg-[#f1ebe5] px-5 py-3 text-sm font-semibold text-[#6f6258]">
       <Loader2 className="h-4 w-4 animate-spin" />
       Loading the Values in the Wild field guide

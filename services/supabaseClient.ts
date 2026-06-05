@@ -7,7 +7,11 @@ let client: SupabaseClient | null = null;
 
 export type SignOutScope = 'global' | 'local' | 'others';
 
-export const isSupabaseConfigured = (): boolean => Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
+export const isSupabaseConfigured = (): boolean => {
+  const isConfigured = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
+  const isPlaceholder = SUPABASE_URL.includes('your-project.supabase.co');
+  return isConfigured && !isPlaceholder;
+};
 
 export const getSupabaseClient = (): SupabaseClient | null => {
   if (!isSupabaseConfigured()) return null;
