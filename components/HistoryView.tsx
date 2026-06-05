@@ -7,6 +7,7 @@ import {
   ValueDefinition,
   valueEmoji,
 } from '../stitchData';
+import { GamificationWidgets } from './GamificationWidgets';
 
 type TimeFilter = 'all' | '7d' | '30d' | '90d';
 type NotesSortOption = 'newest' | 'oldest' | 'value' | 'valueNoteCount';
@@ -534,8 +535,8 @@ const HistoryView: React.FC<HistoryViewProps> = ({
 
   return (
     <div className="space-y-9">
+      <div className="mb-4"><GamificationWidgets reflections={reflections} /></div>
       <header className="space-y-3">
-        <h1 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-[-0.05em] text-[#35680e] sm:text-5xl">Field Notes</h1>
         <p className="max-w-2xl text-base leading-7 text-[#6f6258] sm:text-lg">
           Search, sort, and revise the moments you’ve already logged.
         </p>
