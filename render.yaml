@@ -20,3 +20,15 @@ services:
         fromDatabase:
           name: values-in-the-wild-db
           property: connectionString
+
+  - type: web
+    name: values-in-the-wild-static
+    env: static
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_BACKEND_URL
+        value: https://values-in-the-wild.onrender.com
+      - key: NODE_VERSION
+        value: 22.14.0
