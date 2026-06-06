@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "https://www.valuesinthewild.com/api/:match*"
+      "destination": "https://values-in-the-wild.onrender.com/api/:match*"
     },
     {
       "source": "/((?!api/).*)",
