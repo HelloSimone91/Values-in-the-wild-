@@ -29,6 +29,30 @@ services:
     staticPublishPath: ./dist
     routes:
       - type: rewrite
+        source: /guide/category/:category
+        destination: /guide/category/:category/index.html
+      - type: rewrite
+        source: /guide/:value
+        destination: /guide/:value/index.html
+      - type: rewrite
+        source: /guide
+        destination: /guide/index.html
+      - type: rewrite
+        source: /about
+        destination: /about/index.html
+      - type: rewrite
+        source: /practice
+        destination: /practice/index.html
+      - type: rewrite
+        source: /notes
+        destination: /notes/index.html
+      - type: rewrite
+        source: /feedback
+        destination: /feedback/index.html
+      - type: rewrite
+        source: /debug/analytics
+        destination: /debug/analytics/index.html
+      - type: rewrite
         source: /*
         destination: /index.html
     envVars:

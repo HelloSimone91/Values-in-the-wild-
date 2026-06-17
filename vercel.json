@@ -9,6 +9,38 @@
       "destination": "https://www.valuesinthewild.com/api/:match*"
     },
     {
+      "source": "/guide/category/:category",
+      "destination": "/guide/category/:category/index.html"
+    },
+    {
+      "source": "/guide/:value",
+      "destination": "/guide/:value/index.html"
+    },
+    {
+      "source": "/guide",
+      "destination": "/guide/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/practice",
+      "destination": "/practice/index.html"
+    },
+    {
+      "source": "/notes",
+      "destination": "/notes/index.html"
+    },
+    {
+      "source": "/feedback",
+      "destination": "/feedback/index.html"
+    },
+    {
+      "source": "/debug/analytics",
+      "destination": "/debug/analytics/index.html"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
