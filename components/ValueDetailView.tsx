@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Compass, Sparkles, Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Compass, Sparkles, Star } from './icons';
 import { accentClass, categoryAccent, getValueWildMoments, ValueDefinition } from '../stitchData';
 
 interface ValueDetailViewProps {

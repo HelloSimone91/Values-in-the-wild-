@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, BookOpenText, Compass, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpenText, Compass, Sparkles } from './icons';
 
 interface LandingViewProps {
   authConfigured: boolean;

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, NotebookPen, Sparkles } from 'lucide-react';
+import { ArrowRight, NotebookPen, Sparkles } from './icons';
 import {
   createQuickChecklist,
   createDeepDivePractices,

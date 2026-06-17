@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, ExternalLink, Loader2, LogOut, MessageSquareMore, SwatchBook, UserCircle2 } from 'lucide-react';
+import { Check, ChevronDown, ExternalLink, Loader2, LogOut, MessageSquareMore, SwatchBook, UserCircle2 } from './icons';
 
 interface PaletteOption {
   id: string;

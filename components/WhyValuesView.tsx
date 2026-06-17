@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpRight, HeartHandshake, Map, NotebookTabs } from 'lucide-react';
+import { ArrowUpRight, HeartHandshake, Map, NotebookTabs } from './icons';
 
 const WhyValuesView: React.FC = () => {
   return (

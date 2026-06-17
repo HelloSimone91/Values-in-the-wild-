@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { BookOpenText, CheckCircle2, History, LibraryBig, Loader2, TriangleAlert, X } from 'lucide-react';
+import { BookOpenText, CheckCircle2, History, LibraryBig, Loader2, TriangleAlert, X } from './components/icons';
 import type { Session } from '@supabase/supabase-js';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { clearLocalReflections, loadLocalReflections, loadReflections, saveReflections } from './services/reflectionPersistenceService';

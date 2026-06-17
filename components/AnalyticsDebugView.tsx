@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, BarChart3, Bug, Clock3, RefreshCcw } from 'lucide-react';
+import { Activity, BarChart3, Bug, Clock3, RefreshCcw } from './icons';
 
 interface AnalyticsEvent {
   id: number;
@@ -74,7 +74,7 @@ const AnalyticsDebugView: React.FC<AnalyticsDebugViewProps> = ({
     );
   }
 
-  const summaryMap = summary.reduce<Record<string, number>>((acc, item) => {
+  const summaryMap: Record<string, number> = summary.reduce((acc: Record<string, number>, item: AnalyticsSummaryItem) => {
     acc[item.eventName] = item.count;
     return acc;
   }, {});

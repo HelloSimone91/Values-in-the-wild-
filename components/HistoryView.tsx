@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, BarChart3, Brain, CalendarDays, Flame, LayoutGrid, Pencil, Search, SlidersHorizontal, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BarChart3, Brain, CalendarDays, Flame, LayoutGrid, Pencil, Search, SlidersHorizontal, Sparkles, Trash2, X } from './icons';
 import {
   calculateStreak,
   formatReflectionDate,
@@ -318,7 +318,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   );
 
   const topValue = useMemo(() => {
-    const [name] = Object.entries(practicedMap).sort((a, b) => b[1] - a[1])[0] || [];
+    const [name] = (Object.entries(practicedMap) as [string, number][]).sort((a, b) => b[1] - a[1])[0] || [];
     return values.find((value) => value.name === name) || null;
   }, [practicedMap, values]);
 
@@ -361,7 +361,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   }, [favoriteValues, filteredReflections, reflections, values]);
 
   const nextMove = useMemo<NextMoveSuggestion | null>(() => {
-    const activeValues = Object.entries(practicedMap)
+    const activeValues = (Object.entries(practicedMap) as [string, number][])
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .map(([name]) => name);
     const recentActiveValues = activeValues.slice(0, 2);

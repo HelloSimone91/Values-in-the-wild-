@@ -25,5 +25,24 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "include": [
+    "App.tsx",
+    "index.tsx",
+    "components/**/*.tsx",
+    "components/**/*.ts",
+    "services/**/*.ts",
+    "backend/**/*.mjs",
+    "scripts/**/*.mjs",
+    "valueCore.ts",
+    "valueTypes.ts",
+    "stitchData.ts",
+    "vite-env.d.ts",
+    "vite.config.ts"
+  ],
+  "exclude": [
+    "dist",
+    "dist-ssr",
+    "node_modules"
+  ]
 }

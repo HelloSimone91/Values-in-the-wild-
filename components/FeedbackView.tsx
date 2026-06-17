@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, MessageSquareHeart } from 'lucide-react';
+import { Loader2, MessageSquareHeart } from './icons';
 
 interface FeedbackViewProps {
   initialMessage?: string;

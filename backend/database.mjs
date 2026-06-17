@@ -1,11 +1,12 @@
-import { Pool } from 'pg';
-
 const DATABASE_URL = process.env.DATABASE_URL || '';
 const SSL_MODE = process.env.PGSSLMODE || '';
 
-const createPool = () => {
+let poolPromise = null;
+
+const createPool = async () => {
   if (!DATABASE_URL) return null;
 
+  const { Pool } = await import('pg');
   const useSsl = SSL_MODE === 'require';
   return new Pool({
     connectionString: DATABASE_URL,
@@ -13,9 +14,19 @@ const createPool = () => {
   });
 };
 
-const pool = createPool();
+const getPool = async () => {
+  if (!poolPromise) {
+    poolPromise = createPool().catch((error) => {
+      poolPromise = null;
+      throw error;
+    });
+  }
+
+  return poolPromise;
+};
 
 const ensureTable = async () => {
+  const pool = await getPool();
   if (!pool) return;
 
   await pool.query(`
@@ -72,20 +83,24 @@ const ensureTable = async () => {
   `);
 };
 
-export const hasDatabase = () => Boolean(pool);
+export const hasDatabase = () => Boolean(DATABASE_URL);
 
 export const initDatabase = async () => {
+  const pool = await getPool();
   if (!pool) return false;
   await ensureTable();
   return true;
 };
 
 export const closeDatabase = async () => {
+  const pool = await getPool();
   if (!pool) return;
   await pool.end();
+  poolPromise = null;
 };
 
 export const listReflections = async (userId) => {
+  const pool = await getPool();
   if (!pool) {
     throw new Error('DATABASE_URL is not configured.');
   }
@@ -109,6 +124,7 @@ export const listReflections = async (userId) => {
 };
 
 export const replaceReflections = async (userId, reflections) => {
+  const pool = await getPool();
   if (!pool) {
     throw new Error('DATABASE_URL is not configured.');
   }
@@ -152,6 +168,7 @@ export const replaceReflections = async (userId, reflections) => {
 };
 
 export const recordEvent = async ({ anonymousId = null, eventName, metadata = {}, userId = null }) => {
+  const pool = await getPool();
   if (!pool) {
     throw new Error('DATABASE_URL is not configured.');
   }
@@ -171,6 +188,7 @@ export const recordEvent = async ({ anonymousId = null, eventName, metadata = {}
 };
 
 export const listRecentEvents = async (limit = 50) => {
+  const pool = await getPool();
   if (!pool) {
     throw new Error('DATABASE_URL is not configured.');
   }
@@ -196,6 +214,7 @@ export const listRecentEvents = async (limit = 50) => {
 };
 
 export const summarizeRecentEvents = async (hours = 168) => {
+  const pool = await getPool();
   if (!pool) {
     throw new Error('DATABASE_URL is not configured.');
   }
@@ -218,6 +237,7 @@ export const summarizeRecentEvents = async (hours = 168) => {
 };
 
 export const recordFeedback = async ({ anonymousId = null, currentView = null, message, paletteId = null, pathname = null, userEmail = null, userId = null }) => {
+  const pool = await getPool();
   if (!pool) {
     throw new Error('DATABASE_URL is not configured.');
   }

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, Compass, Search, Star } from 'lucide-react';
+import { ArrowRight, Compass, Search, Star } from './icons';
 import { useSearchParams } from 'react-router-dom';
 import { accentClass, categoryAccent, getValueSearchScore, ValueDefinition } from '../stitchData';
 

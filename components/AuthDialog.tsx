@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, Mail, X } from 'lucide-react';
+import { ArrowRight, Mail, X } from './icons';
 
 interface AuthDialogProps {
   initialEmail?: string;

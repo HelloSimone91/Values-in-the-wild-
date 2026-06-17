@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 const DIST_ASSETS_DIR = path.join(DIST_DIR, 'assets');
 const DIST_INDEX = path.join(DIST_DIR, 'index.html');
+const SEO_ROUTE_FILE_EXTENSIONS = new Set(['.html', '.xml', '.txt']);
 const VALUES_FILE = process.env.VALUES_FILE || path.join(__dirname, '..', 'data', 'Values-en.json');
 const SITE_CONTENT_FILE = path.join(__dirname, '..', 'data', 'ValueSiteContent.json');
 const FEEDBACK_WEBHOOK_URL = process.env.FEEDBACK_WEBHOOK_URL || '';
@@ -393,6 +394,23 @@ if (fsSync.existsSync(DIST_DIR)) {
     );
   }
 
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+
+    const routePath = req.path === '/' ? '' : req.path.replace(/\/$/, '');
+    const extension = path.extname(routePath);
+    const candidatePath = SEO_ROUTE_FILE_EXTENSIONS.has(extension)
+      ? path.join(DIST_DIR, routePath)
+      : path.join(DIST_DIR, routePath, 'index.html');
+
+    if (fsSync.existsSync(candidatePath) && fsSync.statSync(candidatePath).isFile()) {
+      res.set('Cache-Control', 'public, max-age=0, must-revalidate');
+      return res.sendFile(candidatePath);
+    }
+
+    return next();
+  });
+
   app.use(
     express.static(DIST_DIR, {
       index: false,
@@ -401,9 +419,11 @@ if (fsSync.existsSync(DIST_DIR)) {
   );
 
   // In production, serve the built SPA from the same service.
-  app.get(/^(?!\/api).*/, (_req, res) => {
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+
     res.set('Cache-Control', 'public, max-age=0, must-revalidate');
-    res.sendFile(DIST_INDEX);
+    return res.sendFile(DIST_INDEX);
   });
 }
 
@@ -412,12 +432,21 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Values API listening on http://localhost:${PORT}`);
   console.log(`CORS origin: ${Array.isArray(CORS_ORIGINS) ? CORS_ORIGINS.join(', ') : '*'}`);
   console.log(`Database: ${hasDatabase() ? 'configured' : 'missing DATABASE_URL'}`);
   console.log(`Auth: ${hasSupabaseAuth() ? 'configured' : 'missing Supabase env'}`);
 });
+
+const shutdown = () => {
+  server.close(() => {
+    process.exit(0);
+  });
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 
 if (hasDatabase()) {
   void initDatabase()
