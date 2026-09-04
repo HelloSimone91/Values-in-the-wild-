@@ -38,3 +38,6 @@ CREATE TABLE IF NOT EXISTS feedback_submissions (
 
 CREATE INDEX IF NOT EXISTS feedback_submissions_created_idx
 ON feedback_submissions (created_at DESC);
+ALTER TABLE public.reflections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.feedback_submissions ENABLE ROW LEVEL SECURITY;
