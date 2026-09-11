@@ -29,6 +29,20 @@ const ensureTable = async () => {
   const pool = await getPool();
   if (!pool) return;
 
+  // Check if tables already exist to avoid permission errors on IF NOT EXISTS
+  const checkRes = await pool.query(`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name = 'reflections'
+    );
+  `);
+  
+  if (checkRes.rows[0].exists) {
+    console.log("Tables already exist. Skipping ensureTable.");
+    return;
+  }
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS reflections (
       user_id TEXT NOT NULL,
