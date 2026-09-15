@@ -341,20 +341,48 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   }, [trendBars]);
 
   const favoriteSummaries = useMemo(() => {
+    const valueMap = new Map(values.map((v) => [v.name, v]));
+    const statsMap = new Map<
+      string,
+      { totalNotes: number; visibleNotes: number; mostRecentEntryDate: number | null; mostRecentEntry: ReflectionEntry | null }
+    >();
+
+    for (const name of favoriteValues) {
+      statsMap.set(name, { totalNotes: 0, visibleNotes: 0, mostRecentEntryDate: null, mostRecentEntry: null });
+    }
+
+    for (let i = 0; i < reflections.length; i++) {
+      const entry = reflections[i];
+      const stats = statsMap.get(entry.value);
+      if (stats) {
+        stats.totalNotes++;
+        const entryTime = new Date(entry.date).getTime();
+        if (stats.mostRecentEntryDate === null || entryTime > stats.mostRecentEntryDate) {
+          stats.mostRecentEntryDate = entryTime;
+          stats.mostRecentEntry = entry;
+        }
+      }
+    }
+
+    for (let i = 0; i < filteredReflections.length; i++) {
+      const entry = filteredReflections[i];
+      const stats = statsMap.get(entry.value);
+      if (stats) {
+        stats.visibleNotes++;
+      }
+    }
+
     return favoriteValues
       .map((name) => {
-        const value = values.find((entry) => entry.name === name) || null;
-        const allEntries = reflections.filter((entry) => entry.value === name);
-        const totalNotes = allEntries.length;
-        const visibleNotes = filteredReflections.filter((entry) => entry.value === name).length;
-        const mostRecentEntry = [...allEntries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] || null;
+        const value = valueMap.get(name) || null;
+        const stats = statsMap.get(name)!;
 
         return {
-          lastLoggedAt: mostRecentEntry?.date || null,
+          lastLoggedAt: stats?.mostRecentEntry?.date || null,
           name,
-          totalNotes,
+          totalNotes: stats?.totalNotes || 0,
           value,
-          visibleNotes,
+          visibleNotes: stats?.visibleNotes || 0,
         };
       })
       .filter((entry) => entry.value);
