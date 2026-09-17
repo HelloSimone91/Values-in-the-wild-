@@ -68,14 +68,32 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
     }));
   }, [alphabetizedValues]);
   const relatedValues = useMemo(() => {
-    return values
-      .filter((candidate) => candidate.name !== value.name)
-      .map((candidate) => {
-        const sharedTags = candidate.tags.filter((tag) => value.tags.includes(tag)).length;
-        const sameCategory = candidate.category === value.category ? 2 : 0;
-        return { candidate, score: sharedTags + sameCategory };
-      })
-      .filter((entry) => entry.score > 0)
+    const targetTags = new Set(value.tags);
+    const targetCategory = value.category;
+    const targetName = value.name;
+
+    const scored = [];
+    for (let i = 0; i < values.length; i++) {
+      const candidate = values[i];
+      if (candidate.name === targetName) continue;
+
+      let sharedTags = 0;
+      const candidateTags = candidate.tags;
+      for (let j = 0; j < candidateTags.length; j++) {
+        if (targetTags.has(candidateTags[j])) {
+          sharedTags++;
+        }
+      }
+
+      const sameCategory = candidate.category === targetCategory ? 2 : 0;
+      const score = sharedTags + sameCategory;
+
+      if (score > 0) {
+        scored.push({ candidate, score });
+      }
+    }
+
+    return scored
       .sort((a, b) => b.score - a.score)
       .slice(0, 6)
       .map((entry) => entry.candidate);
