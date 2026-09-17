@@ -6,6 +6,7 @@ import json
 import re
 from pathlib import Path
 
+NON_ALPHANUMERIC_RE = re.compile(r"[^a-z0-9]+")
 
 META_PREFIXES = (
     "here are",
@@ -109,7 +110,7 @@ def dedupe(items: list[str]) -> list[str]:
     seen: set[str] = set()
     output: list[str] = []
     for item in items:
-        normalized = re.sub(r"[^a-z0-9]+", "", item.lower())
+        normalized = NON_ALPHANUMERIC_RE.sub("", item.lower())
         if normalized in seen:
             continue
         seen.add(normalized)
@@ -132,13 +133,17 @@ def collect_rows(csv_path: Path, key: str) -> dict[str, list[dict[str, str]]]:
         return rows
 
 
-def source_candidates(big_ole_rows: list[dict[str, str]], stack_rows: list[dict[str, str]]) -> list[str]:
+def source_candidates(
+    big_ole_rows: list[dict[str, str]], stack_rows: list[dict[str, str]]
+) -> list[str]:
     candidates: list[str] = []
 
     for row in big_ole_rows:
         candidates.extend(extract_list_items(row.get(" 2 - 5 examples ", "")))
 
-    return dedupe([cleaned for item in candidates if (cleaned := clean_candidate(item))])
+    return dedupe(
+        [cleaned for item in candidates if (cleaned := clean_candidate(item))]
+    )
 
 
 CATEGORY_FALLBACKS = {
@@ -241,17 +246,29 @@ def fallback_lines(value: dict[str, object]) -> list[str]:
     return dedupe(lines)
 
 
-def build_in_the_wild(value: dict[str, object], big_ole_index: dict[str, list[dict[str, str]]], stack_index: dict[str, list[dict[str, str]]]) -> list[str]:
+def build_in_the_wild(
+    value: dict[str, object],
+    big_ole_index: dict[str, list[dict[str, str]]],
+    stack_index: dict[str, list[dict[str, str]]],
+) -> list[str]:
     name = str(value["name"])
-    candidates = source_candidates(big_ole_index.get(name, []), stack_index.get(name, []))
-    detailed_candidates = [candidate for candidate in candidates if len(candidate) >= 60]
-    preferred_candidates = detailed_candidates[:3] if len(detailed_candidates) >= 2 else candidates[:1]
+    candidates = source_candidates(
+        big_ole_index.get(name, []), stack_index.get(name, [])
+    )
+    detailed_candidates = [
+        candidate for candidate in candidates if len(candidate) >= 60
+    ]
+    preferred_candidates = (
+        detailed_candidates[:3] if len(detailed_candidates) >= 2 else candidates[:1]
+    )
     combined = dedupe(preferred_candidates + fallback_lines(value))
     return combined[:3]
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Add richer in-the-wild content to the values JSON.")
+    parser = argparse.ArgumentParser(
+        description="Add richer in-the-wild content to the values JSON."
+    )
     parser.add_argument("--input", default="data/Values-en.json")
     parser.add_argument("--big-ole")
     parser.add_argument("--stacks")
