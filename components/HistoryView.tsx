@@ -313,7 +313,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
     return sorted;
   }, [filteredReflections, notesSortBy, practicedMap]);
   const maxHeatmapCount = useMemo(
-    () => Math.max(...heatmapMonths.flatMap((month) => month.weeks.flat().filter(Boolean).map((cell) => cell!.count)), 1),
+    () => heatmapMonths.reduce((max, month) => Math.max(max, month.peakCount), 1),
     [heatmapMonths]
   );
 
