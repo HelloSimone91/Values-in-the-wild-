@@ -1,6 +1,10 @@
-export type AppView = 'landing' | 'library' | 'value' | 'practice' | 'history';
+export type AppView = "landing" | "library" | "value" | "practice" | "history";
 
-export type SiteContentSource = 'manual' | 'value-stacks' | 'big-ole' | 'values-in-the-wild';
+export type SiteContentSource =
+  | "manual"
+  | "value-stacks"
+  | "big-ole"
+  | "values-in-the-wild";
 
 export interface ApprovedSiteField<T> {
   value: T;
@@ -43,6 +47,7 @@ export interface ValueDefinition {
   category: string;
   tags: string[];
   siteContent?: ValueSiteContent;
+  slug?: string;
 }
 
 export interface PracticeItem {
@@ -51,7 +56,7 @@ export interface PracticeItem {
   value: string;
   description: string;
   duration: string;
-  accent: 'green' | 'orange' | 'purple';
+  accent: "green" | "orange" | "purple";
   prompt: string;
 }
 
