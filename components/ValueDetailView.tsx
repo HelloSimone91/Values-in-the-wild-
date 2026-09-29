@@ -68,10 +68,11 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
     }));
   }, [alphabetizedValues]);
   const relatedValues = useMemo(() => {
+    const targetTags = new Set(value.tags);
     return values
       .filter((candidate) => candidate.name !== value.name)
       .map((candidate) => {
-        const sharedTags = candidate.tags.filter((tag) => value.tags.includes(tag)).length;
+        const sharedTags = candidate.tags.filter((tag) => targetTags.has(tag)).length;
         const sameCategory = candidate.category === value.category ? 2 : 0;
         return { candidate, score: sharedTags + sameCategory };
       })
