@@ -514,7 +514,9 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
 
         {relatedValues.length ? (
           <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {relatedValues.map((candidate) => (
+            {relatedValues.map((candidate) => {
+              const isFavorite = favoriteValues.includes(candidate.name);
+              return (
               <article key={candidate.name} className="rounded-[2rem] bg-[#f9f2ed] p-5 text-left transition hover:bg-[#f1ebe5]">
                 <div className="flex items-start justify-between gap-4">
                   <button
@@ -526,16 +528,16 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
                   </button>
                   <button
                     type="button"
-                    aria-label={favoriteValues.includes(candidate.name) ? `Remove ${candidate.name} from favorites` : `Add ${candidate.name} to favorites`}
-                    aria-pressed={favoriteValues.includes(candidate.name)}
+                    aria-label={isFavorite ? `Remove ${candidate.name} from favorites` : `Add ${candidate.name} to favorites`}
+                    aria-pressed={isFavorite}
                     onClick={() => onToggleFavorite(candidate.name)}
                     className={`rounded-full border p-2 transition ${
-                      favoriteValues.includes(candidate.name)
+                      isFavorite
                         ? 'border-[#35680e] bg-[#eef5e8] text-[#35680e]'
                         : 'border-[#e4d8cf] bg-white text-[#8a7668] hover:border-[#cdbeb2] hover:text-[#35680e]'
                     }`}
                   >
-                    <Star className={`h-4 w-4 ${favoriteValues.includes(candidate.name) ? 'fill-current' : ''}`} />
+                    <Star className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
                   </button>
                 </div>
                 <button
@@ -547,7 +549,7 @@ const ValueDetailView: React.FC<ValueDetailViewProps> = ({
                 </button>
                 <p className="mt-2 line-clamp-3 text-sm leading-6 text-[#6f6258]">{candidate.description}</p>
               </article>
-            ))}
+            );})}
           </div>
         ) : (
           <p className="mt-5 text-sm leading-6 text-[#6f6258]">No nearby values found yet.</p>
