@@ -13383,5 +13383,95 @@
       },
       "source": "manual"
     }
+  },
+  "Mischief": {
+    "summary": {
+      "value": "Mischief is playful rule-bending that wakes up a moment without making someone else pay for the joke.",
+      "source": "manual"
+    },
+    "shortDefinition": {
+      "value": "Using playful disruption, surprise, or harmless troublemaking to create delight, freedom, and connection.",
+      "source": "manual"
+    },
+    "longDefinition": {
+      "value": "Mischief becomes visible when someone nudges against an expectation in a way that makes life feel less rigid and more alive. It might be a sly joke, an absurd addition, or a harmless refusal to follow the obvious script. At its best, mischief is conspiratorial rather than cruel: it invites people into delight without leaving harm, humiliation, or unwanted labor behind.",
+      "source": "manual"
+    },
+    "everydayExamples": {
+      "value": [
+        "Someone slips a playful surprise into an otherwise ordinary routine.",
+        "A harmless prank creates a shared story instead of an embarrassed target.",
+        "An overly serious moment is loosened by an unexpected, absurd choice.",
+        "A person questions a needless rule with wit and imagination."
+      ],
+      "source": "manual"
+    },
+    "practiceMoments": {
+      "value": [
+        "Someone bent an expectation in a way that created delight rather than harm.",
+        "Playful disruption made a rigid moment feel more alive.",
+        "A sly joke or unexpected choice invited other people into harmless fun."
+      ],
+      "source": "manual"
+    },
+    "misalignment": {
+      "value": "You are probably out of alignment with mischief when the surprise depends on humiliation, damaged trust, ignored consent, or cleanup that falls to someone else. Mischief can also disappear when every impulse is overmanaged and every rule is treated as sacred. The repair move is to choose play that leaves everyone freer, closer, or more delighted afterward.",
+      "source": "manual"
+    },
+    "habitIdeas": {
+      "value": [
+        "Add one harmless, unexpected detail to an ordinary interaction.",
+        "Question one needless convention with warmth instead of contempt.",
+        "Before a prank or surprise, ask whether everyone can enjoy its aftermath.",
+        "Use absurdity to loosen unnecessary seriousness this week."
+      ],
+      "source": "manual"
+    },
+    "practiceChecklist": {
+      "value": [
+        {
+          "label": "Did you notice playful rule-bending create delight or connection today?",
+          "summary": "Playful rule-bending created delight or connection"
+        },
+        {
+          "label": "Did someone surprise others without causing harm or humiliation today?",
+          "summary": "Someone created surprise without harm or humiliation"
+        },
+        {
+          "label": "Did mischief make a rigid moment feel more alive today?",
+          "summary": "Mischief made a rigid moment feel more alive"
+        },
+        {
+          "label": "Did you catch harmless troublemaking opening a door to shared play today?",
+          "summary": "Caught harmless troublemaking opening a door to shared play"
+        }
+      ],
+      "source": "manual"
+    },
+    "journalPrompts": {
+      "value": [
+        "What kind of mischief makes you feel most alive?",
+        "How do you tell the difference between playful disruption and harm?",
+        "Describe a time when breaking the expected script created connection.",
+        "Where could a little harmless mischief loosen your life this week?"
+      ],
+      "source": "manual"
+    },
+    "conversationStarters": {
+      "value": [
+        "What is the best harmless trouble you have ever made?",
+        "When does mischief create connection, and when does it cross a line?",
+        "Which rules or routines in your life could use more play?"
+      ],
+      "source": "manual"
+    },
+    "seo": {
+      "value": {
+        "title": "Mischief Meaning in Real Life",
+        "description": "A grounded guide to mischief: how playful rule-bending, harmless surprise, and imaginative disruption create delight and connection.",
+        "slug": "mischief"
+      },
+      "source": "manual"
+    }
   }
 }

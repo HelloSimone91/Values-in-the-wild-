@@ -236,7 +236,7 @@ const homePage = ({ shell, values, categories }) => {
 };
 
 const guidePage = ({ shell, values, categories }) => {
-  const description = 'Browse 149 values with real-life meanings, examples, reflection prompts, and practice links.';
+  const description = `Browse ${values.length} values with real-life meanings, examples, reflection prompts, and practice links.`;
   const body = `${pageShellStyle}
         <span class="eyebrow">Field guide</span>
         <h1>Browse values by meaning, category, and lived practice</h1>

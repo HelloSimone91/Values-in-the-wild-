@@ -1703,6 +1703,27 @@
             ]
         },
         {
+            "name": "Mischief",
+            "description": "Playful, imaginative rule-bending that creates surprise, delight, or connection without causing harm.",
+            "example": "She brought mischief to the long meeting by slipping a tiny, absurd doodle into each person's notes and making the whole table grin.",
+            "category": "Personal",
+            "tags": [
+                "play",
+                "imagine",
+                "create",
+                "surprise",
+                "delight",
+                "laugh",
+                "question",
+                "connect"
+            ],
+            "inTheWild": [
+                "Mischief appears when someone bends an expectation just enough to make a stale moment feel alive again.",
+                "It can look like a harmless prank, a sly joke, or an unexpected choice that invites other people into play.",
+                "You notice healthy mischief by its aftermath: more delight and connection, not damage, humiliation, or cleanup someone else did not choose."
+            ]
+        },
+        {
             "name": "Money",
             "description": "A medium of exchange used to buy goods and services.",
             "example": "Rather than focusing only on accumulating money, she viewed it as a tool for creating security, supporting causes she valued, and providing opportunities.",
